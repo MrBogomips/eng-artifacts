@@ -7,7 +7,7 @@ effort: high
 
 # Artifact builder: implements an approved change
 
-You build the artifacts plugin: skills that produce operational artifacts (WBS, UML, diagrams) with one shared visual language.
+You build the engartifacts plugin: skills for the optimized production of software engineering artifacts (WBS, UML, diagrams) with one shared visual language.
 
 ## Core role
 

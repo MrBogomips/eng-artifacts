@@ -1,20 +1,25 @@
 {
-  "name": "artifacts",
+  "name": "engartifacts",
   "owner": {
     "name": "MrBogomips",
     "url": "https://github.com/MrBogomips"
   },
   "metadata": {
-    "description": "Marketplace for the artifacts Claude Code plugin"
+    "description": "Marketplace for the engartifacts Claude Code plugin"
   },
   "plugins": [
     {
-      "name": "artifacts",
+      "name": "engartifacts",
       "source": "./",
-      "description": "Skills that produce operational artifacts (entity relationship diagrams first) as self-contained pages with one shared visual language, a light/dark switch and replaceable themes.",
+      "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams first) as self-contained pages with one shared visual language, a light/dark toggle and replaceable themes.",
       "version": "0.2.0",
-      "category": "productivity",
-      "tags": ["artifacts", "diagram", "erd", "theme"]
+      "category": "development",
+      "tags": [
+        "software-engineering",
+        "diagram",
+        "erd",
+        "theme"
+      ]
     }
   ]
 }
