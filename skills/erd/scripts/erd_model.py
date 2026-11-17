@@ -18,7 +18,8 @@ MAX_GROUPS = 5
 MODEL_FIELDS = ("title", "description", "groups", "entities", "relationships")
 GROUP_FIELDS = ("id", "label")
 ENTITY_FIELDS = ("name", "group", "columns")
-COLUMN_FIELDS = ("name", "type", "pk", "fk")
+COLUMN_FIELDS = ("name", "type", "pk", "fk", "uk", "nullable")
+FLAGS = ("pk", "fk", "uk", "nullable")  # optional booleans of a column
 RELATIONSHIP_FIELDS = ("from", "to", "fromCard", "toCard", "kind", "columns", "label")
 
 MARKUP = re.compile(r"<\s*[/!]?[A-Za-z]")
@@ -103,7 +104,7 @@ def _validate_columns(entity, ename, errors):
         if not _nonempty_string(c.get("type")):
             errors.append("entity %s, column %s: type is required (a non-empty string)"
                           % (_quote(ename), _quote(cname)))
-        for flag in ("pk", "fk"):
+        for flag in FLAGS:
             if flag in c and not isinstance(c[flag], bool):
                 errors.append("entity %s, column %s: %s must be true or false"
                               % (_quote(ename), _quote(cname), flag))

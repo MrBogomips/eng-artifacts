@@ -12,7 +12,7 @@
       "name": "artifacts",
       "source": "./",
       "description": "Skills that produce operational artifacts (entity relationship diagrams first) as self-contained pages with one shared visual language, a light/dark switch and replaceable themes.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "productivity",
       "tags": ["artifacts", "diagram", "erd", "theme"]
     }

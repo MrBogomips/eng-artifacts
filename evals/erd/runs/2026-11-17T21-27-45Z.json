@@ -1,0 +1,185 @@
+{
+  "baselineOnly": false,
+  "cases": {
+    "erd-complex": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 0.2887,
+            "median": 0.2876,
+            "min": 0.2368
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 30090,
+            "median": 29743,
+            "min": 27530
+          },
+          "tokens": {
+            "max": 141689,
+            "median": 115405,
+            "min": 91165
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 0.7339,
+            "median": 0.726,
+            "min": 0.6986
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 236790,
+            "median": 222138,
+            "min": 200852
+          },
+          "tokens": {
+            "max": 273748,
+            "median": 161452,
+            "min": 156079
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 60.4,
+        "timeMs": 86.6,
+        "tokens": 28.5
+      }
+    },
+    "erd-easy": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 0.1825,
+            "median": 0.1788,
+            "min": 0.1716
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 22838,
+            "median": 21542,
+            "min": 19890
+          },
+          "tokens": {
+            "max": 127138,
+            "median": 106580,
+            "min": 83141
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 0.4319,
+            "median": 0.4267,
+            "min": 0.4167
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 173487,
+            "median": 145469,
+            "min": 106551
+          },
+          "tokens": {
+            "max": 144656,
+            "median": 141706,
+            "min": 87893
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 58.1,
+        "timeMs": 85.2,
+        "tokens": 24.8
+      }
+    },
+    "erd-medium": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 0.2135,
+            "median": 0.2097,
+            "min": 0.2077
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 30943,
+            "median": 30677,
+            "min": 29994
+          },
+          "tokens": {
+            "max": 86973,
+            "median": 86633,
+            "min": 86467
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 1.087,
+            "median": 0.9017,
+            "min": 0.778
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 367248,
+            "median": 308790,
+            "min": 266444
+          },
+          "tokens": {
+            "max": 393663,
+            "median": 278482,
+            "min": 266341
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 76.7,
+        "timeMs": 90.1,
+        "tokens": 68.9
+      }
+    }
+  },
+  "classification": {
+    "flaggedRuns": [],
+    "incompleteRuns": [],
+    "label": "meets target",
+    "unmetTargets": [],
+    "worseCases": []
+  },
+  "claudeVersion": "2.1.326",
+  "date": "2026-11-17",
+  "effort": {
+    "observed": [
+      "medium"
+    ],
+    "requested": "medium"
+  },
+  "evaluationCostUsd": 8.1774,
+  "format": 1,
+  "model": "claude-opus-5-5",
+  "pluginVersion": "0.2.0",
+  "runId": "2026-11-17T21-27-45Z",
+  "runsPerArm": 3,
+  "skill": "erd",
+  "targets": {
+    "timePercent": 20.0,
+    "tokensPercent": 20.0
+  },
+  "totals": {
+    "arms": {
+      "with": {
+        "costPerRunUsd": 0.6761,
+        "timeMs": 81962,
+        "tokens": 308618
+      },
+      "without": {
+        "costPerRunUsd": 2.0544,
+        "timeMs": 676397,
+        "tokens": 581640
+      }
+    },
+    "reduction": {
+      "costUsd": 67.1,
+      "timeMs": 87.9,
+      "tokens": 46.9
+    }
+  }
+}

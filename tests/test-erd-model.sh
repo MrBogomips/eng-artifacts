@@ -32,6 +32,7 @@ expect six-groups 'merge groups or split the diagram'
 expect markup-field 'unknown field "style"'
 expect markup-field 'unknown field "x"'
 expect markup-in-text 'contains markup'
+expect nullable-text 'entity "order", column "paid_at": nullable must be true or false'
 
 # the complete example in references/model.md is a valid model
 EX=$(mktemp "${TMPDIR:-/tmp}/erd-example.XXXXXX")

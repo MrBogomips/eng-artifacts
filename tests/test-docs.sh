@@ -23,20 +23,34 @@ copy_repo() { # copy_repo <dir>
     cp -R "$ROOT/evals/erd" "$1/evals/erd"
 }
 check_in() { python3 -I "$KPI" doc --check --root "$1" 2>&1; }
+# change the first percentage found after an optional marker, as a hand edit would
+edit_first_pct() {
+    python3 -I -c '
+import re, sys
+path, marker = sys.argv[1], sys.argv[2]
+text = open(path).read()
+start = text.index(marker) if marker else 0
+m = re.compile(r"-?[0-9]+\.[0-9]%").search(text, start)
+if not m:
+    sys.exit("no percentage to edit in " + path)
+edited = "0.0%" if m.group(0) != "0.0%" else "1.0%"
+open(path, "w").write(text[:m.start()] + edited + text[m.end():])
+' "$1" "${2:-}"
+}
 
 copy_repo "$TMP/ok"
 check_in "$TMP/ok" >/dev/null || fail "docs:copy" "the untouched copy does not pass --check"
 
 # a hand-edited Performance value
 copy_repo "$TMP/edit"
-sed 's/683,542/683,543/' "$TMP/edit/skills/erd/README.md" > "$TMP/edit/x" && mv "$TMP/edit/x" "$TMP/edit/skills/erd/README.md"
+edit_first_pct "$TMP/edit/skills/erd/README.md" '<!-- performance:start -->'
 out=$(check_in "$TMP/edit"); rc=$?
 [ "$rc" = 1 ] || fail "docs:edited-value" "exit status $rc, expected 1"
 printf '%s' "$out" | grep -q '^skills/erd/README.md:' || fail "docs:edited-value" "the file is not named: $out"
 
 # a hand-edited row of the skills table
 copy_repo "$TMP/row"
-sed 's/-88\.7%/-80.7%/' "$TMP/row/README.md" > "$TMP/row/x" && mv "$TMP/row/x" "$TMP/row/README.md"
+edit_first_pct "$TMP/row/README.md" ""
 out=$(check_in "$TMP/row"); rc=$?
 [ "$rc" = 1 ] || fail "docs:edited-row" "exit status $rc, expected 1"
 printf '%s' "$out" | grep -q '^README.md:' || fail "docs:edited-row" "the file is not named: $out"

@@ -45,6 +45,30 @@ expect_fail "themes: token removed" "--status-late" bash "$ROOT/tests/validate-t
 cp "$ROOT/shared/themes/default.css" "$TMP/themes/alt.css"
 expect_fail "themes: alt equals default" "does not differ from the default" bash "$ROOT/tests/validate-themes.sh" "$TMP/themes"
 
+# a theme that imports its fonts from a host other than Google Fonts: rejected, naming theme and source
+cp "$ROOT"/shared/themes/*.css "$TMP/themes/"
+python3 - "$TMP/themes/alt.css" <<'PY'
+import sys
+p = sys.argv[1]
+t = open(p).read().replace("fonts.googleapis.com", "fonts.example.org")
+open(p, "w").write(t)
+PY
+expect_fail "themes: foreign font host" "alt.css: the theme loads fonts from \"https://fonts.example.org/" bash "$ROOT/tests/validate-themes.sh" "$TMP/themes"
+
+# a theme with system fonts only (no import at all) is accepted
+cp "$ROOT"/shared/themes/*.css "$TMP/themes/"
+python3 - "$TMP/themes/alt.css" <<'PY'
+import re, sys
+p = sys.argv[1]
+t = open(p).read()
+t = re.sub(r"@import url\([^)]*\);\n", "", t)
+t = re.sub(r'--font-display: [^;]*;', '--font-display: Georgia, "Times New Roman", serif;', t)
+t = re.sub(r'--font-body: [^;]*;', '--font-body: system-ui, sans-serif;', t)
+t = re.sub(r'--font-data: [^;]*;', '--font-data: ui-monospace, monospace;', t)
+open(p, "w").write(t)
+PY
+bash "$ROOT/tests/validate-themes.sh" "$TMP/themes" >/dev/null 2>&1 || fail "themes: system fonts only" "a theme with no @import was rejected"
+
 # style source: injected literals report file and line
 mkdir -p "$TMP/plugin/shared/page" "$TMP/plugin/skills/x"
 printf '.a {\n  color: #123456;\n}\n' > "$TMP/plugin/shared/page/page.css"

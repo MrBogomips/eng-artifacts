@@ -4,13 +4,16 @@
     artifact_page.py --type erd --model <file> --theme <name|path> --out <file>
 
 Loads the artifact type from skills/<type>/ (its validator scripts/<type>_model.py, its renderer
-assets/<type>.js and, optionally, assets/<type>.json naming external scripts), validates the model,
+assets/<type>.js with any helper files assets/<type>-*.js that it needs, and, optionally,
+assets/<type>.json naming external scripts), validates the model,
 checks the theme against the default theme's token set, and writes ONE html file with the theme,
 page styles, scripts and the model inlined. Nothing is written unless every check passes; on
 failure every problem is printed and the exit status is 1 (2 for a usage error).
 
-Inlining order: theme style first (an @import must open its stylesheet), page style, core.js,
-the type's external scripts, the type renderer, the model as JSON, then the boot call.
+Inlining order: theme style first (an @import, when the theme has one, must open its stylesheet),
+page style, core.js, chrome.js, the type's external scripts, the type renderer (its helper files
+first, in name order, then <type>.js), the model as JSON, then the boot call. A theme may name system fonts only and import nothing; one that loads fonts
+loads them from Google Fonts only.
 """
 import argparse
 import html
@@ -80,6 +83,17 @@ def resolve_theme(root, theme):
     if os.path.isfile(theme):
         return theme, theme
     raise AssemblyError(["theme file %s does not exist" % theme])
+
+
+def read_renderer(type_dir, art_type, problems):
+    """The renderer's text: helper files assets/<type>-*.js in name order, then assets/<type>.js."""
+    assets = os.path.join(type_dir, "assets")
+    names = []
+    if os.path.isdir(assets):
+        names = sorted(n for n in os.listdir(assets) if n.startswith(art_type + "-") and n.endswith(".js"))
+    names.append("%s.js" % art_type)
+    parts = [read_text(os.path.join(assets, n), problems, "the renderer") for n in names]
+    return None if None in parts else "\n".join(parts)
 
 
 def check_external_scripts(scripts, problems):
@@ -157,7 +171,8 @@ def assemble(root, art_type, model_path, theme, problems=None):
     shell = read_text(os.path.join(root, "shared", "page", "shell.html"), problems, "the page shell")
     page_css = read_text(os.path.join(root, "shared", "page", "page.css"), problems, "the page styles")
     core_js = read_text(os.path.join(root, "shared", "page", "core.js"), problems, "the page core")
-    type_js = read_text(os.path.join(type_dir, "assets", "%s.js" % art_type), problems, "the renderer")
+    chrome_js = read_text(os.path.join(root, "shared", "page", "chrome.js"), problems, "the page chrome")
+    type_js = read_renderer(type_dir, art_type, problems)
     scripts = []
     manifest = os.path.join(type_dir, "assets", "%s.json" % art_type)
     if os.path.isfile(manifest):
@@ -168,11 +183,12 @@ def assemble(root, art_type, model_path, theme, problems=None):
             problems.append("%s: not valid JSON: %s" % (manifest, exc))
     scripts = check_external_scripts(scripts, problems)
 
-    if problems or None in (shell, page_css, core_js, type_js, theme_text, model):
+    if problems or None in (shell, page_css, core_js, chrome_js, type_js, theme_text, model):
         raise AssemblyError(problems)
 
     for text, closer, label in ((theme_text, "style", "the theme"), (page_css, "style", "page.css"),
-                                (core_js, "script", "core.js"), (type_js, "script", "the renderer")):
+                                (core_js, "script", "core.js"), (chrome_js, "script", "chrome.js"),
+                                (type_js, "script", "the renderer")):
         safe_inline(text, closer, label, problems)
     if problems:
         raise AssemblyError(problems)
@@ -186,6 +202,7 @@ def assemble(root, art_type, model_path, theme, problems=None):
         "THEME_CSS": theme_text,
         "PAGE_CSS": page_css,
         "CORE_JS": core_js,
+        "CHROME_JS": chrome_js,
         "EXTERNAL_SCRIPTS": "\n".join(script_tag(s) for s in scripts),
         "TYPE_JS": type_js,
         "MODEL_JSON": json_for_script(model),

@@ -9,14 +9,16 @@ model          title (required), description, groups, entities (required, at lea
 group          id (required, unique), label
 entity         name (required, unique), group (an id from groups), columns (required, at least one)
 column         name (required, unique within the entity), type (required, text as written in the schema),
-               pk (true for a primary key column), fk (true for a foreign key column); a column may be both
+               pk (primary key), fk (foreign key; a column may be both), uk (unique), nullable (may be empty);
+               pk, fk, uk and nullable are optional and default to false
 relationship   from, to (entity names), fromCard, toCard, kind, columns, label
 ```
 
 - `title` becomes the page title and heading; `description`, when present, appears under it.
 - `groups`: at most five, each entity in at most one; when the model defines groups, an entity without `group` is drawn in the neutral color (outside every group); when it defines none, every table is drawn in the accent color. Use groups for bounded contexts or subject areas. More than five groups: merge groups or split the diagram.
 - `type` is shown as written: `uuid`, `varchar(80)`, `numeric(10,2)`.
-- `pk` columns are drawn bold with a key marker; several `pk` columns form a composite key. An `fk` column is marked too. Column order is the order of the file.
+- `pk` columns are drawn bold with a PK chip; several `pk` columns form a composite key. An `fk` column gets an FK chip, a `uk` column a UK chip (chips in the order PK, FK, UK). Column order is the order of the file.
+- `uk` marks a column with a `UNIQUE` constraint on its own; leave it off the columns of a composite key. `nullable` marks a column that may be empty and is drawn with a `null` marker before its type; a primary key column is never nullable.
 
 ## Relationships
 
@@ -57,8 +59,8 @@ A relationship from an entity to itself (an employee and their manager) is valid
   "entities": [
     { "name": "customer", "group": "sales", "columns": [
       { "name": "id", "type": "uuid", "pk": true },
-      { "name": "name", "type": "text" },
-      { "name": "referred_by", "type": "uuid", "fk": true } ] },
+      { "name": "email", "type": "text", "uk": true },
+      { "name": "referred_by", "type": "uuid", "fk": true, "nullable": true } ] },
     { "name": "order", "group": "sales", "columns": [
       { "name": "id", "type": "uuid", "pk": true },
       { "name": "customer_id", "type": "uuid", "fk": true },

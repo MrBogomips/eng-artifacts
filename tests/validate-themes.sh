@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Theme completeness: same token set in every theme and in its light and both dark blocks, identical
-# dark blocks, every color token in all three blocks, every font role with a fallback, default tokens
-# equal to the vocabulary of design.md, the alternate theme unlike the default in every token group.
+# dark blocks, every color token in all three blocks, every font role with a fallback, no font source
+# but Google Fonts (a theme may name system fonts only and import nothing), default tokens equal to the
+# vocabulary of design.md, the alternate theme unlike the default in every token group.
 # Usage: validate-themes.sh [theme-dir]   (default: shared/themes)
 set -u
 . "$(dirname "$0")/lib.sh"
