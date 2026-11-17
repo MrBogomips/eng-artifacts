@@ -1,0 +1,13 @@
+{
+  "title": "Composite key",
+  "entities": [
+    { "name": "order", "columns": [ { "name": "id", "type": "uuid", "pk": true } ] },
+    { "name": "order_line", "columns": [
+      { "name": "order_id", "type": "uuid", "pk": true, "fk": true },
+      { "name": "line_no", "type": "int", "pk": true },
+      { "name": "sku", "type": "text" } ] }
+  ],
+  "relationships": [
+    { "from": "order_line", "to": "order", "fromCard": "0..*", "toCard": "1", "kind": "owned", "columns": ["order_id", "id"] }
+  ]
+}

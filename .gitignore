@@ -3,3 +3,10 @@ _agents_workspace/
 
 # OS files
 .DS_Store
+
+# Evaluation results: raw runs, kept deliverables, reports (never committed)
+evals/results/
+
+# Python bytecode
+__pycache__/
+*.pyc

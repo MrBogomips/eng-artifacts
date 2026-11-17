@@ -1,0 +1,4 @@
+{ "title": "t",
+  "entities": [ { "name": "a", "columns": [ { "name": "id", "type": "int", "pk": true } ] },
+                { "name": "b", "columns": [ { "name": "id", "type": "int", "pk": true } ] } ],
+  "relationships": [ { "from": "a", "to": "b", "fromCard": "0..*", "toCard": "1", "kind": "weak" } ] }

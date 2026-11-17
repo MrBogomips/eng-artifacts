@@ -1,0 +1,113 @@
+# Spec Delta
+
+## Purpose
+
+Entity relationship diagrams produced from a short request: the skill writes a small data model, the plugin validates it and delivers an artifact page drawn with the shared visual design and standard crow's foot notation.
+
+## ADDED Requirements
+
+### Requirement: Skill turns a request into an ERD page
+The plugin SHALL provide an ERD skill that, from a description of a data model, a schema (SQL DDL or an ORM model) or an existing ERD model file, writes an ERD model file and produces its artifact page.
+
+#### Scenario: From a description
+- **WHEN** the user asks for an ERD of a customer, order, order line, product and payment schema described in prose
+- **THEN** the skill writes an ERD model file and an artifact page showing those five entities and their relationships
+
+#### Scenario: From SQL DDL
+- **WHEN** the user provides `CREATE TABLE` statements with primary and foreign keys
+- **THEN** every table becomes an entity, every column keeps its name and type, and every foreign key becomes a relationship
+
+#### Scenario: Change to an existing diagram
+- **WHEN** the user asks to add an entity to an ERD the skill produced earlier
+- **THEN** the skill edits the existing model file and produces the page again, keeping everything not asked to change
+
+### Requirement: The model holds data, not markup
+The skill SHALL express a diagram only as an ERD model: a JSON document with a title, an optional description, optional groups, entities and relationships. It SHALL NOT write markup, styles, scripts or coordinates.
+
+#### Scenario: Model content
+- **WHEN** the skill writes a model for any request
+- **THEN** the file contains only the model's fields and no HTML, CSS, SVG, script or position values
+
+### Requirement: Entities and columns
+An entity SHALL have a unique name and at least one column. A column SHALL have a name unique within its entity and a type, and MAY be marked as primary key, foreign key, or both.
+
+#### Scenario: Composite primary key
+- **WHEN** two columns of an entity are marked as primary key
+- **THEN** both are shown as key columns and the model is valid
+
+#### Scenario: Duplicate column rejected
+- **WHEN** an entity has two columns with the same name
+- **THEN** validation fails, naming the entity and the column
+
+### Requirement: Relationships and cardinality
+A relationship SHALL join two entities, MAY name the joining columns and carry a short label, and SHALL give each end one cardinality: `1` (exactly one), `0..1` (zero or one), `1..*` (one or more) or `0..*` (zero or more).
+
+#### Scenario: Unknown entity rejected
+- **WHEN** a relationship names an entity the model does not define
+- **THEN** validation fails, naming the relationship and the missing entity
+
+#### Scenario: Unknown cardinality rejected
+- **WHEN** a relationship end has a cardinality outside the four allowed values
+- **THEN** validation fails, listing the allowed values
+
+#### Scenario: Self-relationship
+- **WHEN** a relationship joins an entity to itself, such as an employee and their manager
+- **THEN** the model is valid and the relationship is drawn as a loop on that entity
+
+### Requirement: Relationship kind
+A relationship SHALL have a kind: `owned`, when the child entity exists only as part of the parent and its identity includes the parent's key, or `referenced`, when the child only points to the parent. The kind defaults to `referenced`. The user MAY state the kind of any relationship; otherwise the skill sets `owned` when the child's primary key includes the joining foreign key.
+
+#### Scenario: User chooses the kind
+- **WHEN** the user asks for `order_line` to be owned by `order` and `order` to reference `customer`
+- **THEN** the model marks the first relationship `owned` and the second `referenced`
+
+#### Scenario: Unknown kind rejected
+- **WHEN** a relationship has a kind other than `owned` or `referenced`
+- **THEN** validation fails, listing the allowed values
+
+### Requirement: Groups
+A model MAY define up to five groups and assign each entity to at most one. A model with more than five groups SHALL be rejected, because the design has five group colors and does not reuse them.
+
+#### Scenario: Six groups rejected
+- **WHEN** a model defines six groups
+- **THEN** validation fails and suggests merging groups or splitting the diagram
+
+### Requirement: Tables drawn as header-band nodes
+Each entity SHALL be drawn as the design's header-band node: the entity name in the band, one row per column below with key marker, name and type, primary key names in bold. The band takes the entity's group color. When the model defines groups, an entity with no group takes the neutral role, so it cannot be mistaken for a group; when the model defines no groups, every band takes the accent role.
+
+#### Scenario: Grouped and ungrouped entities
+- **WHEN** a model puts `order` in the first group and leaves `audit_log` ungrouped
+- **THEN** the band of `order` uses the first group role and the band of `audit_log` uses the neutral role
+
+#### Scenario: Model without groups
+- **WHEN** a model defines no groups
+- **THEN** every table band uses the accent role
+
+#### Scenario: Coherent with the design's role map
+- **WHEN** the reviewer compares an ERD table with the header-band node defined in the visual design's role map
+- **THEN** band, body, outline, row text and data face match the shared definition, which the next artifact type must also use
+
+### Requirement: Crow's foot notation
+Each relationship end SHALL carry the information engineering mark for its cardinality: a bar for one, a crow's foot for many, a ring for zero. Connectors SHALL be orthogonal and drawn with the line role: solid for an `owned` relationship, dashed for a `referenced` one. A label, when present, sits beside the connector.
+
+#### Scenario: Marks per cardinality
+- **WHEN** a relationship has `1` at one end and `0..*` at the other
+- **THEN** the first end shows two bars and the second shows a ring and a crow's foot
+
+#### Scenario: Line per kind
+- **WHEN** a diagram has one owned and one referenced relationship
+- **THEN** the owned connector is solid and the referenced connector is dashed with the design's dash pattern, both in the line role
+
+### Requirement: Automatic layout
+The diagram SHALL be laid out automatically so that tables do not overlap, connectors do not cross tables, and related tables sit near each other. The model SHALL NOT carry positions.
+
+#### Scenario: No overlap
+- **WHEN** a model with twelve entities and fifteen relationships is drawn
+- **THEN** no two tables overlap and no connector passes through a table
+
+### Requirement: Light and dark under any theme
+An ERD page SHALL be complete and legible in light and dark under every complete theme, including a non-default one.
+
+#### Scenario: Alternate theme in dark
+- **WHEN** an ERD page is produced with the alternate theme and viewed in dark mode
+- **THEN** every table, mark, connector and label is visible with the alternate theme's dark values, and text reaches the contrast ratios set by the visual design

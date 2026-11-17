@@ -1,0 +1,22 @@
+{
+  "name": "artifacts",
+  "version": "0.1.0",
+  "description": "Skills that produce operational artifacts (entity relationship diagrams first; WBS, UML and other diagrams to follow) as self-contained pages that share one visual language, switch between light and dark, and can be re-themed as a whole.",
+  "author": {
+    "name": "MrBogomips",
+    "url": "https://github.com/MrBogomips"
+  },
+  "license": "MIT",
+  "keywords": [
+    "artifacts",
+    "diagram",
+    "erd",
+    "entity-relationship",
+    "theme",
+    "dark-mode",
+    "claude-code-plugin"
+  ],
+  "experimental": {
+    "evals": "evals"
+  }
+}

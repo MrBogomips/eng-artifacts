@@ -1,0 +1,33 @@
+{
+  "title": "Order schema",
+  "description": "Customers place orders made of lines for products; orders are paid.",
+  "entities": [
+    { "name": "customer", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "name", "type": "text" },
+      { "name": "email", "type": "text" } ] },
+    { "name": "order", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "customer_id", "type": "uuid", "fk": true },
+      { "name": "placed_at", "type": "timestamp" } ] },
+    { "name": "order_line", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "order_id", "type": "uuid", "fk": true },
+      { "name": "product_id", "type": "uuid", "fk": true },
+      { "name": "quantity", "type": "int" } ] },
+    { "name": "product", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "title", "type": "text" },
+      { "name": "price", "type": "numeric(10,2)" } ] },
+    { "name": "payment", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "order_id", "type": "uuid", "fk": true },
+      { "name": "amount", "type": "numeric(10,2)" } ] }
+  ],
+  "relationships": [
+    { "from": "order", "to": "customer", "fromCard": "0..*", "toCard": "1", "columns": ["customer_id", "id"], "label": "placed by" },
+    { "from": "order_line", "to": "order", "fromCard": "0..*", "toCard": "1", "kind": "owned", "columns": ["order_id", "id"] },
+    { "from": "order_line", "to": "product", "fromCard": "0..*", "toCard": "1", "columns": ["product_id", "id"] },
+    { "from": "payment", "to": "order", "fromCard": "0..*", "toCard": "1", "columns": ["order_id", "id"], "label": "settles" }
+  ]
+}

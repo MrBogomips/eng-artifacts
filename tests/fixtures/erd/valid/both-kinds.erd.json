@@ -1,0 +1,16 @@
+{
+  "title": "Owned and referenced",
+  "entities": [
+    { "name": "customer", "columns": [ { "name": "id", "type": "uuid", "pk": true } ] },
+    { "name": "order", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "customer_id", "type": "uuid", "fk": true } ] },
+    { "name": "order_line", "columns": [
+      { "name": "order_id", "type": "uuid", "pk": true, "fk": true },
+      { "name": "line_no", "type": "int", "pk": true } ] }
+  ],
+  "relationships": [
+    { "from": "order", "to": "customer", "fromCard": "0..*", "toCard": "1", "kind": "referenced" },
+    { "from": "order_line", "to": "order", "fromCard": "1..*", "toCard": "1", "kind": "owned" }
+  ]
+}

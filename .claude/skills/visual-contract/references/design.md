@@ -2,7 +2,7 @@
 
 The look every artifact of the plugin shares. Decided on 2026-11-17 from three explored directions: the structure of the third (header bands), the type of the second (a geometric display face over a plain sans), the palette of the first (navy ink on cool paper, one orange mark).
 
-The palette, the fonts and the geometry are in `default-theme.css`, next to this file, and only there. This file says what each token is for and how the roles are drawn.
+The palette, the fonts and the geometry are in the plugin's `shared/themes/default.css`, and only there. This file says what each token is for and how the roles are drawn.
 
 ## Contents
 
@@ -27,7 +27,7 @@ Color has two jobs and no others. A **group** color says what a node belongs to 
 
 Artifacts are built for Artifact pages first. The rules that follow from that medium:
 
-- Every color is a token with a light and a dark value, in the shape of `default-theme.css`: light on `:root`, dark under the system preference, dark again under an explicit choice. No component rule holds a literal color.
+- Every color is a token with a light and a dark value, in the shape of the theme files in `shared/themes/`: light on `:root`, dark under the system preference, dark again under an explicit choice. No component rule holds a literal color.
 - The page sets `body { background: var(--canvas); color: var(--ink) }`. The host paints its own ground behind the page, so a transparent body shows the wrong theme.
 - The page body never scrolls sideways. A drawing wider than the screen sits in its own `overflow-x: auto` frame; it is not scaled down until its text is unreadable.
 - Text in a drawing is 10.5px or larger at drawn size.
@@ -47,8 +47,8 @@ An artifact skill references these names and no others. A need that none of them
 | `--ink-2` | Secondary text: sublabels, identifiers, multiplicities, edge labels. |
 | `--line` | Connectors and neutral borders. |
 | `--grid` | Gridlines and hairlines that organize but carry no meaning. |
-| `--neutral` | The group color of a node that is outside every group (an external system, a client). |
-| `--accent` | The group color of a node when no group is set. |
+| `--neutral` | The group color of a node that is outside every group of a diagram that has groups (an external system, a client, an ungrouped table). |
+| `--accent` | The group color of a node when the diagram defines no groups. |
 | `--mark` | Critical path, milestone, today, an emphasized edge. One meaning per drawing. |
 | `--band-ink` | Text on a header band. |
 | `--status-done`, `--status-active`, `--status-risk`, `--status-late`, `--status-todo` | The five states of a work item. Always with their shape, never color alone. |
@@ -59,13 +59,17 @@ An artifact skill references these names and no others. A need that none of them
 
 ## How a role is drawn
 
-A shape names its role; the tokens decide how it looks. A node takes its group from a custom property set on it or on an ancestor: `--c: var(--group-2)`. With none set it falls back to `--accent`.
+A shape names its role; the tokens decide how it looks. A node takes its group from a custom property set on it or on an ancestor: `--c: var(--group-2)`. With none set it falls back to `--accent`. A diagram that defines groups gives every node outside them `--neutral`, so an ungrouped node cannot be mistaken for the first group; a diagram that defines none draws every node in `--accent`.
 
 These formulas are normative. They are what makes one theme file restyle every artifact:
 
 ```css
 /* node body, outline, header band */
 .node      { fill: color-mix(in oklab, var(--c, var(--accent)) var(--fill-mix), var(--node));
+             stroke: color-mix(in oklab, var(--c, var(--accent)) var(--stroke-mix), var(--line));
+             stroke-width: var(--stroke); }
+/* the outline drawn again over a header band (no fill), and the line under the band */
+.node-outline, .node-rule { fill: none;
              stroke: color-mix(in oklab, var(--c, var(--accent)) var(--stroke-mix), var(--line));
              stroke-width: var(--stroke); }
 .band      { fill: color-mix(in oklab, var(--c, var(--accent)) var(--band-mix), var(--node)); }
@@ -84,6 +88,15 @@ These formulas are normative. They are what makes one theme file restyle every a
 .edge-head { fill: var(--line); }
 .edge.mark { stroke: var(--mark); stroke-width: calc(var(--stroke) + 0.75px); }
 
+/* connector, dashed variant: the same line with the boundary's dash pattern, for a weaker tie
+   (an ERD referenced relationship); it combines with .mark */
+.edge.dashed { stroke-dasharray: 5 4; }
+
+/* notation marks at a connector's end (an ERD's bars, crow's foot and ring): the line role; a hollow
+   mark, here the ring, is filled with the node color, as the hollow UML triangle is */
+.notation      { fill: none; stroke: var(--line); stroke-width: var(--stroke); stroke-linecap: butt; }
+.notation-ring { fill: var(--node); stroke: var(--line); stroke-width: var(--stroke); }
+
 /* a boundary around nodes that belong together */
 .boundary  { fill: color-mix(in oklab, var(--ink) 3%, var(--surface));
              stroke: var(--line); stroke-width: var(--stroke); stroke-dasharray: 5 4; }
@@ -96,7 +109,9 @@ These formulas are normative. They are what makes one theme file restyle every a
 .edge-label { fill: var(--ink-2); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
 ```
 
-A node with a header band is drawn in this order: body, band (rounded on its top corners only), the line under the band, then the outline again with no fill, so the outline stays crisp over the band.
+A node with a header band is drawn in this order: body, band (rounded on its top corners only), the line under the band, then the outline again with no fill, so the outline stays crisp over the band. The text on the band is centered in it, horizontally and vertically.
+
+Every header-band node has the same proportions, whatever the artifact type: a band 28px high, body rows 22px high, 10px of padding at each side, 6px under the last row. The shared header-band primitive owns these sizes; an artifact skill places its rows with it and never sets its own.
 
 ## Type
 
@@ -140,7 +155,7 @@ A design sets stroke, fill and type. It never changes a shape that a notation de
 
 - **BPMN**: an event is a circle (an end event's line is 2.6 times `--stroke`); a task is a rectangle with rounded corners, at least 6px whatever `--radius` is; a gateway is a diamond, with its marker inside.
 - **UML**: composition is a filled diamond at the owner; generalization is a hollow triangle at the parent; a navigable association ends in the standard arrowhead.
-- **ERD**: crow's foot for many, two short ticks for one.
+- **ERD**: information engineering marks at each end of a relationship: a bar for one, a crow's foot for many, a ring for zero. The four cardinalities are two bars (`1`), ring and bar (`0..1`), bar and crow's foot (`1..*`), ring and crow's foot (`0..*`); the ring sits farthest from the table, the crow's foot nearest to it, and in `1..*` the bar sits outside the foot. A relationship is of one of two kinds: owned (identifying: the child exists only as part of the parent) is drawn solid, referenced (non-identifying: the child only points to the parent) is drawn dashed, in the `.edge.dashed` variant. A self-relationship is a loop on the table's right side.
 
 ## The same roles in each artifact type
 
@@ -148,9 +163,9 @@ This is the coherence map. A new artifact type gets a column here before it gets
 
 | Role | WBS | Gantt | Component diagram | UML class | ERD | BPMN |
 |---|---|---|---|---|---|---|
-| Node with header band | work package: code and effort in the band, title in the body | | | class: name in the band, members below | table: name in the band, columns below | pool: name in the band |
+| Node with header band | work package: title in the band, code and effort in the body | | | class: name in the band, members below | table: name in the band, columns below | pool: name in the band |
 | Plain node | task: code, title, status mark | | component, store, queue | | | task, event, gateway |
-| Group color | workstream | workstream, on the bar | bounded context: a service and its store | none set: accent | none set: accent | lane |
+| Group color | workstream | workstream, on the bar | bounded context: a service and its store | none set: accent | schema area (a bounded context); a table outside every group: neutral; no groups defined: accent | lane |
 | Mark | | critical path, milestone, today | the edge under discussion | | | |
 | Status mark | on each task | beside each task name | | | | |
 | Data face | codes, effort | week labels | | members, multiplicities | keys, columns, types | |
@@ -158,19 +173,19 @@ This is the coherence map. A new artifact type gets a column here before it gets
 
 ## Making a theme
 
-Copy `default-theme.css`, change values, keep every token. Nothing outside the file changes. `alt-theme.css` is a second complete theme kept for checking exactly that: it differs from the default in every group of tokens.
+Copy `shared/themes/default.css`, change values, keep every token. Nothing outside the file changes. `shared/themes/alt.css` is a second complete theme kept for checking exactly that: it differs from the default in every group of tokens.
 
 The treatment tokens change the character of a theme more than the palette does:
 
 | Character | `--fill-mix` | `--stroke-mix` | `--band-mix` |
 |---|---|---|---|
 | Header bands (the default) | 5% | 65% | 100% |
-| Tinted fills (`alt-theme.css`) | 13% | 100% | 27% |
+| Tinted fills (`alt.css`) | 13% | 100% | 27% |
 | Outlines only | 0% | 100% | 9% |
 
 `--band-ink` follows `--band-mix`: with solid bands it inverts against the group colors; with faint bands it equals `--ink`.
 
 A theme is acceptable when these pairs reach their contrast ratio in light and in dark:
 
-- 4.5:1: `--ink` and `--ink-2` on `--canvas`, on `--surface`, on `--node`, and on a node body and a lane header of every group color; `--band-ink` on a header band of every group color and of `--accent`; `--mark` on `--surface`.
-- 3:1: `--line` on `--surface`; every status token on `--node`; every group color, and its outline mix, on `--surface`.
+- 4.5:1: `--ink` and `--ink-2` on `--canvas`, on `--surface`, on `--node`, and on a node body and a lane header of every group color; `--band-ink` on a header band of every group color, of `--neutral` and of `--accent`; `--mark` on `--surface`.
+- 3:1: `--line` on `--surface`; every status token on `--node`; every group color, and its outline mix, on `--surface`; the accent outline mix (`color-mix` of `--accent` at `--stroke-mix` with `--line`) on `--surface`, the meaningful line that sets the selected switch button apart.

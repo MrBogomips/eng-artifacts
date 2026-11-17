@@ -1,0 +1,163 @@
+/* Page styles of the artifacts plugin: the drawing formulas of the visual design as role classes.
+   Tokens only: every color, font and geometry value is a var(--token) defined by a theme. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+/* the page ground comes from the theme, never from the host */
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ---- page layout: 16px side gutter, nothing scrolls sideways except the drawing frame ---- */
+.page { max-width: 100%; padding: 20px 16px 32px; }
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 16px;
+}
+.page-titles { min-width: 0; flex: 1 1 280px; }
+.page-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.page-desc { margin: 4px 0 0; color: var(--ink-2); font-size: 14px; overflow-wrap: anywhere; }
+
+/* ---- the System / Light / Dark switch ---- */
+.mode-switch {
+  display: inline-flex;
+  flex: 0 0 auto;
+  border: 1px solid var(--grid);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.mode-switch button {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 5px 12px;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.mode-switch button + button { border-left: 1px solid var(--grid); }
+.mode-switch button[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--accent) var(--band-mix), var(--node));
+  color: var(--band-ink);
+  box-shadow: inset 0 0 0 var(--stroke) color-mix(in oklab, var(--accent) var(--stroke-mix), var(--line));
+}
+.mode-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.mode-switch button[aria-pressed="true"]:focus-visible { outline-color: var(--band-ink); }
+
+/* ---- notices and errors ---- */
+.notice, .error {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--grid);
+  border-left: 3px solid var(--mark);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.error { border-left-color: var(--status-late); }
+.notice:empty, .error:empty { display: none; }
+
+/* ---- the drawing frame: scrolls on its own, never scaled below drawn size ---- */
+.frame {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-radius: var(--panel-radius);
+  padding: 16px;
+}
+.frame[hidden] { display: none; }
+#drawing > svg { display: block; max-width: none; }
+
+/* ---- type roles (design: Type) ---- */
+.t-label      { font-family: var(--font-body); font-size: 12px; font-weight: 500; fill: var(--ink); }
+.t-label-sm   { font-family: var(--font-body); font-size: 11.5px; font-weight: 500; fill: var(--ink); }
+.t-sub        { font-family: var(--font-body); font-size: 10.5px; font-weight: 400; fill: var(--ink-2); }
+.t-band       { font-family: var(--font-body); font-size: 12px; font-weight: 600; }
+.t-data       { font-family: var(--font-data); font-size: 10.5px; font-weight: 500; font-variant-numeric: tabular-nums; fill: var(--ink-2); }
+.t-member     { font-family: var(--font-data); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; fill: var(--ink); }
+.t-member-key { font-family: var(--font-data); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; fill: var(--ink); }
+.t-italic     { font-style: italic; }
+
+/* ---- drawing roles: the formulas of the visual design ---- */
+/* node body, outline, header band */
+.node      { fill: color-mix(in oklab, var(--c, var(--accent)) var(--fill-mix), var(--node));
+             stroke: color-mix(in oklab, var(--c, var(--accent)) var(--stroke-mix), var(--line));
+             stroke-width: var(--stroke); }
+.node-outline { fill: none;
+             stroke: color-mix(in oklab, var(--c, var(--accent)) var(--stroke-mix), var(--line));
+             stroke-width: var(--stroke); }
+.node-rule { fill: none;
+             stroke: color-mix(in oklab, var(--c, var(--accent)) var(--stroke-mix), var(--line));
+             stroke-width: var(--stroke); }
+.band      { fill: color-mix(in oklab, var(--c, var(--accent)) var(--band-mix), var(--node)); }
+.band-text { fill: var(--band-ink); }
+
+/* schedule bar */
+.bar       { fill: color-mix(in oklab, var(--c, var(--accent)) var(--bar-mix), var(--node));
+             stroke: var(--c, var(--accent)); stroke-width: var(--stroke); }
+.bar-done  { fill: var(--c, var(--accent)); }
+
+/* lane header */
+.lane-head { fill: color-mix(in oklab, var(--c, var(--accent)) var(--lane-mix), var(--node)); }
+
+/* connector, the emphasized variant and the dashed variant */
+.edge      { fill: none; stroke: var(--line); stroke-width: var(--stroke); }
+.edge-head { fill: var(--line); }
+.edge.mark { stroke: var(--mark); stroke-width: calc(var(--stroke) + 0.75px); }
+.edge.dashed { stroke-dasharray: 5 4; }
+
+/* notation marks at a connector's end (ERD cardinality): the line role; a hollow mark is filled with
+   the node color, as every hollow notation mark is */
+.notation      { fill: none; stroke: var(--line); stroke-width: var(--stroke); stroke-linecap: butt; }
+.notation-ring { fill: var(--node); stroke: var(--line); stroke-width: var(--stroke); }
+
+/* a boundary around nodes that belong together */
+.boundary  { fill: color-mix(in oklab, var(--ink) 3%, var(--surface));
+             stroke: var(--line); stroke-width: var(--stroke); stroke-dasharray: 5 4; }
+
+/* status mark: --s is one of the five status tokens */
+.status      { fill: var(--s); }
+.status-open { fill: var(--node); stroke: var(--s); stroke-width: 1.5px; }
+
+/* a label that crosses lines keeps a halo of the surface behind it */
+.edge-label { fill: var(--ink-2); paint-order: stroke; stroke: var(--surface); stroke-width: 3px;
+              stroke-linejoin: round; font-family: var(--font-body); font-size: 10.5px; font-weight: 500; }
+
+/* group assignment: --c is set on a node or an ancestor */
+.g-1 { --c: var(--group-1); } .g-2 { --c: var(--group-2); } .g-3 { --c: var(--group-3); }
+.g-4 { --c: var(--group-4); } .g-5 { --c: var(--group-5); }
+.g-neutral { --c: var(--neutral); }
+
+/* legend */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding: 0; list-style: none;
+          color: var(--ink-2); font-size: 10.5px; }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { display: block; }
