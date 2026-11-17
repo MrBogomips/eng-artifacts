@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-Guidance for working in the artifacts plugin repository.
+Guidance for working in the engartifacts plugin repository.
 
 ## Purpose
 
-A Claude Code plugin: a collection of skills for producing operational artifacts (WBS, UML, diagrams) efficiently and with a coherent visual language across artifact types. Every skill is held to both goals: it makes the artifact cheaper to produce, and its output looks like it belongs with the output of the other skills.
+A Claude Code plugin (`engartifacts`): a collection of skills for the optimized production of software engineering artifacts (WBS, UML, diagrams), produced efficiently and with a coherent visual language across artifact types. Every skill is held to both goals: it makes the artifact cheaper to produce, and its output looks like it belongs with the output of the other skills.
 
 ## Product guarantees
 
@@ -19,7 +19,7 @@ The visual design is decided. The role vocabulary and drawing rules (`design.md`
 
 ## State
 
-The plugin exists (version 0.2.0) with one artifact type, ERD. It is published at `github.com/MrBogomips/artifacts` and installs with `claude plugin marketplace add MrBogomips/artifacts` then `claude plugin install artifacts@artifacts`. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
+The plugin exists (version 0.2.0) with one artifact type, ERD. It is published at `github.com/MrBogomips/engartifacts` (renamed from `artifacts`) and listed in the `mrbogomips` marketplace (`MrBogomips/claude-plugins`): it installs with `claude plugin marketplace add MrBogomips/claude-plugins` then `claude plugin install engartifacts@mrbogomips`. The repository also stays a marketplace of its own (`engartifacts@engartifacts`), as the `plugin-package` spec requires. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
 
 ```
 .claude-plugin/          manifests (shipped)
@@ -60,7 +60,7 @@ Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((V
 
 **Spec process:** OpenSpec (2.0.0) — the orchestrator activates it for the change proposal (proposal, spec deltas, design, tasks) and pauses for approval; hand-back via the approved `openspec/changes/<id>/`; at the end the change is archived into `openspec/specs/`.
 
-**Issue tracking:** GitHub Issues (`gh`) — the orchestrator pulls ready work via `gh issue list` or files it with `gh issue create`; status written back via `gh issue comment` and `gh issue close`. Active: the repository is `MrBogomips/artifacts` on GitHub.
+**Issue tracking:** GitHub Issues (`gh`) — the orchestrator pulls ready work via `gh issue list` or files it with `gh issue create`; status written back via `gh issue comment` and `gh issue close`. Active: the repository is `MrBogomips/engartifacts` on GitHub.
 
 **Entry point — applies to every prompt in this repo:** You MUST invoke the `artifacts-orchestrator` skill *before* responding to any request — new work, a follow-up, a re-run, a question, or a change to a previous result. It is the single entry point; do not craft a response outside it. The orchestrator decides what happens next: it answers trivial or out-of-scope requests directly and runs the agents only when the work warrants it.
 
@@ -74,6 +74,7 @@ Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((V
 | 2026-11-17 | Added the `skill-eval` harness skill, Phase 3b (evaluate) in the orchestrator, and the Effectiveness rules in `openspec/config.yaml` | `skills/skill-eval`, `skills/artifacts-orchestrator`, `openspec/config.yaml` | an artifact skill must prove it makes the artifact cheaper to produce, and the user decides adoption |
 | 2026-11-17 | Reference-aligned design (user's decision, change `align-design-with-reference-erd`): pale 34/24 left-aligned header bands, zones, key chips, system fonts in the default theme, highlighting, details table, zoom from 1:1, a two-state Dark mode toggle in place of the System / Light / Dark switch; the former default becomes the alternate theme | `skills/visual-contract`, `shared/`, `skills/erd` | the plugin's ERD read worse than a reference page the user preferred; align the whole design while ERD is the only type |
 | 2026-11-17 | Documentation step: after `adopt`, `python3 evals/kpi.py doc` writes the skill's Performance section and the README skills table; the structural tests check them | `skills/skill-eval`, `skills/artifacts-orchestrator`, `openspec/config.yaml` | capabilities and measured performance are part of a skill's delivery, in one format for every skill |
+| 2026-11-17 | Renamed the plugin and the repository to `engartifacts` (software engineering artifacts) and listed it in the `mrbogomips` marketplace | manifests, `README.md`, `CLAUDE.md`, `openspec/config.yaml`, harness descriptions | user's decision: a specific name for a plugin shared in a common marketplace |
 
 ## Working documents
 

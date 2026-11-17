@@ -1,8 +1,8 @@
 schema: spec-driven
 
 context: |
-  This repository is a public Claude Code plugin: a collection of skills that produce operational
-  artifacts (WBS, UML, diagrams). CLAUDE.md is the authority for repository conventions.
+  This repository is a public Claude Code plugin, engartifacts: a collection of skills for the
+  optimized production of software engineering artifacts (WBS, UML, diagrams). CLAUDE.md is the authority for repository conventions.
   The repository is public: no artifact contains personal paths, client, company or person names,
   email addresses or private URLs. Examples use neutral placeholders.
 

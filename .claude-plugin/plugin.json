@@ -1,13 +1,14 @@
 {
-  "name": "artifacts",
+  "name": "engartifacts",
   "version": "0.2.0",
-  "description": "Skills that produce operational artifacts (entity relationship diagrams first; WBS, UML and other diagrams to follow) as self-contained pages that share one visual language, switch between light and dark, and can be re-themed as a whole.",
+  "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams first; WBS, UML and other diagrams to follow) as self-contained pages that share one visual language, switch between light and dark, and can be re-themed as a whole.",
   "author": {
     "name": "MrBogomips",
     "url": "https://github.com/MrBogomips"
   },
   "license": "MIT",
   "keywords": [
+    "software-engineering",
     "artifacts",
     "diagram",
     "erd",
