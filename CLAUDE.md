@@ -19,7 +19,7 @@ The visual design is decided. The role vocabulary and drawing rules (`design.md`
 
 ## State
 
-The plugin exists (version 0.1.0) with one artifact type, ERD. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
+The plugin exists (version 0.1.0) with one artifact type, ERD. It is published at `github.com/MrBogomips/artifacts` and installs with `claude plugin marketplace add MrBogomips/artifacts` then `claude plugin install artifacts@artifacts`. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
 
 ```
 .claude-plugin/          manifests (shipped)
@@ -47,6 +47,7 @@ python3 shared/scripts/artifact_page.py --type erd --model <file>.erd.json --the
 python3 skills/erd/scripts/erd_model.py <file>.erd.json   # validate an ERD model
 
 bash evals/run.sh <skill> [--model <id>] [--effort <level>] [--runs N] [-j N] [--baseline]   # evaluate a skill: with the plugin vs without it
+python3 evals/kpi.py doc [<skill>] [--check]   # write (or check) the Performance section of each adopted skill and the README skills table
 ```
 
 `evals/run.sh` starts real agent sessions (3 cases x 2 arms x 3 runs by default, model `claude-opus-5-5`, effort `medium`), with no cost ceiling and no cost confirmation, and never publishes a report. Raw results go to the ignored `evals/results/`; a summary is appended to `evals/<skill>/RESULTS.md` with a `Decision: pending` line that the user fills with `adopt`, `rework` or `reject`. The method is the `skill-eval` harness skill. There is no build or lint command.
@@ -59,7 +60,7 @@ Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((V
 
 **Spec process:** OpenSpec (2.0.0) — the orchestrator activates it for the change proposal (proposal, spec deltas, design, tasks) and pauses for approval; hand-back via the approved `openspec/changes/<id>/`; at the end the change is archived into `openspec/specs/`.
 
-**Issue tracking:** GitHub Issues (`gh`) — the orchestrator pulls ready work via `gh issue list` or files it with `gh issue create`; status written back via `gh issue comment` and `gh issue close`. Inactive until the repository has a remote.
+**Issue tracking:** GitHub Issues (`gh`) — the orchestrator pulls ready work via `gh issue list` or files it with `gh issue create`; status written back via `gh issue comment` and `gh issue close`. Active: the repository is `MrBogomips/artifacts` on GitHub.
 
 **Entry point — applies to every prompt in this repo:** You MUST invoke the `artifacts-orchestrator` skill *before* responding to any request — new work, a follow-up, a re-run, a question, or a change to a previous result. It is the single entry point; do not craft a response outside it. The orchestrator decides what happens next: it answers trivial or out-of-scope requests directly and runs the agents only when the work warrants it.
 
@@ -71,6 +72,7 @@ Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((V
 | 2026-11-17 | Added the visual design: role vocabulary, drawing rules, default theme, alternate theme | `skills/visual-contract` | design chosen by the user from three explored directions |
 | 2026-11-17 | Theme values moved to the plugin's `shared/themes/`; `visual-contract` points to them; ERD notation extended (ring, owned and referenced lines, dashed connector variant) | `skills/visual-contract` | one style source (VC-1); real ERDs need optionality and ownership |
 | 2026-11-17 | Added the `skill-eval` harness skill, Phase 3b (evaluate) in the orchestrator, and the Effectiveness rules in `openspec/config.yaml` | `skills/skill-eval`, `skills/artifacts-orchestrator`, `openspec/config.yaml` | an artifact skill must prove it makes the artifact cheaper to produce, and the user decides adoption |
+| 2026-11-17 | Documentation step: after `adopt`, `python3 evals/kpi.py doc` writes the skill's Performance section and the README skills table; the structural tests check them | `skills/skill-eval`, `skills/artifacts-orchestrator`, `openspec/config.yaml` | capabilities and measured performance are part of a skill's delivery, in one format for every skill |
 
 ## Working documents
 
