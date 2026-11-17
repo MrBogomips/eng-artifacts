@@ -1,0 +1,99 @@
+{
+  "title": "Order management schema",
+  "description": "Customers place orders shipped to their addresses; orders are made of lines for catalog products, invoiced once and paid in one or more payments.",
+  "groups": [
+    { "id": "sales", "label": "Sales" },
+    { "id": "catalog", "label": "Catalog" },
+    { "id": "billing", "label": "Billing" }
+  ],
+  "entities": [
+    { "name": "customer", "group": "sales", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "name", "type": "text" },
+      { "name": "email", "type": "text" },
+      { "name": "created_at", "type": "timestamp" } ] },
+    { "name": "address", "group": "sales", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "customer_id", "type": "uuid", "fk": true },
+      { "name": "street", "type": "text" },
+      { "name": "city", "type": "text" },
+      { "name": "postal_code", "type": "varchar(12)" } ] },
+    { "name": "order", "group": "sales", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "customer_id", "type": "uuid", "fk": true },
+      { "name": "shipping_address_id", "type": "uuid", "fk": true },
+      { "name": "placed_at", "type": "timestamp" },
+      { "name": "status", "type": "text" } ] },
+    { "name": "order_line", "group": "sales", "columns": [
+      { "name": "order_id", "type": "uuid", "pk": true, "fk": true },
+      { "name": "line_no", "type": "int", "pk": true },
+      { "name": "product_id", "type": "uuid", "fk": true },
+      { "name": "quantity", "type": "int" },
+      { "name": "unit_price", "type": "numeric(10,2)" } ] },
+    { "name": "shipment", "group": "sales", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "order_id", "type": "uuid", "fk": true },
+      { "name": "carrier", "type": "text" },
+      { "name": "shipped_at", "type": "timestamp" } ] },
+    { "name": "category", "group": "catalog", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "parent_id", "type": "uuid", "fk": true },
+      { "name": "name", "type": "text" } ] },
+    { "name": "product", "group": "catalog", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "category_id", "type": "uuid", "fk": true },
+      { "name": "title", "type": "text" },
+      { "name": "price", "type": "numeric(10,2)" } ] },
+    { "name": "supplier", "group": "catalog", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "name", "type": "text" } ] },
+    { "name": "product_supplier", "group": "catalog", "columns": [
+      { "name": "product_id", "type": "uuid", "pk": true, "fk": true },
+      { "name": "supplier_id", "type": "uuid", "pk": true, "fk": true },
+      { "name": "lead_days", "type": "int" } ] },
+    { "name": "invoice", "group": "billing", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "order_id", "type": "uuid", "fk": true },
+      { "name": "issued_at", "type": "date" },
+      { "name": "total", "type": "numeric(12,2)" } ] },
+    { "name": "payment", "group": "billing", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "invoice_id", "type": "uuid", "fk": true },
+      { "name": "amount", "type": "numeric(12,2)" },
+      { "name": "paid_at", "type": "timestamp" } ] },
+    { "name": "audit_log", "columns": [
+      { "name": "id", "type": "bigint", "pk": true },
+      { "name": "customer_id", "type": "uuid", "fk": true },
+      { "name": "entity", "type": "text" },
+      { "name": "action", "type": "text" },
+      { "name": "at", "type": "timestamp" } ] }
+  ],
+  "relationships": [
+    { "from": "address", "to": "customer", "fromCard": "0..*", "toCard": "1",
+      "kind": "referenced", "columns": ["customer_id", "id"] },
+    { "from": "order", "to": "customer", "fromCard": "0..*", "toCard": "1",
+      "kind": "referenced", "columns": ["customer_id", "id"], "label": "placed by" },
+    { "from": "order", "to": "address", "fromCard": "0..*", "toCard": "0..1",
+      "kind": "referenced", "columns": ["shipping_address_id", "id"], "label": "ships to" },
+    { "from": "order_line", "to": "order", "fromCard": "0..*", "toCard": "1",
+      "kind": "owned", "columns": ["order_id", "id"] },
+    { "from": "order_line", "to": "product", "fromCard": "0..*", "toCard": "1",
+      "kind": "referenced", "columns": ["product_id", "id"] },
+    { "from": "category", "to": "category", "fromCard": "0..*", "toCard": "0..1",
+      "kind": "referenced", "columns": ["parent_id", "id"], "label": "parent" },
+    { "from": "product", "to": "category", "fromCard": "0..*", "toCard": "1",
+      "kind": "referenced", "columns": ["category_id", "id"] },
+    { "from": "product_supplier", "to": "product", "fromCard": "0..*", "toCard": "1",
+      "kind": "owned", "columns": ["product_id", "id"] },
+    { "from": "product_supplier", "to": "supplier", "fromCard": "0..*", "toCard": "1",
+      "kind": "owned", "columns": ["supplier_id", "id"] },
+    { "from": "invoice", "to": "order", "fromCard": "0..1", "toCard": "1",
+      "kind": "referenced", "columns": ["order_id", "id"] },
+    { "from": "payment", "to": "invoice", "fromCard": "0..*", "toCard": "1",
+      "kind": "referenced", "columns": ["invoice_id", "id"] },
+    { "from": "shipment", "to": "order", "fromCard": "0..*", "toCard": "1",
+      "kind": "referenced", "columns": ["order_id", "id"] },
+    { "from": "audit_log", "to": "customer", "fromCard": "0..*", "toCard": "0..1",
+      "kind": "referenced", "columns": ["customer_id", "id"] }
+  ]
+}

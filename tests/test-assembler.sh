@@ -11,11 +11,11 @@ FIX="$ROOT/tests/fixtures/erd"
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/artifacts-asm.XXXXXX")
 trap 'rm -rf "$TMP"' EXIT
 
-# a project theme: a complete copy of the default with a few values changed
+# a project theme: a complete copy of the default (system fonts, no import) with a few values changed
 PROJECT="$TMP/project-theme.css"
 python3 - "$ROOT/shared/themes/default.css" "$PROJECT" <<'PY'
 import sys
-t = open(sys.argv[1]).read().replace("#2a4d8f", "#2a8f4d").replace("--radius: 3px", "--radius: 6px")
+t = open(sys.argv[1]).read().replace("#2563eb", "#2a8f4d").replace("--radius: 8px", "--radius: 6px")
 open(sys.argv[2], "w").write(t)
 PY
 
@@ -23,14 +23,24 @@ check_page() { # check_page <page> <label>
     local page="$1" label="$2" url
     head -c 15 "$page" | grep -qi '<!doctype html>' || fail "$label" "page does not start with a doctype"
     if grep -q '{{[A-Z_]*}}' "$page"; then fail "$label" "unfilled placeholder in the page"; fi
-    # the theme opens its stylesheet with the @import
-    python3 - "$page" <<'PY' || fail "$label" "the first style element does not open with the theme's @import"
+    # a theme that imports fonts opens its stylesheet with the @import; one with system fonts has none
+    python3 - "$page" <<'PY' || fail "$label" "the theme's @import does not open its stylesheet, or the page names a font source other than Google Fonts"
 import re, sys
 t = open(sys.argv[1]).read()
 m = re.search(r'<style id="theme">\s*(.*?)</style>', t, re.S)
 body = re.sub(r"/\*.*?\*/", "", m.group(1), flags=re.S).lstrip()
-sys.exit(0 if body.startswith("@import") else 1)
+if "@import" in body:
+    ok = body.startswith("@import") and all(u.startswith("https://fonts.googleapis.com/") for u in re.findall(r'@import url\("([^"]+)"\)', body))
+    sys.exit(0 if ok else 1)
+sys.exit(0)
 PY
+    # the Dark mode toggle replaces the three-button switch; the page head carries zoom and the cards exist
+    grep -q 'type="checkbox" id="mode-toggle" role="switch"' "$page" || fail "$label" "the page has no Dark mode toggle"
+    grep -q '<span class="mode-label">Dark mode</span>' "$page" || fail "$label" "the toggle is not labelled Dark mode"
+    grep -qE 'mode-switch|data-mode=|aria-pressed' "$page" && fail "$label" "the page still carries the System / Light / Dark switch"
+    for id in zoom-out zoom-in zoom-fit zoom-actual legend-card details-card; do
+        grep -q "id=\"$id\"" "$page" || fail "$label" "the page lacks #$id"
+    done
     # every external script is on an allowed CDN with an exact version
     for url in $(grep -oE '<script[^>]* src="[^"]+"' "$page" | grep -oE 'src="[^"]+"' | sed 's/^src="//; s/"$//'); do
         printf '%s' "$url" | grep -qE '^https://(cdn\.jsdelivr\.net/npm/[^/@]+@[0-9]+\.[0-9]+\.[0-9]+/|cdnjs\.cloudflare\.com/ajax/libs/[^/]+/[0-9]+\.[0-9]+\.[0-9]+/|unpkg\.com/[^/@]+@[0-9]+\.[0-9]+\.[0-9]+/)' \
@@ -57,7 +67,21 @@ done
 
 # the project theme's values are what the page carries
 grep -q '#2a8f4d' "$TMP/small-project-theme.html" || fail "assembler:project theme" "the page does not use the project theme's values"
-grep -q '#2a4d8f' "$TMP/small-project-theme.html" && fail "assembler:project theme" "the default theme's accent leaked into the page"
+grep -q '#2563eb' "$TMP/small-project-theme.html" && fail "assembler:project theme" "the default theme's accent leaked into the page"
+
+# a system-font theme makes no font request; the alternate theme loads its fonts from Google Fonts
+grep -q 'fonts.googleapis.com' "$TMP/small-default.html" && fail "assembler:system fonts" "the default page requests web fonts"
+grep -q 'fonts.googleapis.com' "$TMP/small-alt.html" || fail "assembler:web fonts" "the alternate page does not load its Google Fonts"
+
+# a theme that imports from another host is refused, nothing written
+python3 - "$ROOT/shared/themes/alt.css" "$TMP/foreign.css" <<'PY'
+import sys
+open(sys.argv[2], "w").write(open(sys.argv[1]).read().replace("fonts.googleapis.com", "fonts.example.org"))
+PY
+rm -f "$TMP/foreign.html"
+msg=$(python3 -I "$ASM" --type erd --model "$FIX/valid/small.erd.json" --theme "$TMP/foreign.css" --out "$TMP/foreign.html" 2>&1) && fail "assembler:foreign font host" "accepted"
+[ ! -e "$TMP/foreign.html" ] || fail "assembler:foreign font host" "a page was written"
+printf '%s' "$msg" | grep -qF 'fonts.example.org' || fail "assembler:foreign font host" "message does not name the source: $msg"
 
 # title and description: escaped, shown as heading and under it
 cat > "$TMP/title.erd.json" <<'JSON'

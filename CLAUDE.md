@@ -15,24 +15,24 @@ Two guarantees bind every change to the plugin:
 
 Their checkable form is the `visual-contract` skill (invariants VC-1 to VC-6). The same guarantees are in `openspec/config.yaml`, which injects them into every OpenSpec artifact: change both together.
 
-The visual design is decided. The role vocabulary and drawing rules (`design.md`) live in the `visual-contract` skill under `references/`; the values live only in the plugin's themes, `shared/themes/default.css` and `shared/themes/alt.css` (a second theme for themability checks), each opening with the Google Fonts it needs. Artifact pages are the primary target medium. Changing the principle, the vocabulary or the default values is the user's decision.
+The visual design is decided. The role vocabulary and drawing rules (`design.md`) live in the `visual-contract` skill under `references/`; the values live only in the plugin's themes, `shared/themes/default.css` (system fonts, nothing loaded) and `shared/themes/alt.css` (the former default look, a second theme for themability checks, loading its fonts from Google Fonts). Artifact pages are the primary target medium. Changing the principle, the vocabulary or the default values is the user's decision.
 
 ## State
 
-The plugin exists (version 0.1.0) with one artifact type, ERD. It is published at `github.com/MrBogomips/artifacts` and installs with `claude plugin marketplace add MrBogomips/artifacts` then `claude plugin install artifacts@artifacts`. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
+The plugin exists (version 0.2.0) with one artifact type, ERD. It is published at `github.com/MrBogomips/artifacts` and installs with `claude plugin marketplace add MrBogomips/artifacts` then `claude plugin install artifacts@artifacts`. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
 
 ```
 .claude-plugin/          manifests (shipped)
 shared/themes/           the style source: default.css, alt.css (shipped)
-shared/page/             page shell, page.css (the design's role classes), core.js (switch, measurement, primitives) (shipped)
+shared/page/             page shell, page.css (the design's role classes and the page chrome), core.js (measurement, primitives, highlight registry), chrome.js (Dark mode toggle, zoom, legend and details cards) (shipped)
 shared/scripts/          artifact_page.py, the assembler: validates a model, checks the theme, writes one HTML page (shipped)
-skills/erd/              SKILL.md, references/model.md, scripts/erd_model.py (validation), assets/erd.js (renderer) and erd.json (pinned elkjs) (shipped)
+skills/erd/              SKILL.md, references/model.md, scripts/erd_model.py (validation), assets/erd.js (renderer), erd-layout.js (layout) and erd.json (pinned elkjs) (shipped)
 tests/                   structural tests and fixtures (not shipped)
 evals/                   skill testbeds, run.sh, kpi.py (not shipped)
 .claude/                 the development harness (not shipped)
 ```
 
-A later artifact type adds a folder under `skills/` with its own model, validator and renderer, and touches `shared/` only for a new primitive. A page is assembled in a fixed order: theme, page styles, `core.js`, the type's external scripts, the type renderer, the model as JSON. External scripts load only from `cdn.jsdelivr.net`, `cdnjs.cloudflare.com` or `unpkg.com`, pinned to an exact version. The ERD layout uses `elkjs` 0.11.1 from jsDelivr, with a grid fallback and a notice when it cannot load.
+A later artifact type adds a folder under `skills/` with its own model, validator and renderer, and touches `shared/` only for a new primitive. A page is assembled in a fixed order: theme, page styles, `core.js`, `chrome.js`, the type's external scripts, the type renderer (its `<type>-*.js` helper files first, then `<type>.js`), the model as JSON. External scripts load only from `cdn.jsdelivr.net`, `cdnjs.cloudflare.com` or `unpkg.com`, pinned to an exact version. The ERD layout uses `elkjs` 0.11.1 from jsDelivr, with a grid fallback and a notice when it cannot load.
 
 ## Commands
 
@@ -72,6 +72,7 @@ Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((V
 | 2026-11-17 | Added the visual design: role vocabulary, drawing rules, default theme, alternate theme | `skills/visual-contract` | design chosen by the user from three explored directions |
 | 2026-11-17 | Theme values moved to the plugin's `shared/themes/`; `visual-contract` points to them; ERD notation extended (ring, owned and referenced lines, dashed connector variant) | `skills/visual-contract` | one style source (VC-1); real ERDs need optionality and ownership |
 | 2026-11-17 | Added the `skill-eval` harness skill, Phase 3b (evaluate) in the orchestrator, and the Effectiveness rules in `openspec/config.yaml` | `skills/skill-eval`, `skills/artifacts-orchestrator`, `openspec/config.yaml` | an artifact skill must prove it makes the artifact cheaper to produce, and the user decides adoption |
+| 2026-11-17 | Reference-aligned design (user's decision, change `align-design-with-reference-erd`): pale 34/24 left-aligned header bands, zones, key chips, system fonts in the default theme, highlighting, details table, zoom from 1:1, a two-state Dark mode toggle in place of the System / Light / Dark switch; the former default becomes the alternate theme | `skills/visual-contract`, `shared/`, `skills/erd` | the plugin's ERD read worse than a reference page the user preferred; align the whole design while ERD is the only type |
 | 2026-11-17 | Documentation step: after `adopt`, `python3 evals/kpi.py doc` writes the skill's Performance section and the README skills table; the structural tests check them | `skills/skill-eval`, `skills/artifacts-orchestrator`, `openspec/config.yaml` | capabilities and measured performance are part of a skill's delivery, in one format for every skill |
 
 ## Working documents
@@ -92,7 +93,7 @@ Settle these through an OpenSpec change; none is decided, so do not assume an an
 - **Relationship with the existing `plantuml` plugin** (in `MrBogomips/claude-code`): it already authors UML, WBS, Gantt, C4 and other diagram types with policy-driven theming and multi-target rendering. This plugin may build on it, depend on it, or replace part of it.
 - **Secondary rendering targets**: Artifact pages are the primary medium (decided); which other formats the skills emit (diagram source, standalone SVG, images for documents) is open.
 
-Decided by the `add-erd-artifact` change: the mechanism of the shared visual language. The style source is `shared/themes/` (CSS files carrying their fonts), a project supplies its own theme as a file with the same token set (`--theme <path>`), the switch is built in `shared/page/core.js`, and `artifact_page.py` assembles the page.
+Decided by the `add-erd-artifact` change: the mechanism of the shared visual language. The style source is `shared/themes/` (CSS files carrying their fonts), a project supplies its own theme as a file with the same token set (`--theme <path>`), the toggle is built in `shared/page/chrome.js` (it was a three-button switch in `core.js` until 0.2.0), and `artifact_page.py` assembles the page.
 
 ## Reference repositories
 

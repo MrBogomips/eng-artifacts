@@ -13,26 +13,48 @@
 <script id="core">
 {{CORE_JS}}
 </script>
+<script id="chrome">
+{{CHROME_JS}}
+</script>
 </head>
 <body data-type="{{TYPE}}">
-<div class="page">
-  <header class="page-head">
-    <div class="page-titles">
-      <h1 class="page-title">{{TITLE}}</h1>
+<header class="page-head">
+  <div class="page-titles">
+    <h1 class="page-title">{{TITLE}}</h1>
 {{DESCRIPTION}}
+    <p class="page-meta" id="page-meta" hidden></p>
+  </div>
+  <div class="page-controls">
+    <div class="zoom" role="group" aria-label="Zoom">
+      <button type="button" id="zoom-out" aria-label="Zoom out" title="Zoom out">&minus;</button>
+      <span class="zoom-level" id="zoom-level" aria-live="polite">100%</span>
+      <button type="button" id="zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
+      <button type="button" id="zoom-fit" title="Fit the drawing to the width of its frame">Fit</button>
+      <button type="button" id="zoom-actual" title="Actual size">1:1</button>
     </div>
-    <div class="mode-switch" role="group" aria-label="Color mode">
-      <button type="button" data-mode="system" aria-pressed="true">System</button>
-      <button type="button" data-mode="light" aria-pressed="false">Light</button>
-      <button type="button" data-mode="dark" aria-pressed="false">Dark</button>
-    </div>
-  </header>
-  <main>
-    <div id="notices"></div>
-    <div id="errors" role="alert"></div>
-    <div class="frame" id="frame"><div id="drawing"></div></div>
-  </main>
-</div>
+    <label class="mode-toggle" title="Switch between light and dark mode">
+      <input type="checkbox" id="mode-toggle" role="switch">
+      <span class="mode-track"><span class="mode-thumb"></span></span>
+      <span class="mode-label">Dark mode</span>
+    </label>
+  </div>
+</header>
+<main class="page">
+  <div id="notices"></div>
+  <div id="errors" role="alert"></div>
+  <div class="frame" id="frame"><div id="drawing"></div></div>
+  <p class="hint" id="hint" hidden>Point at a node, a connector or a row of the table to highlight what it connects; on a touch screen, tap it.</p>
+  <div class="below" id="below" hidden>
+    <section class="card" id="legend-card" aria-labelledby="legend-title" hidden>
+      <h2 class="card-title" id="legend-title">Legend</h2>
+      <div id="legend"></div>
+    </section>
+    <section class="card" id="details-card" aria-labelledby="details-title" hidden>
+      <h2 class="card-title" id="details-title">Details</h2>
+      <div class="card-scroll" id="details"></div>
+    </section>
+  </div>
+</main>
 {{EXTERNAL_SCRIPTS}}
 <script id="renderer">
 {{TYPE_JS}}

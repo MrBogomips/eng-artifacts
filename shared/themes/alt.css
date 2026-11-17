@@ -1,96 +1,114 @@
-/* Alternate theme, for checking that the plugin is themable (VC-4).
-   Deliberately unlike the default in every group of tokens: tinted fills, soft corners, other hues.
+/* Alternate theme: the plugin's former default look. Header bands carry the structure; navy ink on
+   cool paper; one orange mark for what is critical. Solid bands with inverted text, small corners,
+   Space Grotesk over Inter from Google Fonts. It differs from the default theme in every group of
+   tokens, which is what proves that a page is restyled by its theme alone.
    A theme is this set of tokens and nothing else: every token, in light and in dark.
    Shape: light values on :root, then the dark values twice, once for the system preference and once
-   for an explicit choice, so a page's light/dark switch (data-theme on the root element) wins both
-   ways. The two dark blocks must stay identical.
-   Fonts: the @import below is the theme's font source (Google Fonts only); the three font tokens
+   for an explicit choice, so a page's light/dark toggle (data-theme on the root element) wins both
+   ways. The two dark blocks must stay identical. A value that is not a color (a length, a mix, an
+   opacity) has one value for both modes and lives in the light block only.
+   Fonts: the import below is the theme's font source (Google Fonts only); the three font tokens
    name the families it loads, each with a fallback stack. */
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,600&family=Fraunces:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;1,600&family=Space+Grotesk:wght@500;600&display=swap");
 
 :root {
   /* Surfaces */
-  --canvas:        #f1f1f6; /* page ground */
-  --surface:       #ffffff; /* drawing panel */
-  --node:          #ffffff; /* node body */
+  --canvas:        #eef1f6; /* page ground */
+  --surface:       #fbfcfe; /* drawing panel */
+  --node:          #fbfcfe; /* node body */
 
   /* Ink */
-  --ink:           #1b1a28; /* text, primary */
-  --ink-2:         #5c5a70; /* text, secondary */
-  --line:          #807e96; /* connectors, neutral borders */
-  --grid:          #e2e1eb; /* gridlines, hairlines */
-  --neutral:       #807e96; /* a node outside every group, in a diagram that has groups */
+  --ink:           #13223a; /* text, primary */
+  --ink-2:         #4d5d78; /* text, secondary */
+  --line:          #5a6c8c; /* connectors, neutral borders */
+  --grid:          #cfd7e3; /* gridlines, hairlines */
+  --neutral:       #5a6c8c; /* a node outside every group, in a diagram that has groups */
 
   /* Emphasis */
-  --accent:        #6a3fe0; /* a node of a diagram that defines no groups */
-  --mark:          #6a3fe0; /* critical path, milestone, today, emphasized edge */
-  --band-ink:      #1b1a28; /* text on a header band */
+  --accent:        #2a4d8f; /* a node of a diagram that defines no groups */
+  --mark:          #c2410c; /* critical path, milestone, today, emphasized edge */
+  --band-ink:      #fbfcfe; /* text on a header band */
 
   /* Status */
-  --status-done:   #188a52;
-  --status-active: #2f6fed;
-  --status-risk:   #b97800;
-  --status-late:   #d83a3a;
-  --status-todo:   #8f8da3;
+  --status-done:   #1f7a4d;
+  --status-active: #2a5fc4;
+  --status-risk:   #a86a00;
+  --status-late:   #c0362c;
+  --status-todo:   #7d8aa0;
 
   /* Groups: workstream, lane, bounded context */
-  --group-1:       #2f6fed;
-  --group-2:       #0d8f84;
-  --group-3:       #c06a08;
-  --group-4:       #cc3d8b;
-  --group-5:       #5b6b8c;
+  --group-1:       #2a5fc4;
+  --group-2:       #0d7983;
+  --group-3:       #6a4fb3;
+  --group-4:       #94640f;
+  --group-5:       #b23f68;
+
+  /* Keys: the text of a chip; its ground is this color mixed into the node */
+  --key-primary:   #8a4b08;
+  --key-foreign:   #5a3fa0;
+  --key-unique:    #0b6b78;
 
   /* Type */
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Geometry */
-  --radius: 10px;        /* node corners */
-  --stroke: 1.5px;     /* node outlines, connectors */
+  --radius: 3px;        /* node corners */
+  --stroke: 1.25px;     /* node outlines, connectors */
   --arrowhead: 8px;     /* length of a connector's head */
-  --panel-radius: 14px;  /* the frame around a drawing */
+  --panel-radius: 4px;  /* the frame around a drawing, the cards */
+  --zone-radius: 6px;   /* corners of a zone */
 
   /* Treatment: how much of a node's group color goes into each part of it */
-  --fill-mix: 13%;      /* node body */
-  --stroke-mix: 100%;   /* node outline */
-  --band-mix: 27%;    /* header band */
-  --bar-mix: 24%;      /* unfinished part of a schedule bar */
-  --lane-mix: 18%;     /* lane header */
+  --fill-mix: 5%;      /* node body */
+  --stroke-mix: 65%;   /* node outline */
+  --band-mix: 100%;    /* header band */
+  --bar-mix: 30%;      /* unfinished part of a schedule bar */
+  --lane-mix: 15%;     /* lane header */
+  --zone-mix: 5%;      /* the ground of a zone */
+  --chip-mix: 14%;     /* the ground of a chip */
+  --highlight-mix: 14%; /* the ground of a highlighted row */
+  --dim: 0.25;         /* opacity of what is not highlighted */
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     /* Surfaces */
-    --canvas:        #121119; /* page ground */
-    --surface:       #191824; /* drawing panel */
-    --node:          #1e1d2b; /* node body */
+    --canvas:        #0c1422; /* page ground */
+    --surface:       #111b2d; /* drawing panel */
+    --node:          #111b2d; /* node body */
 
     /* Ink */
-    --ink:           #ecebf5; /* text, primary */
-    --ink-2:         #a9a7be; /* text, secondary */
-    --line:          #8684a0; /* connectors, neutral borders */
-    --grid:          #2d2b3f; /* gridlines, hairlines */
-    --neutral:       #8684a0; /* a node outside every group, in a diagram that has groups */
+    --ink:           #e1e9f7; /* text, primary */
+    --ink-2:         #9aaac6; /* text, secondary */
+    --line:          #8497b8; /* connectors, neutral borders */
+    --grid:          #26344d; /* gridlines, hairlines */
+    --neutral:       #8497b8; /* a node outside every group, in a diagram that has groups */
 
     /* Emphasis */
-    --accent:        #a993ff; /* a node of a diagram that defines no groups */
-    --mark:          #a993ff; /* critical path, milestone, today, emphasized edge */
-    --band-ink:      #ecebf5; /* text on a header band */
+    --accent:        #8db4ff; /* a node of a diagram that defines no groups */
+    --mark:          #ff9c66; /* critical path, milestone, today, emphasized edge */
+    --band-ink:      #0c1422; /* text on a header band */
 
     /* Status */
-    --status-done:   #52d08e;
-    --status-active: #78a4ff;
-    --status-risk:   #f0b840;
-    --status-late:   #ff7d7d;
-    --status-todo:   #6e6c85;
+    --status-done:   #5fcf96;
+    --status-active: #78aaff;
+    --status-risk:   #e6b445;
+    --status-late:   #ff8078;
+    --status-todo:   #71809a;
 
     /* Groups: workstream, lane, bounded context */
-    --group-1:       #78a4ff;
-    --group-2:       #45cdbd;
-    --group-3:       #f0a445;
-    --group-4:       #f284c0;
-    --group-5:       #9eabc9;
+    --group-1:       #78aaff;
+    --group-2:       #55cfdb;
+    --group-3:       #b5a3ff;
+    --group-4:       #e0b866;
+    --group-5:       #f191b3;
+
+    /* Keys: the text of a chip; its ground is this color mixed into the node */
+    --key-primary:   #f0b45a;
+    --key-foreign:   #b8a6ff;
+    --key-unique:    #5fd3e0;
 
     color-scheme: dark;
   }
@@ -98,35 +116,40 @@
 
 :root[data-theme="dark"] {
   /* Surfaces */
-  --canvas:        #121119; /* page ground */
-  --surface:       #191824; /* drawing panel */
-  --node:          #1e1d2b; /* node body */
+  --canvas:        #0c1422; /* page ground */
+  --surface:       #111b2d; /* drawing panel */
+  --node:          #111b2d; /* node body */
 
   /* Ink */
-  --ink:           #ecebf5; /* text, primary */
-  --ink-2:         #a9a7be; /* text, secondary */
-  --line:          #8684a0; /* connectors, neutral borders */
-  --grid:          #2d2b3f; /* gridlines, hairlines */
-  --neutral:       #8684a0; /* a node outside every group, in a diagram that has groups */
+  --ink:           #e1e9f7; /* text, primary */
+  --ink-2:         #9aaac6; /* text, secondary */
+  --line:          #8497b8; /* connectors, neutral borders */
+  --grid:          #26344d; /* gridlines, hairlines */
+  --neutral:       #8497b8; /* a node outside every group, in a diagram that has groups */
 
   /* Emphasis */
-  --accent:        #a993ff; /* a node of a diagram that defines no groups */
-  --mark:          #a993ff; /* critical path, milestone, today, emphasized edge */
-  --band-ink:      #ecebf5; /* text on a header band */
+  --accent:        #8db4ff; /* a node of a diagram that defines no groups */
+  --mark:          #ff9c66; /* critical path, milestone, today, emphasized edge */
+  --band-ink:      #0c1422; /* text on a header band */
 
   /* Status */
-  --status-done:   #52d08e;
-  --status-active: #78a4ff;
-  --status-risk:   #f0b840;
-  --status-late:   #ff7d7d;
-  --status-todo:   #6e6c85;
+  --status-done:   #5fcf96;
+  --status-active: #78aaff;
+  --status-risk:   #e6b445;
+  --status-late:   #ff8078;
+  --status-todo:   #71809a;
 
   /* Groups: workstream, lane, bounded context */
-  --group-1:       #78a4ff;
-  --group-2:       #45cdbd;
-  --group-3:       #f0a445;
-  --group-4:       #f284c0;
-  --group-5:       #9eabc9;
+  --group-1:       #78aaff;
+  --group-2:       #55cfdb;
+  --group-3:       #b5a3ff;
+  --group-4:       #e0b866;
+  --group-5:       #f191b3;
+
+  /* Keys: the text of a chip; its ground is this color mixed into the node */
+  --key-primary:   #f0b45a;
+  --key-foreign:   #b8a6ff;
+  --key-unique:    #5fd3e0;
 
   color-scheme: dark;
 }

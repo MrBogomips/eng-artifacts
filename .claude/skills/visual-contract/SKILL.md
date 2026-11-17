@@ -22,7 +22,7 @@ The look itself is defined in `references/` and in the plugin's theme files:
 | `shared/themes/default.css` (in the plugin, not in this skill) | The default theme: every token's value, light and dark, and the fonts it loads | you need a value, or the shape a theme must have |
 | `shared/themes/alt.css` (in the plugin, not in this skill) | A second complete theme, unlike the default in every group of tokens | checking that the plugin is themable (VC-4) |
 
-In short: structure carries the meaning. A solid header band names a work package, a class, a table and a pool alike, and the body stays plain. A group color says what a node belongs to; one mark color says what is critical. Artifacts are built for Artifact pages first.
+In short: structure carries the meaning. A header band (a pale tint of the group color) names a work package, a class, a table and a pool alike, and the body stays plain. A group color says what a node belongs to, and a zone shows the group as an area; one mark color says what is critical or under discussion, and highlights what the viewer points at; a chip tells the kind of a key. Artifacts are built for Artifact pages first.
 
 ## Invariants
 
@@ -30,13 +30,13 @@ In short: structure carries the meaning. A solid header band names a work packag
 
 **VC-2: semantic tokens.** Tokens are named for the role they play (`--surface`, `--ink`, `--mark`, `--status-done`, `--group-2`), not for how they look (`blue-500`, `gray-dark`). Artifact skills reference only the names in the role vocabulary of `references/design.md`. A role name stays true when the theme changes; an appearance name becomes a lie in the first dark mode.
 
-**VC-3: same role, same look.** A role that two artifact types share (node, header band, connector, status mark, group, mark, legend) is drawn the same way in both, by the formulas and rules of `references/design.md`. A new artifact type reuses existing roles before adding one, and gets its column in the role map. A new role is added to the vocabulary and to every theme, never to one skill.
+**VC-3: same role, same look.** A role that two artifact types share (node, header band, zone, chip, connector, status mark, group, mark, highlight, legend, details table) is drawn the same way in both, by the formulas and rules of `references/design.md`. A new artifact type reuses existing roles before adding one, and gets its column in the role map. A new role is added to the vocabulary and to every theme, never to one skill.
 
 **VC-4: themable.** A theme is a complete set of token values and nothing else. Applying another theme needs no edit to an artifact skill, a template or the artifact's content. The default theme is one theme among others, not a special case the code depends on.
 
 **VC-5: light and dark.** Every theme defines both modes for every color token. Every artifact is complete and legible in both: nothing disappears, nothing keeps the other mode's color, and text against its background reaches a contrast ratio of 4.5:1 (3:1 for large text and for the lines and shapes that carry meaning). The pairs to check are listed at the end of `references/design.md`.
 
-**VC-6: the switch.** An interactive artifact (a page the viewer opens) carries a visible light/dark switch, starts from the viewer's system preference, and applies the choice to the whole artifact. A static artifact (an image placed in a document) takes the mode as a render parameter, and both modes come from the same source without editing it.
+**VC-6: the switch.** An interactive artifact (a page the viewer opens) carries a visible light/dark switch (the "Dark mode" toggle), starts from the viewer's system preference, and applies the choice to the whole artifact. The switch's on, off and keyboard-focused states are told apart in every theme and mode. A static artifact (an image placed in a document) takes the mode as a render parameter, and both modes come from the same source without editing it.
 
 ## What is defined where
 
@@ -65,7 +65,7 @@ Render at least two artifact types, each in the default theme and in the alterna
 - Side by side across types: shared roles look the same, status marks keep their shapes, notation shapes are intact, no text is under 10.5px (VC-3).
 - Across themes: the artifact changed by switching the theme only (VC-4).
 - Across modes: complete and legible; measure contrast for text and meaning-carrying lines when in doubt (VC-5).
-- For an interactive artifact: operate the switch, check the starting mode against the system preference, check that no part stays behind (VC-6).
+- For an interactive artifact: operate the switch, check the starting mode against the system preference, check that no part stays behind, and capture the switch on, off, on-focused and off-focused in every theme and mode (VC-6).
 
 Use the renderer the artifact's medium needs and the session has (a browser driver for a page, the diagram tool's CLI for diagram source). Save each render under the run's folder in `_agents_workspace/` and cite it. If nothing in the session can render the medium, the result for the invariants that need a render is `not verified`. Never report an unrendered artifact as passing.
 

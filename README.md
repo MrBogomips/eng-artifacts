@@ -5,7 +5,7 @@ A Claude Code plugin that turns a request into a finished operational artifact: 
 What sets it apart:
 
 - **One visual language.** Every artifact type is drawn with the same roles (colors, line weights, node shapes), so the pages look like a family.
-- **Light and dark, with a switch.** Every page has a System / Light / Dark switch, and every theme works in both modes.
+- **Light and dark, with a toggle.** Every page has a Dark mode toggle that starts from your system preference and remembers your choice, and every theme works in both modes.
 - **Replaceable themes.** The look is a set of token values; swap the theme and every artifact changes with it.
 - **Cheaper than doing it by hand.** Each skill is measured against the same prompts run without the plugin, and its tokens and time are published below.
 
@@ -14,7 +14,7 @@ What sets it apart:
 <!-- skills:start -->
 | Skill | What it produces | Tokens | Time | Evaluated |
 |---|---|---:|---:|---|
-| [`erd`](skills/erd/README.md) | Entity relationship diagram as one self-contained HTML page, in crow's foot notation, with groups, light/dark switch and replaceable themes | -59.0% | -88.7% | 2026-11-17 |
+| [`erd`](skills/erd/README.md) | Entity relationship diagram as one self-contained HTML page, in crow's foot notation, with groups, light/dark switch and replaceable themes | -46.9% | -87.9% | 2026-11-17 |
 <!-- skills:end -->
 
 Tokens and Time are the change with the plugin against the same prompts without it (lower is better), summed over the skill's test cases; the skill's page has the per-case figures.
@@ -34,7 +34,7 @@ Inside a Claude Code session the same two steps are `/plugin marketplace add MrB
 
 - Claude Code with plugin support.
 - `python3` (3.8 or later, standard library only) on the machine where a skill runs: it validates the data model and assembles the page. A skill checks for it first and tells you when it is missing.
-- A network connection when a page is first opened: fonts load from Google Fonts and the ERD layout library from a CDN. Without them the page falls back to system fonts and a simple grid layout, and says so.
+- A network connection when a page is first opened: the ERD layout library loads from a CDN (and so do the fonts of a theme that uses Google Fonts; the default theme uses system fonts and loads none). Without the library the page falls back to a simple grid layout, and says so.
 
 ## Usage
 
@@ -42,7 +42,7 @@ Inside a Claude Code session the same two steps are `/plugin marketplace add MrB
 
 Full reference: [skills/erd/README.md](skills/erd/README.md).
 
-Ask in plain words. The skill writes a small JSON model (`<name>.erd.json`, data only) and runs a script that validates it and produces one HTML page: tables drawn as header-band nodes, crow's foot notation, relationships laid out automatically, and a System / Light / Dark switch.
+Ask in plain words. The skill writes a small JSON model (`<name>.erd.json`, data only) and runs a script that validates it and produces one HTML page: tables drawn as header-band nodes, crow's foot notation, relationships laid out automatically, each group drawn as a zone, key chips and a relationships table with linked highlighting, zoom, and a Dark mode toggle.
 
 From a description:
 

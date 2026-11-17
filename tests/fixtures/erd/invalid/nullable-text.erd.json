@@ -1,0 +1,4 @@
+{ "title": "t",
+  "entities": [ { "name": "order", "columns": [
+    { "name": "id", "type": "int", "pk": true },
+    { "name": "paid_at", "type": "timestamp", "nullable": "yes" } ] } ] }

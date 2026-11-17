@@ -13,9 +13,10 @@ GROUPS = {
     "emphasis": lambda n: n in ("accent", "mark", "band-ink"),
     "status": lambda n: n.startswith("status-"),
     "groups": lambda n: n.startswith("group-"),
+    "keys": lambda n: n.startswith("key-"),
     "fonts": lambda n: n.startswith("font-"),
-    "geometry": lambda n: n in ("radius", "stroke", "arrowhead", "panel-radius"),
-    "treatment": lambda n: n.endswith("-mix"),
+    "geometry": lambda n: n in ("radius", "stroke", "arrowhead", "panel-radius", "zone-radius"),
+    "treatment": lambda n: n.endswith("-mix") or n == "dim",
 }
 
 
@@ -32,8 +33,8 @@ def parse_theme(path):
     text = theme_tokens._strip_comments(raw)
     light, dark_media, dark_explicit = theme_tokens.read_theme(raw)
     return {
-        "imports": re.findall(r"@import\s+url\(\s*[\"']?([^\"')]+)[\"']?\s*\)", text),
-        "opens_with_import": text.lstrip().startswith("@import"),
+        "imports": theme_tokens.font_sources(raw),
+        "font_problems": theme_tokens.font_source_problems(raw),
         "light": light or {},
         "dark_media": dark_media or {},
         "dark_explicit": dark_explicit or {},

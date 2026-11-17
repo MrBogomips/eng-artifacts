@@ -1,4 +1,4 @@
-"""validate-themes: token sets, light and dark blocks, fonts, vocabulary, alternate vs default."""
+"""validate-themes: token sets, light and dark blocks, fonts and font sources, vocabulary, alternate vs default."""
 import os
 import re
 import sys
@@ -33,8 +33,9 @@ for name, t in themes.items():
     if not (t["has_light"] and t["has_dark_media"] and t["has_dark_explicit"]):
         bad(p, "needs a :root block, a prefers-color-scheme dark block and a :root[data-theme=\"dark\"] block")
         continue
-    if not t["opens_with_import"] or not any("fonts.googleapis.com" in u for u in t["imports"]):
-        bad(p, "must open with an @import of a Google Fonts stylesheet")
+    # a theme may load no web font at all; one that loads fonts loads them from Google Fonts only
+    for problem in t["font_problems"]:
+        bad(p, problem)
     light = t["light"]
     dm, de = t["dark_media"], t["dark_explicit"]
     color_light = {k for k, v in light.items() if is_color(v)}
@@ -64,10 +65,11 @@ for name, t in themes.items():
     for u in t["imports"]:
         for m in re.finditer(r"family=([^:&]+)", u):
             imported.add(m.group(1).replace("+", " "))
-    for f in sorted(fam_used - imported):
-        bad(p, "font \"%s\" is used by a font token but not loaded by the @import" % f)
-    for f in sorted(imported - fam_used):
-        bad(p, "font \"%s\" is loaded by the @import but no font token uses it" % f)
+    if t["imports"]:  # web fonts are loaded: the families named must be the families loaded
+        for f in sorted(fam_used - imported):
+            bad(p, "font \"%s\" is used by a font token but not loaded by the @import" % f)
+        for f in sorted(imported - fam_used):
+            bad(p, "font \"%s\" is loaded by the @import but no font token uses it" % f)
 
 # same token set in every theme
 if "default" in themes:
