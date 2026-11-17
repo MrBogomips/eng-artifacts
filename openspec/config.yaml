@@ -15,8 +15,8 @@ context: |
   The checkable form of both guarantees is .claude/skills/visual-contract/SKILL.md (invariants VC-1
   to VC-6). A change that would break an invariant is not acceptable as proposed.
   The visual design is decided: the role vocabulary (token names) and drawing rules are in
-  .claude/skills/visual-contract/references/design.md, the default theme in default-theme.css beside
-  it. Artifact pages are the primary target medium. A change uses those token names and does not
+  .claude/skills/visual-contract/references/design.md, and the theme values live only in the
+  plugin's shared/themes/ (default.css, alt.css). Artifact pages are the primary target medium. A change uses those token names and does not
   alter the design on its own.
 
   Spec coverage starts empty: a missing spec does not mean missing behavior. The first change to a
@@ -27,12 +27,15 @@ rules:
     - Name the artifact types and the parts of the shared visual language the change touches.
     - Include a "Visual contract" section that says, per invariant VC-1 to VC-6, how the change keeps it or why the change does not affect it.
     - A change that makes a design decision (new component, rejected alternative, trade-off) includes design.md.
+    - A change that adds or changes an artifact skill includes an "Effectiveness" section (see .claude/skills/skill-eval/SKILL.md) that states the testbed cases (easy, medium, complex), the targets (the defaults of 20% fewer tokens and 20% less time, or stricter ones, never looser), the model and effort, and says the user records adopt, rework or reject on the final evaluation.
   specs:
     - Capability paths are kebab-case.
     - A requirement about appearance names a semantic token role, never a literal color, font or size.
     - A capability that renders an artifact has at least one scenario for coherence with another artifact type and one for rendering in light and dark under a non-default theme.
   design:
     - List every token role the change adds or changes, and the artifact types that consume it.
+    - A change that adds or changes an artifact skill lists, for each testbed case, its prompt in outline and its mechanical graders (deliverable exists, expected names present, the skill was used), and no model-judged grader.
   tasks:
     - Tick each checkbox as soon as its task is done.
-    - End with a task for the visual-reviewer pass and a task to archive the change as the last commit before merge.
+    - A change that adds or changes an artifact skill has a task to write the testbed and run it once before the skill exists, to record the baseline and check that every case is fair.
+    - End with a task for the visual-reviewer pass, then a task to evaluate the final skill with evals/run.sh and record the user's decision (adopt, rework or reject) in evals/<skill>/RESULTS.md, then the documentation step (a task to write skills/<skill>/README.md with its `summary:` front block and the performance markers, run `python3 evals/kpi.py doc` after the adopt, and check that bash tests/run-structural-tests.sh passes), then a task to archive the change as the last commit before merge. Archive only after an adopt is recorded on an evaluation of the final version and the skill's README and the root README skills table show it.

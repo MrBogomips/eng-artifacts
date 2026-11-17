@@ -14,13 +14,13 @@ Both promises fail quietly. One skill with its own shade of blue, or one templat
 
 ## The design
 
-The look itself is defined in `references/`:
+The look itself is defined in `references/` and in the plugin's theme files:
 
 | File | Holds | Read it when |
 |---|---|---|
 | `references/design.md` | The principle, the role vocabulary (every token and what it is for), how each role is drawn, type, geometry, status marks, fixed notation shapes, and the map of roles across artifact types | building or reviewing anything visual; deciding which token to use; adding an artifact type |
-| `references/default-theme.css` | The default theme: every token's value, light and dark, in the shape an Artifact page expects | you need a value, or the shape a theme must have |
-| `references/alt-theme.css` | A second complete theme, unlike the default in every group of tokens | checking that the plugin is themable (VC-4) |
+| `shared/themes/default.css` (in the plugin, not in this skill) | The default theme: every token's value, light and dark, and the fonts it loads | you need a value, or the shape a theme must have |
+| `shared/themes/alt.css` (in the plugin, not in this skill) | A second complete theme, unlike the default in every group of tokens | checking that the plugin is themable (VC-4) |
 
 In short: structure carries the meaning. A solid header band names a work package, a class, a table and a pool alike, and the body stays plain. A group color says what a node belongs to; one mark color says what is critical. Artifacts are built for Artifact pages first.
 
@@ -40,7 +40,7 @@ In short: structure carries the meaning. A solid header band names a work packag
 
 ## What is defined where
 
-This skill defines the look and the invariants. The plugin's files implement them. Until the plugin has its own shared style source, `references/default-theme.css` is the definition of the default theme: the OpenSpec change that creates the plugin's style source takes its values and its token names from here. From that change on, the plugin's file is the single source (VC-1 applies to this skill too): replace `references/default-theme.css` and `references/alt-theme.css` with a pointer to the plugin's files in the same change, so the values never live in two places.
+This skill defines the look and the invariants. The plugin's files implement them, and the plugin's `shared/themes/` is the single source of every token value and font family (VC-1 applies to this skill too): this skill holds no copy of a value, so the values live in one place. `default.css` is the default theme and `alt.css` the alternate one; a project may supply a theme of its own with the same token set. The vocabulary of tokens is the table in `references/design.md`; a structural test compares it with `default.css`.
 
 The specs under `openspec/specs/` are authoritative for the mechanism: where the style source lives, the theme file format, how a project overrides a theme, how the switch is built. Read them before checking. Where no spec covers the mechanism yet, check the invariants against what the change under review proposes, and say in the result that the mechanism is not specified.
 

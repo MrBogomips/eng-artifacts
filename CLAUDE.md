@@ -15,13 +15,24 @@ Two guarantees bind every change to the plugin:
 
 Their checkable form is the `visual-contract` skill (invariants VC-1 to VC-6). The same guarantees are in `openspec/config.yaml`, which injects them into every OpenSpec artifact: change both together.
 
-The visual design is decided and lives in the same skill, under `references/`: the role vocabulary and drawing rules (`design.md`), the default theme (`default-theme.css`) and a second theme for themability checks (`alt-theme.css`). Artifact pages are the primary target medium. Changing the principle, the vocabulary or the default values is the user's decision.
+The visual design is decided. The role vocabulary and drawing rules (`design.md`) live in the `visual-contract` skill under `references/`; the values live only in the plugin's themes, `shared/themes/default.css` and `shared/themes/alt.css` (a second theme for themability checks), each opening with the Google Fonts it needs. Artifact pages are the primary target medium. Changing the principle, the vocabulary or the default values is the user's decision.
 
 ## State
 
-The repository holds the development harness (`.claude/`) and the OpenSpec setup (`openspec/`). The plugin itself does not exist yet: no manifest, no plugin skills, no tests. Replace this section with the real structure as the scaffold lands.
+The plugin exists (version 0.1.0) with one artifact type, ERD. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
 
-Layout (decided): a single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`. The development harness under `.claude/` is not part of the plugin.
+```
+.claude-plugin/          manifests (shipped)
+shared/themes/           the style source: default.css, alt.css (shipped)
+shared/page/             page shell, page.css (the design's role classes), core.js (switch, measurement, primitives) (shipped)
+shared/scripts/          artifact_page.py, the assembler: validates a model, checks the theme, writes one HTML page (shipped)
+skills/erd/              SKILL.md, references/model.md, scripts/erd_model.py (validation), assets/erd.js (renderer) and erd.json (pinned elkjs) (shipped)
+tests/                   structural tests and fixtures (not shipped)
+evals/                   skill testbeds, run.sh, kpi.py (not shipped)
+.claude/                 the development harness (not shipped)
+```
+
+A later artifact type adds a folder under `skills/` with its own model, validator and renderer, and touches `shared/` only for a new primitive. A page is assembled in a fixed order: theme, page styles, `core.js`, the type's external scripts, the type renderer, the model as JSON. External scripts load only from `cdn.jsdelivr.net`, `cdnjs.cloudflare.com` or `unpkg.com`, pinned to an exact version. The ERD layout uses `elkjs` 0.11.1 from jsDelivr, with a grid fallback and a notice when it cannot load.
 
 ## Commands
 
@@ -29,9 +40,18 @@ Layout (decided): a single-plugin repository whose root is the plugin, as in `Mr
 openspec list                     # changes in flight (--specs for the specs)
 openspec validate --all --strict  # validate every change and spec
 openspec validate <id> --strict   # validate one change
+
+bash tests/run-structural-tests.sh   # every tests/validate-*.sh and tests/test-*.sh, plus `claude plugin validate . --strict` when claude is on PATH; needs bash, jq, python3
+bash tests/validate-themes.sh [dir]  # one structural test on its own
+python3 shared/scripts/artifact_page.py --type erd --model <file>.erd.json --theme <default|alt|path> --out <file>.html   # produce a page
+python3 skills/erd/scripts/erd_model.py <file>.erd.json   # validate an ERD model
+
+bash evals/run.sh <skill> [--model <id>] [--effort <level>] [--runs N] [-j N] [--baseline]   # evaluate a skill: with the plugin vs without it
 ```
 
-There are no build, lint or test commands yet.
+`evals/run.sh` starts real agent sessions (3 cases x 2 arms x 3 runs by default, model `claude-opus-5-5`, effort `medium`), with no cost ceiling and no cost confirmation, and never publishes a report. Raw results go to the ignored `evals/results/`; a summary is appended to `evals/<skill>/RESULTS.md` with a `Decision: pending` line that the user fills with `adopt`, `rework` or `reject`. The method is the `skill-eval` harness skill. There is no build or lint command.
+
+Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((VAR++))` under `set -e`.
 
 ## Harness: artifacts
 
@@ -49,12 +69,15 @@ There are no build, lint or test commands yet.
 | 2026-11-17 | Initial setup: OpenSpec, `artifact-builder`, `visual-reviewer`, `artifacts-orchestrator`, `visual-contract` | All | — |
 | 2026-11-17 | Pinned model and effort: builder `claude-sonnet-5-5` / high, reviewer `claude-opus-5-5` / high | `agents/artifact-builder.md`, `agents/visual-reviewer.md` | results must not vary with the session's model |
 | 2026-11-17 | Added the visual design: role vocabulary, drawing rules, default theme, alternate theme | `skills/visual-contract` | design chosen by the user from three explored directions |
+| 2026-11-17 | Theme values moved to the plugin's `shared/themes/`; `visual-contract` points to them; ERD notation extended (ring, owned and referenced lines, dashed connector variant) | `skills/visual-contract` | one style source (VC-1); real ERDs need optionality and ownership |
+| 2026-11-17 | Added the `skill-eval` harness skill, Phase 3b (evaluate) in the orchestrator, and the Effectiveness rules in `openspec/config.yaml` | `skills/skill-eval`, `skills/artifacts-orchestrator`, `openspec/config.yaml` | an artifact skill must prove it makes the artifact cheaper to produce, and the user decides adoption |
 
 ## Working documents
 
 - **Authoritative** (committed): `openspec/specs/`, the current behavior of the plugin.
 - **In flight** (committed): `openspec/changes/<id>/`. The approved design of a change is its `design.md`.
 - **History** (committed): `openspec/changes/archive/`.
+- **Evaluation** (committed): `evals/<skill>/` testbeds (prompts and graders) and `evals/<skill>/RESULTS.md` (sanitized summaries with the user's decisions); `evals/results/` holds raw runs and kept deliverables and is gitignored.
 - **Tooling** (committed): `openspec/config.yaml`, edited by hand; `.agents/skills/openspec-*`, linked from `.claude/skills/`, generated by OpenSpec. Never edit the generated skills. `openspec update` regenerates them to match the global profile of whoever runs it; this repository was generated with the `core` profile.
 - **Scratch** (gitignored): `_agents_workspace/`, the intermediate files of a harness run. Tool defaults such as `docs/superpowers/...` go here instead.
 
@@ -66,13 +89,14 @@ Settle these through an OpenSpec change; none is decided, so do not assume an an
 
 - **Relationship with the existing `plantuml` plugin** (in `MrBogomips/claude-code`): it already authors UML, WBS, Gantt, C4 and other diagram types with policy-driven theming and multi-target rendering. This plugin may build on it, depend on it, or replace part of it.
 - **Secondary rendering targets**: Artifact pages are the primary medium (decided); which other formats the skills emit (diagram source, standalone SVG, images for documents) is open.
-- **The mechanism of the shared visual language**: the token names and the default values are decided (`visual-contract` skill). Open: where the plugin's style source lives, the theme file format, how a project overrides a theme, how the switch is built. The change that creates the plugin's style source moves the theme files out of the skill, so the values live in one place.
+
+Decided by the `add-erd-artifact` change: the mechanism of the shared visual language. The style source is `shared/themes/` (CSS files carrying their fonts), a project supplies its own theme as a file with the same token set (`--theme <path>`), the switch is built in `shared/page/core.js`, and `artifact_page.py` assembles the page.
 
 ## Reference repositories
 
 The author's other plugin repositories carry conventions worth reusing here. Read them before inventing a layout; record in this file whichever ones this repository adopts.
 
-- `MrBogomips/agentic-harness`: single-plugin layout (`.claude-plugin/plugin.json` plus a one-entry `marketplace.json` pointing at `./`), `skills/*/SKILL.md`, shared knowledge under `shared/` referenced as `${CLAUDE_PLUGIN_ROOT}/shared/...`, version kept in sync between the two manifests, structural tests in `tests/`.
+- `MrBogomips/agentic-harness` (adopted: single-plugin layout, manifests kept in sync, structural tests under `tests/` run by one `run-structural-tests.sh`): single-plugin layout (`.claude-plugin/plugin.json` plus a one-entry `marketplace.json` pointing at `./`), `skills/*/SKILL.md`, shared knowledge under `shared/` referenced as `${CLAUDE_PLUGIN_ROOT}/shared/...`, version kept in sync between the two manifests, structural tests in `tests/`.
 - `MrBogomips/claude-code`: multi-plugin marketplace. Its `CLAUDE.md` lists skill frontmatter semantics that are easy to get wrong, the generic-usage principle (no dependence on the author's paths, global instructions or installed tools), and BSD-compatible shell rules. Its `plantuml/` plugin is the closest prior art for policy-driven visual consistency.
 
 On the author's machine both are checked out as siblings of this repository.

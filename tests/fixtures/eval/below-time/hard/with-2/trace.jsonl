@@ -1,0 +1,2 @@
+{"model": "fixture-model", "subtype": "init", "type": "system"}
+{"duration_ms": 72000, "modelUsage": {"model-a": {"cacheCreationInputTokens": 7000, "cacheReadInputTokens": 19596, "inputTokens": 4, "outputTokens": 1400}, "model-b": {"cacheCreationInputTokens": 0, "cacheReadInputTokens": 0, "inputTokens": 0, "outputTokens": 10}}, "num_turns": 6, "subtype": "success", "total_cost_usd": 0.28, "type": "result"}

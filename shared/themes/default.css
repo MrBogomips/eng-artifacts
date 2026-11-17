@@ -3,7 +3,10 @@
    A theme is this set of tokens and nothing else: every token, in light and in dark.
    Shape: light values on :root, then the dark values twice, once for the system preference and once
    for an explicit choice, so a page's light/dark switch (data-theme on the root element) wins both
-   ways. The two dark blocks must stay identical. */
+   ways. The two dark blocks must stay identical.
+   Fonts: the @import below is the theme's font source (Google Fonts only); the three font tokens
+   name the families it loads, each with a fallback stack. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;1,600&family=Space+Grotesk:wght@500;600&display=swap");
 
 :root {
   /* Surfaces */
@@ -16,10 +19,10 @@
   --ink-2:         #4d5d78; /* text, secondary */
   --line:          #5a6c8c; /* connectors, neutral borders */
   --grid:          #cfd7e3; /* gridlines, hairlines */
-  --neutral:       #5a6c8c; /* a node that belongs to no group */
+  --neutral:       #5a6c8c; /* a node outside every group, in a diagram that has groups */
 
   /* Emphasis */
-  --accent:        #2a4d8f; /* a node with no group set */
+  --accent:        #2a4d8f; /* a node of a diagram that defines no groups */
   --mark:          #c2410c; /* critical path, milestone, today, emphasized edge */
   --band-ink:      #fbfcfe; /* text on a header band */
 
@@ -68,10 +71,10 @@
     --ink-2:         #9aaac6; /* text, secondary */
     --line:          #8497b8; /* connectors, neutral borders */
     --grid:          #26344d; /* gridlines, hairlines */
-    --neutral:       #8497b8; /* a node that belongs to no group */
+    --neutral:       #8497b8; /* a node outside every group, in a diagram that has groups */
 
     /* Emphasis */
-    --accent:        #8db4ff; /* a node with no group set */
+    --accent:        #8db4ff; /* a node of a diagram that defines no groups */
     --mark:          #ff9c66; /* critical path, milestone, today, emphasized edge */
     --band-ink:      #0c1422; /* text on a header band */
 
@@ -104,10 +107,10 @@
   --ink-2:         #9aaac6; /* text, secondary */
   --line:          #8497b8; /* connectors, neutral borders */
   --grid:          #26344d; /* gridlines, hairlines */
-  --neutral:       #8497b8; /* a node that belongs to no group */
+  --neutral:       #8497b8; /* a node outside every group, in a diagram that has groups */
 
   /* Emphasis */
-  --accent:        #8db4ff; /* a node with no group set */
+  --accent:        #8db4ff; /* a node of a diagram that defines no groups */
   --mark:          #ff9c66; /* critical path, milestone, today, emphasized edge */
   --band-ink:      #0c1422; /* text on a header band */
 

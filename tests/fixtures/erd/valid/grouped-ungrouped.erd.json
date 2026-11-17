@@ -1,0 +1,27 @@
+{
+  "title": "Groups with an ungrouped table",
+  "description": "Two groups and one table outside both: the ungrouped band must not look like the first group.",
+  "groups": [
+    { "id": "sales", "label": "Sales" },
+    { "id": "catalog", "label": "Catalog" }
+  ],
+  "entities": [
+    { "name": "customer", "group": "sales", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "name", "type": "text" } ] },
+    { "name": "order", "group": "sales", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "customer_id", "type": "uuid", "fk": true } ] },
+    { "name": "product", "group": "catalog", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "title", "type": "text" } ] },
+    { "name": "audit_log", "columns": [
+      { "name": "id", "type": "uuid", "pk": true },
+      { "name": "customer_id", "type": "uuid", "fk": true },
+      { "name": "action", "type": "text" } ] }
+  ],
+  "relationships": [
+    { "from": "order", "to": "customer", "fromCard": "0..*", "toCard": "1", "columns": ["customer_id", "id"] },
+    { "from": "audit_log", "to": "customer", "fromCard": "0..*", "toCard": "0..1", "columns": ["customer_id", "id"], "label": "about" }
+  ]
+}

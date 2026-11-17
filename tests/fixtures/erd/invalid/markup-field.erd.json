@@ -1,0 +1,3 @@
+{ "title": "t",
+  "entities": [ { "name": "a", "x": 120, "y": 40, "style": "background: white",
+                  "columns": [ { "name": "id", "type": "int", "pk": true } ] } ] }

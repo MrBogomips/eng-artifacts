@@ -1,0 +1,339 @@
+{
+  "cases": [
+    {
+      "arms": {
+        "with": [
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "skill",
+                "passed": true,
+                "scored": false,
+                "weight": 1,
+                "withOnly": true
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "skill",
+                "passed": true,
+                "scored": false,
+                "weight": 1,
+                "withOnly": true
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "skill",
+                "passed": true,
+                "scored": false,
+                "weight": 1,
+                "withOnly": true
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          }
+        ],
+        "without": [
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          }
+        ]
+      },
+      "name": "easy"
+    },
+    {
+      "arms": {
+        "with": [
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "skill",
+                "passed": true,
+                "scored": false,
+                "weight": 1,
+                "withOnly": true
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "skill",
+                "passed": true,
+                "scored": false,
+                "weight": 1,
+                "withOnly": true
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "skill",
+                "passed": true,
+                "scored": false,
+                "weight": 1,
+                "withOnly": true
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          }
+        ],
+        "without": [
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "graders": [
+              {
+                "name": "file",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              },
+              {
+                "name": "entity-order",
+                "passed": true,
+                "scored": true,
+                "weight": 1,
+                "withOnly": false
+              }
+            ],
+            "passed": true,
+            "score": 1,
+            "tracePath": null
+          }
+        ]
+      },
+      "name": "hard"
+    }
+  ],
+  "claudeVersion": "0.0.0-fixture",
+  "schemaVersion": 1,
+  "suite": {
+    "modelOverride": "fixture-model",
+    "plugins": [
+      {
+        "name": "fixture",
+        "version": "1.2.3"
+      }
+    ]
+  }
+}

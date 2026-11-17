@@ -1,0 +1,12 @@
+{
+  "title": "Reporting line",
+  "entities": [
+    { "name": "employee", "columns": [
+      { "name": "id", "type": "int", "pk": true },
+      { "name": "name", "type": "text" },
+      { "name": "manager_id", "type": "int", "fk": true } ] }
+  ],
+  "relationships": [
+    { "from": "employee", "to": "employee", "fromCard": "0..*", "toCard": "0..1", "columns": ["manager_id", "id"], "label": "reports to" }
+  ]
+}

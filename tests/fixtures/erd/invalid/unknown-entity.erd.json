@@ -1,0 +1,3 @@
+{ "title": "t",
+  "entities": [ { "name": "order", "columns": [ { "name": "id", "type": "int", "pk": true } ] } ],
+  "relationships": [ { "from": "order", "to": "customer", "fromCard": "0..*", "toCard": "1" } ] }

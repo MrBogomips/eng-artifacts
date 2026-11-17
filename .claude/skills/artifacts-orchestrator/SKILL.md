@@ -1,6 +1,6 @@
 ---
 name: artifacts-orchestrator
-description: "Entry point for all work in the artifacts plugin repository: invoke before responding to any request here. Coordinates the spec process (OpenSpec), the artifact-builder and the visual-reviewer to deliver a change to the plugin with the visual contract intact. Use for: add or change an artifact skill (WBS, UML, any diagram), change the shared visual language, tokens, a theme, light or dark mode, the mode switch, the plugin manifest or the tests; audit the plugin's visual coherence. Also use for follow-ups: continue the change, re-run, run the review again, fix the review findings, update, modify, supplement, improve the previous result, archive the change."
+description: "Entry point for all work in the artifacts plugin repository: invoke before responding to any request here. Coordinates the spec process (OpenSpec), the artifact-builder and the visual-reviewer to deliver a change to the plugin with the visual contract intact. Use for: add or change an artifact skill (WBS, UML, any diagram), change the shared visual language, tokens, a theme, light or dark mode, the mode switch, the plugin manifest or the tests; audit the plugin's visual coherence; evaluate whether an artifact skill pays for itself. Also use for follow-ups: continue the change, re-run, run the review again, run the evaluation, record the decision, fix the review findings, update, modify, supplement, improve the previous result, archive the change."
 ---
 
 # Artifacts orchestrator
@@ -28,7 +28,9 @@ Intermediate files live under `_agents_workspace/<change-id>/` (gitignored). An 
 | Current behavior of the plugin | OpenSpec | `openspec/specs/` |
 | Progress of a change's tasks | OpenSpec | the checkboxes in `openspec/changes/<id>/tasks.md` |
 | The work item and its state (open, closed) | GitHub Issues | the issue |
-| Building, review, integration | this orchestrator | the phases below |
+| Whether a skill pays for itself: the method, the testbed, the KPI report | `skill-eval` skill, `evals/` | `.claude/skills/skill-eval/`, `evals/run.sh`, `evals/<skill>/` |
+| The adoption decision of an artifact skill | the user | the `Decision:` line in `evals/<skill>/RESULTS.md` |
+| Building, review, evaluation, integration | this orchestrator | the phases below |
 
 Each concern has one owner. Read OpenSpec artifacts and issues in place; never copy their content into `_agents_workspace/`, and keep no status file of your own.
 
@@ -75,15 +77,30 @@ Dispatch one `Agent` call, `subagent_type: visual-reviewer`, in the foreground, 
 
 Keep each round's report: rename the previous one `03_reviewer_report.round<N>.md` before the next review.
 
+### Phase 3b: evaluate (orchestrator)
+
+Applies to a change that adds or changes an artifact skill; read `.claude/skills/skill-eval/SKILL.md` first. It runs after a `pass` from the visual review (or after the user accepts an `incomplete` one), with no cost confirmation: the user decided evaluations are not capped, and the cost is reported.
+
+1. Run `bash evals/run.sh <skill>` (the proposal may set stricter targets, passed as `--target-tokens` and `--target-time`). It prints the report and appends an entry to `evals/<skill>/RESULTS.md` with `Decision: pending` and writes its sanitized summary `evals/<skill>/runs/<run-id>.json`. Never publish a report.
+2. Give the user the report: the classification, the KPI table (tokens and time, both arms, the change), the cost, the flagged runs, and the paths of the kept deliverables of both arms to compare. Say what you saw in them.
+3. Ask for the decision and record it, with the user's reason, on the `Decision:` line of that entry in `RESULTS.md`:
+   - `adopt`: go to Phase 4;
+   - `rework`: a builder fix round (Phase 2) with the report and the user's notes as input, within the same two-round cap as the review, then review again and evaluate again;
+   - `reject`: stop; no archive.
+4. An `incomplete` report is run once more; if it is still `incomplete`, tell the user which runs failed.
+
+Nothing here is a new agent: the numbers come from the script and the judgement from the user. A decision is never inferred from the classification.
+
 ### Phase 4: integrate (orchestrator)
 
-1. Run `openspec validate <change-id> --strict` again and check that every checkbox in `tasks.md` is ticked.
-2. Give the user a summary: what was built, the reviewer's verdict per invariant, anything not verified, the files changed.
-3. On the user's go-ahead, and not before:
+1. For a skill change that has an `adopt` recorded, run the documentation step (see `.claude/skills/skill-eval/SKILL.md`, "Documenting the result"): check that `skills/<skill>/README.md` has its `summary:` front block and the performance markers, run `python3 evals/kpi.py doc`, then `bash tests/run-structural-tests.sh` (its docs test fails when the Performance section or the root README skills table is missing or out of date). The documentation is part of the work committed below.
+2. Run `openspec validate <change-id> --strict` again and check that every checkbox in `tasks.md` is ticked. For a skill change, check that `evals/<skill>/RESULTS.md` holds an evaluation of the final version with the decision `adopt` and that the skill's README and the README skills table show it.
+3. Give the user a summary: what was built, the reviewer's verdict per invariant, the evaluation's classification and decision, anything not verified, the files changed.
+4. On the user's go-ahead, and not before:
    - commit the work on the topic branch;
    - archive the change with the `openspec-archive-change` skill, as the last commit before merge, so that `openspec/specs/` on `main` matches the behavior on `main`;
    - if an issue is carried: `gh issue comment <number>` with the summary and the change id, and `gh issue close <number>` once the work is merged.
-4. Keep `_agents_workspace/<change-id>/` for later inspection.
+5. Keep `_agents_workspace/<change-id>/` for later inspection.
 
 Never rewrite the prose of a proposal or an issue that a person wrote: the spec and the tracker own intent, this orchestrator owns execution.
 
@@ -95,6 +112,9 @@ Never rewrite the prose of a proposal or an issue that a person wrote: the spec 
 | The builder reports a blocked task | stop the loop; take the decision to the user |
 | The change's artifacts contradict each other | back to the spec process (`openspec-update-change`), then restart from Phase 1 |
 | The verdict is still `fail` after two fix rounds | stop; report the open findings; no archive |
+| The evaluation is `incomplete` twice | tell the user which runs failed; no decision is recorded; no archive |
+| The decision is `rework` and the two-round cap is spent | stop; give the user the open points; no archive |
+| The decision is `reject` or still `pending` | no archive |
 | The reviewer cannot render | verdict `incomplete`; the user decides whether to accept the gap |
 | The builder disputes a finding | keep both positions with their evidence in the summary; the user decides |
 | `gh` fails or is not authenticated | continue without the tracker; say in the summary what was not written to the issue |
@@ -103,5 +123,6 @@ Never rewrite the prose of a proposal or an issue that a person wrote: the spec 
 
 - **Normal.** "Add a WBS skill." No change exists → an issue is filed, `openspec-propose` writes the change, the user approves → brief → the builder implements and ticks the tasks → the reviewer renders two artifact types in two themes and both modes, verdict `pass` → summary → on go-ahead: commit, archive, issue commented and closed.
 - **Fix loop.** The reviewer reports `VC-1 fail` for a literal color in a template → the builder moves the value to a token role in the shared source → the second review re-checks every invariant and passes.
+- **Evaluation.** The reviewer says `pass` on a new skill → Phase 3b runs the testbed, the report says `below target` with time unmet → the user compares the deliverables, records `adopt` with a reason in `RESULTS.md` → Phase 4. Had the user recorded `rework`, the builder gets the report and the notes, then review and evaluation repeat.
 - **Error.** No renderer is available for the artifact's medium → verdict `incomplete` with VC-5 and VC-6 `not verified` → the user is told which tool is missing and decides; nothing is archived as passing by default.
 - **Trivial.** "What does the visual contract say about dark mode?" → answered directly from `visual-contract`; no agents, no workspace.

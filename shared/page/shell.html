@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style id="theme">
+{{THEME_CSS}}
+</style>
+<style id="page">
+{{PAGE_CSS}}
+</style>
+<script id="core">
+{{CORE_JS}}
+</script>
+</head>
+<body data-type="{{TYPE}}">
+<div class="page">
+  <header class="page-head">
+    <div class="page-titles">
+      <h1 class="page-title">{{TITLE}}</h1>
+{{DESCRIPTION}}
+    </div>
+    <div class="mode-switch" role="group" aria-label="Color mode">
+      <button type="button" data-mode="system" aria-pressed="true">System</button>
+      <button type="button" data-mode="light" aria-pressed="false">Light</button>
+      <button type="button" data-mode="dark" aria-pressed="false">Dark</button>
+    </div>
+  </header>
+  <main>
+    <div id="notices"></div>
+    <div id="errors" role="alert"></div>
+    <div class="frame" id="frame"><div id="drawing"></div></div>
+  </main>
+</div>
+{{EXTERNAL_SCRIPTS}}
+<script id="renderer">
+{{TYPE_JS}}
+</script>
+<script type="application/json" id="model">{{MODEL_JSON}}</script>
+<script>Artifact.boot();</script>
+</body>
+</html>
