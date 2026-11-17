@@ -1,4 +1,4 @@
-# engartifacts
+# eng-artifacts
 
 A Claude Code plugin for the optimized production of software engineering artifacts. It turns a request into a finished artifact: ask for a diagram in plain words, or hand over a schema, and a skill produces it as one self-contained HTML page. Today the plugin draws entity relationship diagrams; WBS, UML and other diagrams are planned.
 
@@ -25,10 +25,10 @@ The plugin is listed in the `mrbogomips` marketplace:
 
 ```
 claude plugin marketplace add MrBogomips/claude-plugins
-claude plugin install engartifacts@mrbogomips
+claude plugin install eng-artifacts@mrbogomips
 ```
 
-Inside a Claude Code session the same two steps are `/plugin marketplace add MrBogomips/claude-plugins` and `/plugin install engartifacts@mrbogomips`. The repository is also a single-plugin marketplace of its own (`claude plugin marketplace add MrBogomips/engartifacts`, then `claude plugin install engartifacts@engartifacts`); use one marketplace or the other, not both. After installing, ask for an artifact in plain words (see Usage); the skill is picked up from the request.
+Inside a Claude Code session the same two steps are `/plugin marketplace add MrBogomips/claude-plugins` and `/plugin install eng-artifacts@mrbogomips`. The repository is also a single-plugin marketplace of its own (`claude plugin marketplace add MrBogomips/eng-artifacts`, then `claude plugin install eng-artifacts@eng-artifacts`); use one marketplace or the other, not both. After installing, ask for an artifact in plain words (see Usage); the skill is picked up from the request.
 
 ## Requirements
 
