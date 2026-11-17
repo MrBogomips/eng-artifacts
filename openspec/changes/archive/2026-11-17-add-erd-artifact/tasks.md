@@ -48,7 +48,7 @@
 - [x] 7.2 Update `CLAUDE.md`: State (structure), Commands (tests, evaluation), Open decisions (mechanism resolved; plantuml and secondary targets still open), change-history rows for the harness changes; verify the file has no stale statement about a missing plugin.
 - [x] 7.3 Visual-reviewer pass: the ERD in the default and alternate themes, light and dark, at desktop and 400px width, against VC-1 to VC-6; verify the report's verdict is `pass`.
   - Result: four review rounds. Every invariant passes except one gap in the mode switch, accepted by the user on 2026-11-17 as a known issue: in the alternate theme (any theme with `--stroke-mix` at 100%), the selected button's border has the focus ring's color, so with keyboard focus on another button the selected state is told apart only by its tint (1.5:1); the unselected focus ring is not covered by a contrast pair in `design.md`. Proposed fix, not applied: focus ring in `--ink`, 2px outside the button.
-- [ ] 7.4 Evaluation of the final ERD skill with `evals/run.sh erd --runs 5`; give the user the report and the deliverable paths; record the user's decision in `evals/erd/RESULTS.md`; verify the entry is sanitized and the decision is `adopt` before archiving.
+- [x] 7.4 Evaluation of the final ERD skill with `evals/run.sh erd --runs 5`; give the user the report and the deliverable paths; record the user's decision in `evals/erd/RESULTS.md`; verify the entry is sanitized and the decision is `adopt` before archiving.
 
 ## 8. Documentation of capabilities and performance
 
