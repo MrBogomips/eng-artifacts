@@ -1,0 +1,38 @@
+schema: spec-driven
+
+context: |
+  This repository is a public Claude Code plugin: a collection of skills that produce operational
+  artifacts (WBS, UML, diagrams). CLAUDE.md is the authority for repository conventions.
+  The repository is public: no artifact contains personal paths, client, company or person names,
+  email addresses or private URLs. Examples use neutral placeholders.
+
+  Two product guarantees bind every change:
+  1. Visual coherence. All artifact types take their look from one shared visual language: a single
+     style source of semantic tokens. The same role looks the same in every artifact type.
+  2. Themable UI with a light/dark switch. A theme is a set of token values. Every theme defines a
+     light and a dark mode. Every artifact renders correctly in both, and an interactive artifact
+     lets the viewer switch.
+  The checkable form of both guarantees is .claude/skills/visual-contract/SKILL.md (invariants VC-1
+  to VC-6). A change that would break an invariant is not acceptable as proposed.
+  The visual design is decided: the role vocabulary (token names) and drawing rules are in
+  .claude/skills/visual-contract/references/design.md, the default theme in default-theme.css beside
+  it. Artifact pages are the primary target medium. A change uses those token names and does not
+  alter the design on its own.
+
+  Spec coverage starts empty: a missing spec does not mean missing behavior. The first change to a
+  capability uses ADDED requirements.
+
+rules:
+  proposal:
+    - Name the artifact types and the parts of the shared visual language the change touches.
+    - Include a "Visual contract" section that says, per invariant VC-1 to VC-6, how the change keeps it or why the change does not affect it.
+    - A change that makes a design decision (new component, rejected alternative, trade-off) includes design.md.
+  specs:
+    - Capability paths are kebab-case.
+    - A requirement about appearance names a semantic token role, never a literal color, font or size.
+    - A capability that renders an artifact has at least one scenario for coherence with another artifact type and one for rendering in light and dark under a non-default theme.
+  design:
+    - List every token role the change adds or changes, and the artifact types that consume it.
+  tasks:
+    - Tick each checkbox as soon as its task is done.
+    - End with a task for the visual-reviewer pass and a task to archive the change as the last commit before merge.

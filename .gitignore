@@ -1,0 +1,5 @@
+# Agent harness scratch (intermediate work of a run)
+_agents_workspace/
+
+# OS files
+.DS_Store

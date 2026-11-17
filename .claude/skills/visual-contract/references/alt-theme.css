@@ -1,0 +1,129 @@
+/* Alternate theme, for checking that the plugin is themable (VC-4).
+   Deliberately unlike the default in every group of tokens: tinted fills, soft corners, other hues.
+   A theme is this set of tokens and nothing else: every token, in light and in dark.
+   Shape: light values on :root, then the dark values twice, once for the system preference and once
+   for an explicit choice, so a page's light/dark switch (data-theme on the root element) wins both
+   ways. The two dark blocks must stay identical. */
+
+:root {
+  /* Surfaces */
+  --canvas:        #f1f1f6; /* page ground */
+  --surface:       #ffffff; /* drawing panel */
+  --node:          #ffffff; /* node body */
+
+  /* Ink */
+  --ink:           #1b1a28; /* text, primary */
+  --ink-2:         #5c5a70; /* text, secondary */
+  --line:          #807e96; /* connectors, neutral borders */
+  --grid:          #e2e1eb; /* gridlines, hairlines */
+  --neutral:       #807e96; /* a node that belongs to no group */
+
+  /* Emphasis */
+  --accent:        #6a3fe0; /* a node with no group set */
+  --mark:          #6a3fe0; /* critical path, milestone, today, emphasized edge */
+  --band-ink:      #1b1a28; /* text on a header band */
+
+  /* Status */
+  --status-done:   #188a52;
+  --status-active: #2f6fed;
+  --status-risk:   #b97800;
+  --status-late:   #d83a3a;
+  --status-todo:   #8f8da3;
+
+  /* Groups: workstream, lane, bounded context */
+  --group-1:       #2f6fed;
+  --group-2:       #0d8f84;
+  --group-3:       #c06a08;
+  --group-4:       #cc3d8b;
+  --group-5:       #5b6b8c;
+
+  /* Type */
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Geometry */
+  --radius: 10px;        /* node corners */
+  --stroke: 1.5px;     /* node outlines, connectors */
+  --arrowhead: 8px;     /* length of a connector's head */
+  --panel-radius: 14px;  /* the frame around a drawing */
+
+  /* Treatment: how much of a node's group color goes into each part of it */
+  --fill-mix: 13%;      /* node body */
+  --stroke-mix: 100%;   /* node outline */
+  --band-mix: 27%;    /* header band */
+  --bar-mix: 24%;      /* unfinished part of a schedule bar */
+  --lane-mix: 18%;     /* lane header */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* Surfaces */
+    --canvas:        #121119; /* page ground */
+    --surface:       #191824; /* drawing panel */
+    --node:          #1e1d2b; /* node body */
+
+    /* Ink */
+    --ink:           #ecebf5; /* text, primary */
+    --ink-2:         #a9a7be; /* text, secondary */
+    --line:          #8684a0; /* connectors, neutral borders */
+    --grid:          #2d2b3f; /* gridlines, hairlines */
+    --neutral:       #8684a0; /* a node that belongs to no group */
+
+    /* Emphasis */
+    --accent:        #a993ff; /* a node with no group set */
+    --mark:          #a993ff; /* critical path, milestone, today, emphasized edge */
+    --band-ink:      #ecebf5; /* text on a header band */
+
+    /* Status */
+    --status-done:   #52d08e;
+    --status-active: #78a4ff;
+    --status-risk:   #f0b840;
+    --status-late:   #ff7d7d;
+    --status-todo:   #6e6c85;
+
+    /* Groups: workstream, lane, bounded context */
+    --group-1:       #78a4ff;
+    --group-2:       #45cdbd;
+    --group-3:       #f0a445;
+    --group-4:       #f284c0;
+    --group-5:       #9eabc9;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  /* Surfaces */
+  --canvas:        #121119; /* page ground */
+  --surface:       #191824; /* drawing panel */
+  --node:          #1e1d2b; /* node body */
+
+  /* Ink */
+  --ink:           #ecebf5; /* text, primary */
+  --ink-2:         #a9a7be; /* text, secondary */
+  --line:          #8684a0; /* connectors, neutral borders */
+  --grid:          #2d2b3f; /* gridlines, hairlines */
+  --neutral:       #8684a0; /* a node that belongs to no group */
+
+  /* Emphasis */
+  --accent:        #a993ff; /* a node with no group set */
+  --mark:          #a993ff; /* critical path, milestone, today, emphasized edge */
+  --band-ink:      #ecebf5; /* text on a header band */
+
+  /* Status */
+  --status-done:   #52d08e;
+  --status-active: #78a4ff;
+  --status-risk:   #f0b840;
+  --status-late:   #ff7d7d;
+  --status-todo:   #6e6c85;
+
+  /* Groups: workstream, lane, bounded context */
+  --group-1:       #78a4ff;
+  --group-2:       #45cdbd;
+  --group-3:       #f0a445;
+  --group-4:       #f284c0;
+  --group-5:       #9eabc9;
+
+  color-scheme: dark;
+}
