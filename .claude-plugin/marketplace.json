@@ -1,15 +1,15 @@
 {
-  "name": "engartifacts",
+  "name": "eng-artifacts",
   "owner": {
     "name": "MrBogomips",
     "url": "https://github.com/MrBogomips"
   },
   "metadata": {
-    "description": "Marketplace for the engartifacts Claude Code plugin"
+    "description": "Marketplace for the eng-artifacts Claude Code plugin"
   },
   "plugins": [
     {
-      "name": "engartifacts",
+      "name": "eng-artifacts",
       "source": "./",
       "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams first) as self-contained pages with one shared visual language, a light/dark toggle and replaceable themes.",
       "version": "0.2.0",
