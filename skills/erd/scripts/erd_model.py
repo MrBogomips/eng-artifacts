@@ -13,7 +13,7 @@ import sys
 CARDINALITIES = ("1", "0..1", "1..*", "0..*")
 KINDS = ("owned", "referenced")
 DEFAULT_KIND = "referenced"
-MAX_GROUPS = 5
+MAX_GROUPS = 16
 
 MODEL_FIELDS = ("title", "description", "groups", "entities", "relationships")
 GROUP_FIELDS = ("id", "label")
@@ -62,8 +62,8 @@ def _validate_groups(model, errors):
         return ids
     if len(groups) > MAX_GROUPS:
         errors.append(
-            "groups: %d groups, at most %d are allowed because the design has %d group colors and does "
-            "not reuse them; merge groups or split the diagram" % (len(groups), MAX_GROUPS, MAX_GROUPS))
+            "groups: %d groups, at most %d are allowed (the five group colors cycle, and every zone is "
+            "labelled); merge groups or split the diagram" % (len(groups), MAX_GROUPS))
     for i, g in enumerate(groups):
         where = "groups[%d]" % i
         if not isinstance(g, dict):

@@ -1,0 +1,10 @@
+{
+ "title": "t",
+ "classifiers": [
+  {
+   "name": "Order",
+   "kind": "class",
+   "package": "nowhere"
+  }
+ ]
+}

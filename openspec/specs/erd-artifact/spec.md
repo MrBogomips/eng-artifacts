@@ -76,17 +76,6 @@ A relationship SHALL have a kind: `owned`, when the child entity exists only as 
 - **WHEN** a relationship has a kind other than `owned` or `referenced`
 - **THEN** validation fails, listing the allowed values
 
-### Requirement: Groups
-A model MAY define up to five groups and assign each entity to at most one. A model with more than five groups SHALL be rejected, because the design has five group colors and does not reuse them. Each group that has at least one entity SHALL be drawn as a zone, in its group role and labelled with its label, that contains exactly its entities.
-
-#### Scenario: Six groups rejected
-- **WHEN** a model defines six groups
-- **THEN** validation fails and suggests merging groups or splitting the diagram
-
-#### Scenario: Groups drawn as zones
-- **WHEN** a model puts five tables in "Sales", four in "Catalog" and two in "Billing", and leaves one ungrouped
-- **THEN** three zones are drawn, each labelled and tinted with its group role, each containing only its tables, and the ungrouped table sits outside every zone
-
 ### Requirement: Tables drawn as header-band nodes
 Each entity SHALL be drawn as the design's header-band node: the entity name left-aligned in the band, one row per column with key chips, name and type in the data face, primary key names bold, and the nullable marker before the type of a nullable column. The band and outline take the entity's group role; with groups defined, an ungrouped entity takes the neutral role with a dashed outline; with none, every table takes the accent role.
 
@@ -152,3 +141,18 @@ An ERD page SHALL carry a legend card that explains the relationship kinds used,
 #### Scenario: Legend matches the model
 - **WHEN** a model uses only referenced relationships, primary and foreign keys and two groups
 - **THEN** the legend shows the dashed sample, the cardinality marks, the primary-key and foreign-key chips and the two group samples, and no owned sample, no unique chip and no nullable marker
+
+### Requirement: Groups with cycling colors
+A model MAY define up to sixteen groups and assign each entity to at most one. A model with more than sixteen groups SHALL be rejected. Groups take the five group roles in order of first appearance and cycle from the sixth. Each group with at least one entity SHALL be drawn as a zone, in its group role and labelled, that contains exactly its entities.
+
+#### Scenario: Six groups reuse the first color
+- **WHEN** a model defines six groups
+- **THEN** the model is valid, the sixth group takes the first group role, and every zone carries its own label
+
+#### Scenario: Seventeen groups rejected
+- **WHEN** a model defines seventeen groups
+- **THEN** validation fails and suggests merging groups or splitting the diagram
+
+#### Scenario: Groups drawn as zones
+- **WHEN** a model puts five tables in "Sales", four in "Catalog" and two in "Billing", and leaves one ungrouped
+- **THEN** three zones are drawn, each labelled and tinted with its group role, each containing only its tables, and the ungrouped table sits outside every zone

@@ -1,0 +1,106 @@
+{
+ "title": "Seven packages",
+ "packages": [
+  {
+   "id": "p1",
+   "label": "package 1"
+  },
+  {
+   "id": "p2",
+   "label": "package 2"
+  },
+  {
+   "id": "p3",
+   "label": "package 3"
+  },
+  {
+   "id": "p4",
+   "label": "package 4"
+  },
+  {
+   "id": "p5",
+   "label": "package 5"
+  },
+  {
+   "id": "p6",
+   "label": "package 6"
+  },
+  {
+   "id": "p7",
+   "label": "package 7"
+  }
+ ],
+ "classifiers": [
+  {
+   "name": "C1",
+   "kind": "class",
+   "package": "p1"
+  },
+  {
+   "name": "C2",
+   "kind": "class",
+   "package": "p2"
+  },
+  {
+   "name": "C3",
+   "kind": "class",
+   "package": "p3"
+  },
+  {
+   "name": "C4",
+   "kind": "class",
+   "package": "p4"
+  },
+  {
+   "name": "C5",
+   "kind": "class",
+   "package": "p5"
+  },
+  {
+   "name": "C6",
+   "kind": "class",
+   "package": "p6"
+  },
+  {
+   "name": "C7",
+   "kind": "class",
+   "package": "p7"
+  },
+  {
+   "name": "Outside",
+   "kind": "class"
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "dependency",
+   "from": "C1",
+   "to": "C2"
+  },
+  {
+   "kind": "dependency",
+   "from": "C2",
+   "to": "C3"
+  },
+  {
+   "kind": "dependency",
+   "from": "C3",
+   "to": "C4"
+  },
+  {
+   "kind": "dependency",
+   "from": "C4",
+   "to": "C5"
+  },
+  {
+   "kind": "dependency",
+   "from": "C5",
+   "to": "C6"
+  },
+  {
+   "kind": "dependency",
+   "from": "C6",
+   "to": "C7"
+  }
+ ]
+}

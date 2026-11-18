@@ -21,7 +21,7 @@ The palette, the fonts and the geometry are in the plugin's `shared/themes/defau
 
 **Structure carries the meaning.** A header band names every node that has a name over content: a work package, a class, a table, a pool. The band is a tint of the node's group color with ink text, and the body under it stays plain. A reader who has learned one artifact type can read the next, because a WBS work package, a UML class and an ERD table are the same object.
 
-Color has three jobs and no others. A **group** color says what a node belongs to (a workstream, a lane, a bounded context); a **zone** draws the same belonging as an area that contains the nodes of one group. The **mark** color says what is critical or under discussion: the critical path, a milestone, today, the element the viewer points at. A **key** color tells the kind of a small chip (primary, foreign, unique). Decoration gets no color.
+Color has three jobs and no others. A **group** color says what a node belongs to (a workstream, a lane, a bounded context); a **zone** draws the same belonging as an area that contains the nodes of one group. The **mark** color says what is critical or under discussion: the critical path, a milestone, today, the element the viewer points at. A **key** color tells the kind of a small chip (primary, foreign, unique, stereotype). Decoration gets no color.
 
 ## Target medium
 
@@ -32,7 +32,7 @@ Artifacts are built for Artifact pages first. The rules that follow from that me
 - The page body never scrolls sideways. A drawing wider than the screen sits in its own `overflow-x: auto` frame and starts at its drawn size; only the viewer's own zoom scales it, and Fit is a button, never the starting state.
 - Text in a drawing is 10.5px or larger at drawn size.
 - A theme names system font stacks, or loads web fonts from Google Fonts only; every font token has a fallback stack. A theme with system fonts only makes no font request. No script library is needed to draw; shapes are inline SVG.
-- The light/dark control is a two-state toggle labelled "Dark mode". With no stored choice it shows the viewer's system preference; turning it on or off sets `data-theme="dark"` or `data-theme="light"` on the root element. The theme files keep their system-preference block, so a page without script still follows the system. The toggle's track is `--grid` when off and `--accent` when on, its thumb is `--node` with a `--line` outline, and keyboard focus draws a 2px `--mark` ring offset 2px, so on, off and focused are told apart by position, by a color that reaches 3:1 against `--surface`, and by the ring.
+- The light/dark control is a two-state toggle labelled "Dark mode". With no stored choice it shows the viewer's system preference; turning it on or off sets `data-theme="dark"` or `data-theme="light"` on the root element. The theme files keep their system-preference block, so a page without script still follows the system. The toggle's track is `--grid` when off and `--accent` when on, its thumb is `--node` with a `--line` outline, and keyboard focus draws a 2px `--mark` ring offset 2px, so on, off and focused are told apart by position, by a color that reaches 3:1 against `--surface`, and by the ring. A page's view options reuse the toggle's roles: a switch is a small copy of the toggle (a 30 by 18 track in place of 38 by 22, with 12px text), and a choice is a row of segments, the selected one on an `--accent` ground with `--node` text and the others on `--grid` with `--ink` text, every segment outlined in `--line` and focus drawn as the same ring.
 - Under the drawing a page may carry two cards on `--surface` with a `--grid` border and `--panel-radius` corners: a legend card that explains every notation, line kind, chip and group the drawing uses, drawn with the same roles, and a details table that lists the drawing's connections, linked to the drawing by highlighting. Side by side above 900px, stacked below; the table scrolls inside its card.
 
 ## Roles and tokens
@@ -53,8 +53,8 @@ An artifact skill references these names and no others. A need that none of them
 | `--mark` | Critical path, milestone, today, an emphasized edge, the highlighted element, the keyboard focus ring. One meaning per drawing. |
 | `--band-ink` | Text on a header band: the ink color when bands are pale, an inverted color when they are solid. |
 | `--status-done`, `--status-active`, `--status-risk`, `--status-late`, `--status-todo` | The five states of a work item. Always with their shape, never color alone. |
-| `--group-1` … `--group-5` | Categorical groups, assigned in order of first appearance. More than five groups: reuse is not allowed; merge groups or split the drawing. |
-| `--key-primary`, `--key-foreign`, `--key-unique` | The text of a key chip; its ground is the same color mixed into `--node`. A chip carries its color in `--k`, as a node carries its group in `--c`. |
+| `--group-1` … `--group-5` | Categorical groups, assigned in order of first appearance. A drawing may have up to sixteen groups: the five colors cycle from the sixth group, and every zone carries its label, which tells two zones of one color apart. More than sixteen: merge groups or split the drawing. |
+| `--key-primary`, `--key-foreign`, `--key-unique`, `--key-stereotype` | The text of a chip; its ground is the same color mixed into `--node`. The first three are an ERD column's keys; the fourth is a UML stereotype. A chip carries its color in `--k`, as a node carries its group in `--c`. |
 | `--font-display`, `--font-body`, `--font-data` | Titles; labels; identifiers, numbers and code. |
 | `--radius`, `--stroke`, `--arrowhead`, `--panel-radius`, `--zone-radius` | Node corners; line weight; arrowhead length (also the unit of a drawing's spacing); the frame around a drawing and the cards; the corners of a zone. |
 | `--fill-mix`, `--stroke-mix`, `--band-mix`, `--bar-mix`, `--lane-mix` | How much of a node's group color goes into its body, outline, header band, the unfinished part of a schedule bar, and a lane header. |
@@ -113,11 +113,13 @@ These formulas are normative. They are what makes one theme file restyle every a
 .edge.mark { stroke: var(--mark); stroke-width: calc(var(--stroke) + 0.75px); }
 
 /* connector, dashed variant: the same line with a longer dash pattern than a boundary's, for a
-   weaker tie (an ERD referenced relationship); it combines with .mark */
+   weaker tie (an ERD referenced relationship, a UML realization or dependency); it combines with
+   .mark */
 .edge.dashed { stroke-dasharray: 7 5; }
 
-/* notation marks at a connector's end (an ERD's bars, crow's foot and ring): the line role, with
-   round caps; a hollow mark, here the ring, is filled with the node color, as the hollow UML triangle is */
+/* notation marks at a connector's end (an ERD's bars, crow's foot and ring, a UML open arrowhead):
+   the line role, with round caps; a hollow mark (the ERD ring, a UML triangle or diamond) is
+   filled with the node color */
 .notation      { fill: none; stroke: var(--line); stroke-width: var(--stroke); stroke-linecap: round; }
 .notation-ring { fill: var(--node); stroke: var(--line); stroke-width: var(--stroke); }
 
@@ -129,6 +131,11 @@ These formulas are normative. They are what makes one theme file restyle every a
 .edge-group.hl .edge-head { fill: var(--mark); }
 .hovering .edge-group:not(.hl), .hovering .edge-label:not(.hl), .hovering .node-group:not(.hl)
                { opacity: var(--dim); }
+
+/* keyboard focus on a node of a drawing: the toggle's ring (2px --mark, offset 2px), drawn as an
+   outline shape because SVG has no outline offset */
+.focus-ring { fill: none; stroke: var(--mark); stroke-width: 2px; visibility: hidden; }
+.node-group:focus-visible .focus-ring { visibility: visible; }
 
 /* a boundary around nodes that belong together */
 .boundary  { fill: color-mix(in oklab, var(--ink) 3%, var(--surface));
@@ -142,7 +149,7 @@ These formulas are normative. They are what makes one theme file restyle every a
 .edge-label { fill: var(--ink-2); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
 ```
 
-A node with a header band is drawn in this order: body, band (rounded on its top corners only), the line under the band, then the outline again with no fill, so the outline stays crisp over the band. The text on the band is left-aligned and centered vertically.
+A node with a header band is drawn in this order: body, band (rounded on its top corners only), the line under the band, then the outline again with no fill, so the outline stays crisp over the band. The text on the band is left-aligned and centered vertically. A node with no body rows (a class with no members) is its band alone: 34 high, rounded on all four corners, with no line under it and no empty strip below.
 
 Every header-band node has the same proportions, whatever the artifact type: a band 34px high, body rows 24px high, the title 12px from the left edge, chips and row hairlines 8px from it, row content 10px from each side, 4px under the last row. A chip is 16px high. The shared header-band primitive owns these sizes; an artifact skill places its rows with it and never sets its own.
 
@@ -170,6 +177,8 @@ An abstract class name is italic. Nothing is smaller than 10.5px. The default th
 - Node corners are `--radius`. A schedule bar uses the smaller of `--radius` and 7px; a chip and a legend swatch the smaller of `--radius` and 4px. A zone's corners are `--zone-radius`.
 - Lines are `--stroke`. An emphasized line adds 0.75px.
 - Connectors are orthogonal: horizontal and vertical runs with square turns. They end in a filled head `--arrowhead` long and 0.9 times that wide, following the last segment.
+- Where a horizontal run of a connector crosses a vertical run of another connector, it hops: a semicircle of radius 0.4 times `--arrowhead`, bulging upward, part of the same path, so it keeps the connector's dash, color and highlight. A crossing nearer than `--arrowhead` to a bend or to a node end does not hop, and connectors that only meet at a shared end do not hop. Only horizontal runs hop, so two connectors never both jump at one point.
+- No connector runs through a zone's label: a type's layout keeps the room of the label (the top left of the zone, 16 across and 20 down) clear, moving a run past it, so the label needs no halo.
 - Shapes sit on a grid: shared baselines, even gaps. A connector label sits above the run it names, centered.
 - The frame around a drawing, and each card under it, have `--panel-radius` corners and a `--grid` border on `--surface`.
 
@@ -192,7 +201,7 @@ A status mark is about 9px across. A legend lists the five whenever status marks
 A design sets stroke, fill and type. It never changes a shape that a notation defines.
 
 - **BPMN**: an event is a circle (an end event's line is 2.6 times `--stroke`); a task is a rectangle with rounded corners, at least 6px whatever `--radius` is; a gateway is a diamond, with its marker inside.
-- **UML**: composition is a filled diamond at the owner; generalization is a hollow triangle at the parent; a navigable association ends in the standard arrowhead.
+- **UML**: six relationship kinds, each with its own line and end. Generalization is a hollow triangle at the parent on a solid line; realization is the same triangle on a dashed line; composition is a filled diamond at the whole and aggregation a hollow diamond at the whole, both on a solid line; a navigable association end is an open arrowhead (two strokes, no fill) and a plain association has no mark at an end that is not navigable; a dependency is a dashed line with an open arrowhead at the supplier. Sizes derive from `--arrowhead` (u): the triangle is u long and 0.9u wide, a diamond 1.6u long and 0.9u wide, an open arrowhead u long and 0.9u wide; hollow shapes are drawn with `.notation-ring`, open ones with `.notation`. A generic class carries its type parameters in a dashed box on the band's top-right corner (the node body role, the dashed `.node-outline.ungrouped` stroke, overhanging the corner by half its height). A class has two compartments, attributes then operations, separated by a `.node-rule`; an empty compartment keeps half a row so the two stay distinguishable.
 - **ERD**: information engineering marks at each end of a relationship: a bar for one, a crow's foot for many, a ring for zero. The four cardinalities are two bars (`1`), ring and bar (`0..1`), bar and crow's foot (`1..*`), ring and crow's foot (`0..*`); the ring sits farthest from the table, the crow's foot nearest to it, and in `1..*` the bar sits outside the foot. A relationship is of one of two kinds: owned (identifying: the child exists only as part of the parent) is drawn solid, referenced (non-identifying: the child only points to the parent) is drawn dashed, in the `.edge.dashed` variant. A self-relationship is a loop on the table's right side. When a relationship names its joining columns, its ends sit inside those rows; ends that share a row are spread within it, at least a bar and its caps apart, and a row with more ends than one side can separate sends the extras to the other side of the table. An end of a relationship without joining columns sits on the straight part of a side, clear of the corner radius by the mark's reach. The grid fallback, used when the layout library is unavailable, spreads ends along the side instead. A connector runs straight out of a table for at least the length of the longest mark set, and two tables that face each other leave room for the marks of both ends and a visible run. Keys are chips in the order primary, foreign, unique; a nullable column shows the nullable marker before its type.
 
 ## The same roles in each artifact type
@@ -201,17 +210,17 @@ This is the coherence map. A new artifact type gets a column here before it gets
 
 | Role | WBS | Gantt | Component diagram | UML class | ERD | BPMN |
 |---|---|---|---|---|---|---|
-| Node with header band (pale band, left title, 34 high, rows 24) | work package: title in the band, code and effort in the body | | | class: name in the band, members below | table: name in the band, columns below | pool: name in the band |
+| Node with header band (pale band, left title, 34 high, rows 24) | work package: title in the band, code and effort in the body | | | class: name in the band, attributes and operations (or literals) below, a `.node-rule` between the compartments | table: name in the band, columns below | pool: name in the band |
 | Plain node | task: code, title, status mark | | component, store, queue | | | task, event, gateway |
-| Group color | workstream | workstream, on the bar | bounded context: a service and its store | none set: accent | schema area (a bounded context); a table outside every group: neutral with a dashed outline; no groups defined: accent | lane (a lane keeps `lane-head`) |
-| Zone | | | bounded context | package, when used | schema area: the tables of one group | |
-| Chip | code | | | stereotype | key: PK, FK, UK | |
+| Group color | workstream | workstream, on the bar | bounded context: a service and its store | package; a class outside every package: neutral with a dashed outline; no packages defined: accent | schema area (a bounded context); a table outside every group: neutral with a dashed outline; no groups defined: accent | lane (a lane keeps `lane-head`) |
+| Zone | | | bounded context | package: the classes of one package | schema area: the tables of one group | |
+| Chip | code | | | stereotype, in `--key-stereotype` | key: PK, FK, UK | |
 | Mark | | critical path, milestone, today | the edge under discussion | | | |
-| Highlight | subtree | dependency chain, critical path | call path | association | relationship: connector, both tables and joining rows | sequence flow |
-| Details table | work packages | tasks and dates | interfaces | | relationships: child, parent, kind, cardinality in words | |
+| Highlight | subtree | dependency chain, critical path | call path | class: it, its connectors and the classes at their other ends; a connector: it and its two classes | relationship: connector, both tables and joining rows | sequence flow |
+| Details table | work packages | tasks and dates | interfaces | relationships: source, kind, target, roles and multiplicities in words | relationships: child, parent, kind, cardinality in words | |
 | Status mark | on each task | beside each task name | | | | |
-| Data face | codes, effort | week labels | | types of members, multiplicities | column types | |
-| Connector | tree lines, no head | dependency, with head | call or data flow, with head and label | association, with notation ends | relation, with notation ends | sequence flow, with head |
+| Data face | codes, effort | week labels | | types and parameters of members, defaults, multiplicities | column types | |
+| Connector | tree lines, no head | dependency, with head | call or data flow, with head and label | the six UML kinds, with notation ends and hops | relation, with notation ends | sequence flow, with head |
 
 ## Making a theme
 
@@ -232,5 +241,5 @@ A project theme may name system font stacks only, or load web fonts from Google 
 
 A theme is acceptable when these pairs reach their contrast ratio in light and in dark:
 
-- 4.5:1: `--ink` and `--ink-2` on `--canvas`, on `--surface`, on `--node`, and on a node body and a lane header of every group color; `--band-ink` on a header band of every group color, of `--neutral` and of `--accent`; `--mark` on `--surface`; each key color on its chip ground (the key color mixed at `--chip-mix` into `--node`); each group color, as a zone label, on its zone ground (at `--zone-mix` into `--surface`); `--ink` and `--ink-2` on a highlighted row (`--mark` at `--highlight-mix` into `--node`).
+- 4.5:1: `--ink` and `--ink-2` on `--canvas`, on `--surface`, on `--node`, and on a node body and a lane header of every group color; `--band-ink` on a header band of every group color, of `--neutral` and of `--accent`; `--mark` on `--surface`; each key color on its chip ground (the key color mixed at `--chip-mix` into `--node`); each group color, as a zone label, on its zone ground (at `--zone-mix` into `--surface`); `--ink` and `--ink-2` on a highlighted row (`--mark` at `--highlight-mix` into `--node`); `--node` on `--accent` and `--ink` on `--grid`, the text of a view option's selected and other segments.
 - 3:1: `--line` on `--surface`, which is also the toggle's outline and its thumb's; every status token on `--node`; every group color, and its outline mix, on `--surface`; the accent outline mix (`color-mix` of `--accent` at `--stroke-mix` with `--line`) on `--surface`; `--accent` on `--surface`, the toggle's on track.

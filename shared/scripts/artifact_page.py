@@ -3,7 +3,8 @@
 
     artifact_page.py --type erd --model <file> --theme <name|path> --out <file>
 
-Loads the artifact type from skills/<type>/ (its validator scripts/<type>_model.py, its renderer
+Loads the artifact type from skills/<type>/ (its validator scripts/<type>_model.py, with hyphens of
+the type name read as underscores: uml-class-diagram -> uml_class_diagram_model.py, its renderer
 assets/<type>.js with any helper files assets/<type>-*.js that it needs, and, optionally,
 assets/<type>.json naming external scripts), validates the model,
 checks the theme against the default theme's token set, and writes ONE html file with the theme,
@@ -54,11 +55,12 @@ def read_text(path, problems, what):
 
 
 def load_validator(type_dir, art_type, problems):
-    path = os.path.join(type_dir, "scripts", "%s_model.py" % art_type)
+    module_name = "%s_model" % art_type.replace("-", "_")  # a hyphenated type is an importable module
+    path = os.path.join(type_dir, "scripts", "%s.py" % module_name)
     if not os.path.isfile(path):
         problems.append("%s: the artifact type has no validator" % path)
         return None
-    spec = importlib.util.spec_from_file_location("%s_model" % art_type, path)
+    spec = importlib.util.spec_from_file_location(module_name, path)
     module = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(module)

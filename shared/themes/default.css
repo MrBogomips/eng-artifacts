@@ -46,6 +46,7 @@
   --key-primary:   #854d0e;
   --key-foreign:   #5b21b6;
   --key-unique:    #0e6a80;
+  --key-stereotype: #9d1a7e; /* UML stereotype chip */
 
   /* Type */
   --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -108,6 +109,7 @@
     --key-primary:   #fcd34d;
     --key-foreign:   #c9bbfd;
     --key-unique:    #6ee7f9;
+    --key-stereotype: #ee9fd8; /* UML stereotype chip */
 
     color-scheme: dark;
   }
@@ -149,6 +151,7 @@
   --key-primary:   #fcd34d;
   --key-foreign:   #c9bbfd;
   --key-unique:    #6ee7f9;
+  --key-stereotype: #ee9fd8; /* UML stereotype chip */
 
   color-scheme: dark;
 }

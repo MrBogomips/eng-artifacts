@@ -1,0 +1,48 @@
+{
+ "title": "No packages",
+ "classifiers": [
+  {
+   "name": "Account",
+   "kind": "class"
+  },
+  {
+   "name": "Transaction",
+   "kind": "class"
+  },
+  {
+   "name": "Kind",
+   "kind": "enumeration",
+   "literals": [
+    "Debit",
+    "Credit"
+   ]
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "composition",
+   "from": "Account",
+   "to": "Transaction",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "role": "transactions",
+    "multiplicity": "0..*"
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Transaction",
+   "to": "Kind",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "role": "kind",
+    "multiplicity": "1",
+    "navigable": true
+   }
+  }
+ ]
+}

@@ -1,0 +1,185 @@
+{
+  "baselineOnly": true,
+  "cases": {
+    "uml-class-diagram-complex": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 2.9739,
+            "median": 2.7001,
+            "min": 2.5203
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 865827,
+            "median": 854751,
+            "min": 755231
+          },
+          "tokens": {
+            "max": 1456817,
+            "median": 1370756,
+            "min": 781273
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 4.057,
+            "median": 3.5771,
+            "min": 3.2485
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 1236571,
+            "median": 998271,
+            "min": 915402
+          },
+          "tokens": {
+            "max": 2635990,
+            "median": 2614569,
+            "min": 2213649
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 24.5,
+        "timeMs": 14.4,
+        "tokens": 47.6
+      }
+    },
+    "uml-class-diagram-easy": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 0.2531,
+            "median": 0.2503,
+            "min": 0.2476
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 53203,
+            "median": 52705,
+            "min": 52413
+          },
+          "tokens": {
+            "max": 71196,
+            "median": 47910,
+            "min": 47636
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 0.2886,
+            "median": 0.2707,
+            "min": 0.2685
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 65081,
+            "median": 60265,
+            "min": 59787
+          },
+          "tokens": {
+            "max": 97720,
+            "median": 49119,
+            "min": 48892
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 7.5,
+        "timeMs": 12.5,
+        "tokens": 2.5
+      }
+    },
+    "uml-class-diagram-medium": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 1.6377,
+            "median": 0.9907,
+            "min": 0.8033
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 590224,
+            "median": 360238,
+            "min": 233099
+          },
+          "tokens": {
+            "max": 729360,
+            "median": 334406,
+            "min": 247607
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 1.7637,
+            "median": 1.7041,
+            "min": 0.9462
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 590231,
+            "median": 579509,
+            "min": 328680
+          },
+          "tokens": {
+            "max": 902704,
+            "median": 565718,
+            "min": 483439
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 41.9,
+        "timeMs": 37.8,
+        "tokens": 40.9
+      }
+    }
+  },
+  "classification": {
+    "flaggedRuns": [],
+    "incompleteRuns": [],
+    "label": "baseline",
+    "unmetTargets": [],
+    "worseCases": []
+  },
+  "claudeVersion": "2.1.327",
+  "date": "2026-11-18",
+  "effort": {
+    "observed": [
+      "medium"
+    ],
+    "requested": "medium"
+  },
+  "evaluationCostUsd": 28.5014,
+  "format": 1,
+  "model": "claude-opus-5-5",
+  "pluginVersion": "0.2.0",
+  "runId": "2026-11-18T08-14-06Z",
+  "runsPerArm": 3,
+  "skill": "uml-class-diagram",
+  "targets": {
+    "timePercent": 20.0,
+    "tokensPercent": 20.0
+  },
+  "totals": {
+    "arms": {
+      "with": {
+        "costPerRunUsd": 3.9411,
+        "timeMs": 1267694,
+        "tokens": 1753072
+      },
+      "without": {
+        "costPerRunUsd": 5.5519,
+        "timeMs": 1638045,
+        "tokens": 3229406
+      }
+    },
+    "reduction": {
+      "costUsd": 29.0,
+      "timeMs": 22.6,
+      "tokens": 45.7
+    }
+  }
+}

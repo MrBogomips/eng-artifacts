@@ -19,8 +19,11 @@ out=$(python3 -I "$KPI" doc --check 2>&1) || fail "docs" "kpi.py doc --check fai
 copy_repo() { # copy_repo <dir>
     mkdir -p "$1/evals" "$1/skills"
     cp "$ROOT/README.md" "$1/README.md"
-    cp -R "$ROOT/skills/erd" "$1/skills/erd"
-    cp -R "$ROOT/evals/erd" "$1/evals/erd"
+    for skill_dir in "$ROOT"/skills/*/; do
+        skill=$(basename "$skill_dir")
+        cp -R "$ROOT/skills/$skill" "$1/skills/$skill"
+        [ -d "$ROOT/evals/$skill" ] && cp -R "$ROOT/evals/$skill" "$1/evals/$skill"
+    done
 }
 check_in() { python3 -I "$KPI" doc --check --root "$1" 2>&1; }
 # change the first percentage found after an optional marker, as a hand edit would

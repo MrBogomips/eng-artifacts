@@ -1,0 +1,190 @@
+{
+  "baselineOnly": false,
+  "cases": {
+    "uml-class-diagram-complex": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 0.5699,
+            "median": 0.5588,
+            "min": 0.4977
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 91898,
+            "median": 88572,
+            "min": 88126
+          },
+          "tokens": {
+            "max": 224928,
+            "median": 190664,
+            "min": 190567
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 3.0955,
+            "median": 3.0434,
+            "min": 2.1861
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 1191439,
+            "median": 978109,
+            "min": 658659
+          },
+          "tokens": {
+            "max": 3140873,
+            "median": 2266188,
+            "min": 925434
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 81.6,
+        "timeMs": 90.9,
+        "tokens": 91.6
+      }
+    },
+    "uml-class-diagram-easy": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 0.2072,
+            "median": 0.1981,
+            "min": 0.1928
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 26721,
+            "median": 21246,
+            "min": 21067
+          },
+          "tokens": {
+            "max": 114985,
+            "median": 114087,
+            "min": 89256
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 0.3027,
+            "median": 0.2843,
+            "min": 0.2781
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 71490,
+            "median": 67419,
+            "min": 66427
+          },
+          "tokens": {
+            "max": 51360,
+            "median": 50032,
+            "min": 49579
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 30.3,
+        "timeMs": 68.5,
+        "tokens": -128.0
+      }
+    },
+    "uml-class-diagram-medium": {
+      "arms": {
+        "with": {
+          "costPerRunUsd": {
+            "max": 0.2917,
+            "median": 0.2694,
+            "min": 0.2519
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 48652,
+            "median": 42463,
+            "min": 34997
+          },
+          "tokens": {
+            "max": 122956,
+            "median": 97124,
+            "min": 94504
+          }
+        },
+        "without": {
+          "costPerRunUsd": {
+            "max": 1.6979,
+            "median": 1.3075,
+            "min": 1.0559
+          },
+          "runs": 3,
+          "timeMs": {
+            "max": 521912,
+            "median": 445390,
+            "min": 393731
+          },
+          "tokens": {
+            "max": 1025929,
+            "median": 463037,
+            "min": 460803
+          }
+        }
+      },
+      "reduction": {
+        "costUsd": 79.4,
+        "timeMs": 90.5,
+        "tokens": 79.0
+      }
+    }
+  },
+  "classification": {
+    "flaggedRuns": [],
+    "incompleteRuns": [],
+    "label": "below target",
+    "unmetTargets": [],
+    "worseCases": [
+      {
+        "case": "uml-class-diagram-easy",
+        "kpi": "tokens"
+      }
+    ]
+  },
+  "claudeVersion": "2.1.327",
+  "date": "2026-11-18",
+  "effort": {
+    "observed": [
+      "medium"
+    ],
+    "requested": "medium"
+  },
+  "evaluationCostUsd": 16.2889,
+  "format": 1,
+  "model": "claude-opus-5-5",
+  "pluginVersion": "0.3.0",
+  "runId": "2026-11-18T11-06-40Z",
+  "runsPerArm": 3,
+  "skill": "uml-class-diagram",
+  "targets": {
+    "timePercent": 20.0,
+    "tokensPercent": 20.0
+  },
+  "totals": {
+    "arms": {
+      "with": {
+        "costPerRunUsd": 1.0263,
+        "timeMs": 152281,
+        "tokens": 401875
+      },
+      "without": {
+        "costPerRunUsd": 4.6352,
+        "timeMs": 1490918,
+        "tokens": 2779257
+      }
+    },
+    "reduction": {
+      "costUsd": 77.9,
+      "timeMs": 89.8,
+      "tokens": 85.5
+    }
+  }
+}

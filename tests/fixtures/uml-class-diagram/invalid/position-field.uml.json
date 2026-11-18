@@ -1,0 +1,12 @@
+{
+ "title": "t",
+ "classifiers": [
+  {
+   "name": "Order",
+   "kind": "class",
+   "x": 10,
+   "y": 20,
+   "style": "color:red"
+  }
+ ]
+}

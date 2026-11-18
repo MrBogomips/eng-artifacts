@@ -1,0 +1,93 @@
+{
+ "title": "Generics and bindings",
+ "classifiers": [
+  {
+   "name": "Repository",
+   "kind": "interface",
+   "typeParams": [
+    "T"
+   ],
+   "stereotypes": [
+    "port"
+   ],
+   "operations": [
+    {
+     "name": "findById",
+     "returns": "T",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      }
+     ]
+    },
+    {
+     "name": "save",
+     "params": [
+      {
+       "name": "item",
+       "type": "T"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Entity",
+   "kind": "class",
+   "abstract": true,
+   "typeParams": [
+    "TId"
+   ],
+   "attributes": [
+    {
+     "name": "id",
+     "type": "TId",
+     "readOnly": true
+    }
+   ]
+  },
+  {
+   "name": "Order",
+   "kind": "class",
+   "stereotypes": [
+    "aggregate root"
+   ]
+  },
+  {
+   "name": "OrderRepository",
+   "kind": "class"
+  },
+  {
+   "name": "Cache",
+   "kind": "class",
+   "typeParams": [
+    "K",
+    "V"
+   ]
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "realization",
+   "from": "OrderRepository",
+   "to": "Repository",
+   "bindings": {
+    "T": "Order"
+   }
+  },
+  {
+   "kind": "generalization",
+   "from": "Order",
+   "to": "Entity",
+   "bindings": {
+    "TId": "string"
+   }
+  },
+  {
+   "kind": "dependency",
+   "from": "OrderRepository",
+   "to": "Cache"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "title": "t",
+ "classifiers": [
+  {
+   "name": "Repo",
+   "kind": "interface",
+   "typeParams": [
+    "T"
+   ]
+  },
+  {
+   "name": "Impl",
+   "kind": "class"
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "realization",
+   "from": "Impl",
+   "to": "Repo",
+   "bindings": {
+    "X": "Order"
+   }
+  }
+ ]
+}

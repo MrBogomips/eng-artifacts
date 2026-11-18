@@ -1,0 +1,117 @@
+{
+ "title": "Domain level, no types",
+ "description": "A model written from prose: names only, no types.",
+ "packages": [
+  {
+   "id": "ordering",
+   "label": "Ordering"
+  },
+  {
+   "id": "billing",
+   "label": "Billing"
+  }
+ ],
+ "classifiers": [
+  {
+   "name": "Order",
+   "kind": "class",
+   "package": "ordering",
+   "stereotypes": [
+    "aggregate root"
+   ],
+   "attributes": [
+    {
+     "name": "total"
+    },
+    {
+     "name": "status"
+    }
+   ],
+   "operations": [
+    {
+     "name": "confirm"
+    },
+    {
+     "name": "cancel"
+    }
+   ]
+  },
+  {
+   "name": "OrderLine",
+   "kind": "class",
+   "package": "ordering",
+   "attributes": [
+    {
+     "name": "quantity"
+    },
+    {
+     "name": "unitPrice"
+    }
+   ]
+  },
+  {
+   "name": "Invoice",
+   "kind": "class",
+   "package": "billing",
+   "stereotypes": [
+    "aggregate root"
+   ],
+   "attributes": [
+    {
+     "name": "amountDue"
+    }
+   ]
+  },
+  {
+   "name": "Payment",
+   "kind": "class",
+   "package": "billing",
+   "attributes": [
+    {
+     "name": "amount"
+    },
+    {
+     "name": "date"
+    }
+   ]
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "composition",
+   "from": "Order",
+   "to": "OrderLine",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "role": "lines",
+    "multiplicity": "1..*"
+   }
+  },
+  {
+   "kind": "composition",
+   "from": "Invoice",
+   "to": "Payment",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "role": "payments",
+    "multiplicity": "*"
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Invoice",
+   "to": "Order",
+   "fromEnd": {
+    "multiplicity": "0..1"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "navigable": true
+   }
+  }
+ ]
+}

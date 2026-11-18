@@ -1,7 +1,7 @@
 {
   "name": "eng-artifacts",
-  "version": "0.2.0",
-  "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams first; WBS, UML and other diagrams to follow) as self-contained pages that share one visual language, switch between light and dark, and can be re-themed as a whole.",
+  "version": "0.3.0",
+  "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams and UML class diagrams so far; WBS and other diagrams to follow) as self-contained pages that share one visual language, switch between light and dark, and can be re-themed as a whole.",
   "author": {
     "name": "MrBogomips",
     "url": "https://github.com/MrBogomips"
@@ -13,6 +13,8 @@
     "diagram",
     "erd",
     "entity-relationship",
+    "uml",
+    "class-diagram",
     "theme",
     "dark-mode",
     "claude-code-plugin"

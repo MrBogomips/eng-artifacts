@@ -16,7 +16,7 @@ You write a small JSON model; a script validates it, lays the diagram out and pr
    - From a description: entities with sensible columns and types, keys marked, every relationship with its cardinality at both ends.
    - From SQL DDL or an ORM model: every table is an entity, every column keeps its name and type, `PRIMARY KEY` columns get `pk`, foreign key columns get `fk`, a column with its own `UNIQUE` gets `uk`, a column without `NOT NULL` that is not in the primary key gets `nullable`, every foreign key is a relationship from the child (`from`, which holds the key) to the parent (`to`). A `NOT NULL` key gives `toCard` `1`, a nullable one `0..1`; a `UNIQUE` key gives `fromCard` `0..1`, otherwise `0..*`. Use `1..*` only when the user says "at least one".
    - Relationship kind: take it from the user's words (`order_line` owned by `order`; the rest referenced). When they say nothing, set `owned` when the child's primary key includes the joining foreign key, otherwise leave it out (it defaults to `referenced`).
-   - Groups: only when the user names areas or contexts, at most five.
+   - Groups: only when the user names areas or contexts, at most sixteen (colors cycle after the fifth).
 5. **Produce the page.** The theme is `default` unless the user names another (`alt`, or the path of their own theme file):
    ```
    python3 "${CLAUDE_PLUGIN_ROOT}/shared/scripts/artifact_page.py" --type erd --model <name>.erd.json --theme default --out <name>.html

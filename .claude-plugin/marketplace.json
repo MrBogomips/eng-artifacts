@@ -11,13 +11,14 @@
     {
       "name": "eng-artifacts",
       "source": "./",
-      "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams first) as self-contained pages with one shared visual language, a light/dark toggle and replaceable themes.",
-      "version": "0.2.0",
+      "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams and UML class diagrams so far) as self-contained pages with one shared visual language, a light/dark toggle and replaceable themes.",
+      "version": "0.3.0",
       "category": "development",
       "tags": [
         "software-engineering",
         "diagram",
         "erd",
+        "uml",
         "theme"
       ]
     }

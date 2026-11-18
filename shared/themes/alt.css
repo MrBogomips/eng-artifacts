@@ -47,6 +47,7 @@
   --key-primary:   #8a4b08;
   --key-foreign:   #5a3fa0;
   --key-unique:    #0b6b78;
+  --key-stereotype: #2a6f37; /* UML stereotype chip */
 
   /* Type */
   --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
@@ -109,6 +110,7 @@
     --key-primary:   #f0b45a;
     --key-foreign:   #b8a6ff;
     --key-unique:    #5fd3e0;
+    --key-stereotype: #86d98f; /* UML stereotype chip */
 
     color-scheme: dark;
   }
@@ -150,6 +152,7 @@
   --key-primary:   #f0b45a;
   --key-foreign:   #b8a6ff;
   --key-unique:    #5fd3e0;
+  --key-stereotype: #86d98f; /* UML stereotype chip */
 
   color-scheme: dark;
 }

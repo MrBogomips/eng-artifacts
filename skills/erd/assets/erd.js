@@ -112,7 +112,7 @@
      other connectors. Returns the elements the highlight flags together. */
   function drawRelationship(layer, r) {
     var pts = r.points, n = pts.length;
-    var g = A.edgePath(pts, { dashed: r.kind === 'referenced' });
+    var g = A.edgePath(pts, { dashed: r.kind === 'referenced', hops: r.hops });
     /* pts run from the parent (r.to) to the child (r.from) */
     drawMarks(g, pts[0], E.unitVector(pts[0], pts[1]), r.toCard);
     drawMarks(g, pts[n - 1], E.unitVector(pts[n - 1], pts[n - 2]), r.fromCard);
@@ -126,11 +126,18 @@
     return els;
   }
 
+  /* a self-relationship loop leaves the table's right side and returns to it */
+  function loopPoints(r) {
+    var e = r.from, right = e.x + e.w, sp = E.loopSpan(e);
+    var x2 = right + G.loopW;
+    return [{ x: right, y: sp.y1 }, { x: x2, y: sp.y1 }, { x: x2, y: sp.y2 }, { x: right, y: sp.y2 }];
+  }
+
   function drawLoop(layer, r) {
     var e = r.from, right = e.x + e.w, sp = E.loopSpan(e);
     var x2 = right + G.loopW;
-    var pts = [{ x: right, y: sp.y1 }, { x: x2, y: sp.y1 }, { x: x2, y: sp.y2 }, { x: right, y: sp.y2 }];
-    var g = A.edgePath(pts, { dashed: r.kind === 'referenced' });
+    var pts = loopPoints(r);
+    var g = A.edgePath(pts, { dashed: r.kind === 'referenced', hops: r.hops });
     var out = { x: 1, y: 0 };
     drawMarks(g, pts[0], out, r.toCard);
     drawMarks(g, pts[3], out, r.fromCard);
@@ -287,6 +294,9 @@
         zoneLayer.appendChild(A.zone({ x: z.x, y: z.y, width: z.w, height: z.h, group: z.group, label: z.label }));
       });
       p.entities.forEach(function (e) { drawTable(tableLayer, e); });
+      /* where a connector crosses one drawn before it, it hops (shared primitive) */
+      var hopSets = A.hops(p.rels.map(function (r) { return r.self ? loopPoints(r) : r.points; }));
+      p.rels.forEach(function (r, i) { r.hops = hopSets[i]; });
       var linked = {};
       p.rels.forEach(function (r) { linked[r.id] = r.self ? drawLoop(edgeLayer, r) : drawRelationship(edgeLayer, r); });
 
@@ -306,7 +316,7 @@
 
       /* linked highlighting: tables, connectors with their joining rows, and the relationships table */
       A.hl.bind(svg);
-      p.entities.forEach(function (e) { A.hl.node(e.name, e.el); });
+      p.entities.forEach(function (e) { A.hl.node(e.name, e.el, { label: 'Table ' + e.name + ': pin its highlight' }); });
       p.rels.forEach(function (r) {
         var rows = r.columns ? [r.from.el.rowEls[r.from.rowIndex[r.columns[0]]], r.to.el.rowEls[r.to.rowIndex[r.columns[1]]]] : [];
         A.hl.link(r.id, r.from.name, r.to.name, { els: linked[r.id], rows: rows });
