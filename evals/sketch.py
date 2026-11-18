@@ -4,20 +4,23 @@
     sketch.py --run-dir evals/results/sketch-<run-id> [--effort <level>]
 
 The run folder holds `aggregate.json`, the output of `claude plugin eval --json` run by
-`evals/sketch.sh` on the empty stub plugin. Stage 1 is the collection of `kpi.py`: it copies each
-session's trace and deliverables into `<run-dir>/<case>/with-1/` and deletes the temporary folder
-the eval tool kept. Stage 2 computes the report from those copies only, so the same records always
-give the same `report.json` and `report.md`. Per case: the kept deliverable, whether it exists,
-whether the session was skill-free, tokens, time and cost; then the total cost. The report holds no
-classification and no decision.
+`evals/sketch.sh` on the empty stub plugin: one complex case, run three times with the identical
+prompt. Stage 1 is the collection of `kpi.py`: it copies each session's trace and deliverables into
+`<run-dir>/sketch-complex/with-<n>/` and deletes the temporary folder the eval tool kept. Stage 2
+computes the report from those copies only, so the same records always give the same `report.json`
+and `report.md`. Per run: the kept deliverable, whether it exists, whether the session was
+skill-free, the effort the session observed, tokens, time and cost; then the total cost and the
+fingerprint (SHA-256) of the prompt the three runs shared, read from the stub copy of the case in
+`<run-dir>/plugin/evals/complex/prompt.md`. The report holds no classification and no decision.
 
 A session is skill-free when its trace shows no call of the Skill tool and its init record does not
-offer that tool.
+offer that tool. A run that was not recorded is reported as missing, with the reason.
 
-Exit status: 0 when every case has its deliverable and is skill-free, 1 when one has not, 2 when
-the tooling failed.
+Exit status: 0 when the three runs have their deliverable and are skill-free, 1 when one has not,
+2 when the tooling failed.
 """
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -25,8 +28,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import kpi  # noqa: E402  (the collection and the metrics are shared with the evaluation report)
 
-CASES = ("easy", "medium", "complex")
-ARM, RUN = "with", 1
+CASE = "complex"
+ARM = "with"
+RUNS = 3  # the number of runs of the complex case the exploration expects
 
 
 # ----------------------------------------------------------------------------- stage 2: compute
@@ -64,49 +68,64 @@ def deliverable_name(case, files):
     return html[0] if html else None
 
 
-def case_entry(run_dir, run_id, difficulty, case):
-    entry = {"case": difficulty, "name": None, "deliverable": None, "exists": False,
-             "skillFree": None, "complete": False}
-    if case is None:
-        entry["problem"] = "the case did not run"
+def run_entry(run_dir, run_id, case, index, run):
+    """One row of the report: run number `index` (1-based) of the complex case; `run` is its record or None."""
+    entry = {"run": index, "deliverable": None, "exists": False, "skillFree": None,
+             "complete": False, "observedEffort": None}
+    if run is None:
+        entry["problem"] = "the run did not run"
         return entry
-    entry["name"] = case["name"]
-    rel = kpi.run_dir_name(case["name"], ARM, RUN)
+    rel = kpi.run_dir_name(case["name"], ARM, index)
     trace = os.path.join(run_dir, rel, "trace.jsonl")
     meta_path = os.path.join(run_dir, rel, "meta.json")
-    files = kpi.load_json(meta_path).get("files", []) if os.path.isfile(meta_path) else []
+    meta = kpi.load_json(meta_path) if os.path.isfile(meta_path) else {}
+    files = meta.get("files", [])
+    entry["observedEffort"] = meta.get("effort") if isinstance(meta.get("effort"), list) else None
     name = deliverable_name(case, files)
     entry["exists"] = name is not None and name in files
     if name is not None:
         entry["deliverable"] = "evals/results/%s/%s/deliverables/%s" % (run_id, rel, name)
     result = kpi.read_result(trace) if os.path.isfile(trace) else None
-    runs = (case.get("arms") or {}).get(ARM) or []
-    error = runs[0].get("error") if runs else "no run recorded"
     if os.path.isfile(trace):
         offered, called = skill_use(trace)
         entry["skillFree"] = not (offered or called)
-    if result is None or error:
-        entry["problem"] = error or "no result record in the trace"
+    if result is None or run.get("error"):
+        entry["problem"] = run.get("error") or "no result record in the trace"
         return entry
     entry["complete"] = True
     entry.update(kpi.run_metrics(result, "%s/trace.jsonl" % rel))
     return entry
 
 
+def prompt_fingerprint(run_dir):
+    """SHA-256 of the stub copy of the complex prompt, or None when the run folder holds none."""
+    path = os.path.join(run_dir, "plugin", "evals", CASE, "prompt.md")
+    try:
+        with open(path, "rb") as fh:
+            return hashlib.sha256(fh.read()).hexdigest()
+    except OSError:
+        return None
+
+
 def compute(run_dir, aggregate, effort):
     run_id = os.path.basename(os.path.normpath(run_dir))
     by_dir = {os.path.basename((c.get("dir") or "").rstrip("/")): c for c in aggregate.get("cases", [])}
-    cases = [case_entry(run_dir, run_id, d, by_dir.get(d)) for d in CASES]
-    total = kpi.as_num(sum(c.get("costUsd", 0.0) for c in cases), 4)
+    case = by_dir.get(CASE)
+    recorded = ((case or {}).get("arms") or {}).get(ARM) or []
+    rows = [run_entry(run_dir, run_id, case, i, recorded[i - 1] if i <= len(recorded) else None)
+            for i in range(1, max(RUNS, len(recorded)) + 1)]
+    total = kpi.as_num(sum(r.get("costUsd", 0.0) for r in rows), 4)
     plugin = (aggregate.get("suite", {}).get("plugins") or [{}])[0]
-    ok = all(c["exists"] and c["skillFree"] is True and c["complete"] for c in cases)
+    sha = prompt_fingerprint(run_dir)
+    ok = sha is not None and all(r["exists"] and r["skillFree"] is True and r["complete"] for r in rows)
     return {
         "runId": run_id,
         "claudeVersion": aggregate.get("claudeVersion", "unknown"),
         "pluginVersion": plugin.get("version", "unknown"),
         "model": aggregate.get("suite", {}).get("modelOverride") or "default",
         "effort": effort,
-        "cases": cases,
+        "promptSha256": sha,
+        "runs": rows,
         "totalCostUsd": total,
         "ok": ok,
     }
@@ -119,29 +138,33 @@ def yes_no(value):
 
 
 def render_markdown(rep):
+    sha = rep["promptSha256"]
     lines = [
         "# Sketch report: %s" % rep["runId"],
         "",
-        "- Model: %s; effort: %s; Claude Code: %s; one run per case"
-        % (rep["model"], rep["effort"], rep["claudeVersion"]),
-        "- Verdict: **%s**" % ("all three sketches delivered and skill-free" if rep["ok"] else "a sketch is missing or not skill-free"),
+        "- Model: %s; effort: %s; Claude Code: %s; %d runs of the complex case"
+        % (rep["model"], rep["effort"], rep["claudeVersion"], len(rep["runs"])),
+        "- Prompt fingerprint (SHA-256, first 12 digits), the same for every run: %s"
+        % ("`%s`" % sha[:12] if sha else "unknown (no prompt.md in the run folder)"),
+        "- Verdict: **%s**" % ("all runs delivered and skill-free" if rep["ok"] else "a run is missing or not skill-free, or the prompt is unknown"),
         "",
-        "| Case | Deliverable | Exists | Skill-free | Tokens | Time (s) | Cost (USD) |",
-        "|---|---|---|---|---:|---:|---:|",
+        "| Run | Deliverable | Exists | Skill-free | Effort observed | Tokens | Time (s) | Cost (USD) |",
+        "|---|---|---|---|---|---:|---:|---:|",
     ]
-    for c in rep["cases"]:
-        if c["complete"]:
-            figures = "%s | %s | %.4f" % (kpi.fmt_int(c["tokens"]), kpi.fmt_s(c["timeMs"]), c["costUsd"])
+    for r in rep["runs"]:
+        if r["complete"]:
+            figures = "%s | %s | %.4f" % (kpi.fmt_int(r["tokens"]), kpi.fmt_s(r["timeMs"]), r["costUsd"])
         else:
             figures = "n/a | n/a | n/a"
-        lines.append("| %s | %s | %s | %s | %s |" % (
-            c["case"], "`%s`" % c["deliverable"] if c["deliverable"] else "none",
-            yes_no(c["exists"]), yes_no(c["skillFree"]), figures))
+        observed = "/".join(r["observedEffort"]) if r["observedEffort"] else "unknown"
+        lines.append("| run %d | %s | %s | %s | %s | %s |" % (
+            r["run"], "`%s`" % r["deliverable"] if r["deliverable"] else "none",
+            yes_no(r["exists"]), yes_no(r["skillFree"]), observed, figures))
     lines += ["", "Total cost: %.4f USD." % rep["totalCostUsd"], ""]
-    for c in rep["cases"]:
-        if c.get("problem"):
-            lines.append("- %s: %s" % (c["case"], c["problem"]))
-    if any(c.get("problem") for c in rep["cases"]):
+    for r in rep["runs"]:
+        if r.get("problem"):
+            lines.append("- run %d: %s" % (r["run"], r["problem"]))
+    if any(r.get("problem") for r in rep["runs"]):
         lines.append("")
     return "\n".join(lines)
 

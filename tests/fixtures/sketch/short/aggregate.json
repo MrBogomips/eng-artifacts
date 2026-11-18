@@ -1,0 +1,41 @@
+{
+  "cases": [
+    {
+      "arms": {
+        "with": [
+          {
+            "error": null,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "tracePath": null
+          }
+        ]
+      },
+      "dir": "evals/complex",
+      "graders": [
+        {
+          "config": {
+            "exists": true,
+            "path": "complex.html"
+          },
+          "name": "file",
+          "type": "file_exists"
+        }
+      ],
+      "name": "sketch-complex"
+    }
+  ],
+  "claudeVersion": "0.0.0-fixture",
+  "schemaVersion": 1,
+  "suite": {
+    "modelOverride": "fixture-model",
+    "plugins": [
+      {
+        "name": "sketch-stub",
+        "version": "0.0.0"
+      }
+    ]
+  }
+}
