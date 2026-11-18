@@ -17,7 +17,7 @@ Color values and font families used by any artifact SHALL be defined only in the
 - **THEN** the static check does not report it
 
 ### Requirement: Token set
-Every theme SHALL define the same token set: the role vocabulary of the visual design, covering surfaces, ink, emphasis, the five status states, five groups, the three key roles, three font roles, geometry and treatment (including the zone, chip and highlight mixes). The default theme is the reference set.
+Every theme SHALL define the same token set: the role vocabulary of the visual design, covering surfaces, ink, emphasis, the five status states, five groups, the four key roles (primary, foreign, unique, stereotype), three font roles, geometry and treatment (including the zone, chip and highlight mixes). The default theme is the reference set.
 
 #### Scenario: Theme missing a token fails the tests
 - **WHEN** a theme file lacks a token that the default theme defines, or defines one the default does not
@@ -29,7 +29,15 @@ Every theme SHALL define the same token set: the role vocabulary of the visual d
 
 #### Scenario: New roles are in every theme
 - **WHEN** the structural tests read a shipped theme
-- **THEN** it defines the three key roles, the chip, zone and highlight mixes and the zone radius, with a light and a dark value for each key role
+- **THEN** it defines the four key roles, the chip, zone and highlight mixes and the zone radius, with a light and a dark value for each key role
+
+#### Scenario: Project theme without the stereotype role
+- **WHEN** a page is produced with a project theme written before the stereotype role existed
+- **THEN** no page is produced and the error names `--key-stereotype` as missing
+
+#### Scenario: Stereotype chip legible
+- **WHEN** the stereotype role is checked on its chip ground in every shipped theme, in light and in dark
+- **THEN** it reaches 4.5:1, as every other key role does
 
 ### Requirement: Light and dark in every theme
 Every theme SHALL give every color token a light value and a dark value. Dark values SHALL apply both when the viewer's system prefers dark with no explicit choice, and when dark is chosen explicitly; an explicit light choice SHALL override a dark system preference.
