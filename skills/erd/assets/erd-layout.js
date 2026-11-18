@@ -66,6 +66,58 @@
   }
   E.loopSpan = loopSpan;
 
+  /* A table drawn as its band alone (the names level, or a table with no key column at the key level) is
+     34 high: too low to hold two connector ends a separation apart clear of the rounded corners. Its ends
+     therefore sit on its top and bottom sides, where the width allows them. */
+  function bandOnly(e) { return !e.rows.length; }
+  E.bandOnly = bandOnly;
+
+  /* Where `m` ends sit along the top or bottom side of a band-only table, as distances from its left
+     edge: clear of the corners by G.endInset, at least G.sep apart (a bottom side that holds the end of
+     the table's own loop leaves that end its place), evenly spread when the width allows. Returns the
+     list and sets `crowded` on it when the ends cannot be told apart. */
+  function sideSpan(e, side) {
+    var hi = e.w - G.endInset;
+    if (side === 'S' && e.loop) hi -= G.sep;
+    return { lo: G.endInset, hi: Math.max(G.endInset, hi) };
+  }
+  function sideCapacity(e, side) {
+    var sp = sideSpan(e, side);
+    return Math.floor((sp.hi - sp.lo) / G.sep) + 1;
+  }
+  function spreadAcross(e, side, m) {
+    var sp = sideSpan(e, side), xs = [], i;
+    if (m === 1) return [(sp.lo + sp.hi) / 2];
+    if ((sp.hi - sp.lo) / (m + 1) >= G.sep) {
+      for (i = 0; i < m; i++) xs.push(sp.lo + (sp.hi - sp.lo) * (i + 1) / (m + 1));
+      return xs;
+    }
+    var span = G.sep * (m - 1), start = Math.max(sp.lo, Math.min((sp.lo + sp.hi) / 2 - span / 2, sp.hi - span));
+    for (i = 0; i < m; i++) xs.push(start + G.sep * i);
+    return xs;
+  }
+  /* may a connector leave the top of table `e`? Not when the room above it is the label room of its group */
+  function topIsFree(e) {
+    return !e.zone || e.y - e.zone.y >= ZM.labelY + G.labelH / 2 + G.stub;
+  }
+
+  /* The route of a self-relationship loop. Beside a table with body rows it takes the lowest stretch of the
+     right side, both ends on it. A band alone cannot hold two ends there, so the loop leaves the middle
+     of the right side and returns into the bottom side, by the right corner, through the room the table
+     keeps below it (e.loopDown). */
+  E.loopPoints = function (e) {
+    var right = e.x + e.w, x2 = right + G.loopW;
+    if (bandOnly(e)) {
+      var mid = e.y + e.h / 2, bottom = e.y + e.h, low = bottom + e.loopDown, bx = right - G.endInset;
+      return [{ x: right, y: mid }, { x: x2, y: mid }, { x: x2, y: low }, { x: bx, y: low }, { x: bx, y: bottom }];
+    }
+    var sp = loopSpan(e);
+    return [{ x: right, y: sp.y1 }, { x: x2, y: sp.y1 }, { x: x2, y: sp.y2 }, { x: right, y: sp.y2 }];
+  };
+  E.loopLabelY = function (e) {
+    var pts = E.loopPoints(e);
+    return bandOnly(e) ? (pts[0].y + pts[2].y) / 2 : (pts[0].y + pts[3].y) / 2;
+  };
   /* The stretch of a table side where connector ends may attach. */
   function sideRange(e, side) {
     var lo = e.y + HM.band + G.endInset, hi = e.y + e.h - G.endInset;
@@ -103,7 +155,8 @@
      left (the flow normally runs parent to child, so parents sit left of their children; see
      orientations for the exception).
        - A relationship that names its joining columns attaches at the height of those rows, inside
-         the row. A row holds as many ends on one side as can be told apart (bars G.sep apart); when a
+         the row (r.joins: the columns the detail level draws; an end whose column is hidden attaches
+         as an end without columns). A row holds as many ends on one side as can be told apart (bars G.sep apart); when a
          row has more, the extras go to the other side of the table, the ones whose other table lies
          on that side first (known from the first pass). A row that cannot be separated even then is
          listed in p.crowded.
@@ -120,12 +173,14 @@
     p.crowded = [];
     function cx(e) { return e.x + e.w / 2; }
     function cy(e) { return e.y + e.h / 2; }
+    var bandEnds = {};   /* ends at a band-only table, by table name */
     p.rels.forEach(function (r) {
       if (r.self) return;
       var src = r.flip ? r.from : r.to, dst = r.flip ? r.to : r.from;
       [[src, dst, 'src', 'E'], [dst, src, 'dst', 'W']].forEach(function (d) {
-        var e = d[0], col = r.columns ? r.columns[e === r.from ? 0 : 1] : null;
+        var e = d[0], col = r.joins ? r.joins[e === r.from ? 0 : 1] : null;
         var end = { r: r, e: e, other: d[1], role: d[2], side: d[3], col: col, y: 0 };
+        if (bandOnly(e)) { (bandEnds[e.name] = bandEnds[e.name] || []).push(end); return; }
         ends.push(end);
         if (col === null) return;
         var k = e.name + '|' + col;
@@ -181,6 +236,7 @@
       if (best && best.s[0] === 0) p.crowded.push(e.name + ' (an end without columns)');
       use(e, x.side, x.y);
     });
+    assignBandPorts(p, bandEnds, placed);
     ends.forEach(function (x, i) {
       var id = x.e.name + '|' + x.side + '|' + i;
       x.e.ports.push({ id: id, x: x.side === 'E' ? x.e.w + x.e.loopRoom : 0, y: x.y, width: 0, height: 0,
@@ -189,8 +245,43 @@
     });
   }
 
+  /* The ends of a band-only table go to its top or bottom side: to the top when the table they join lies
+     above it (known from the first pass), otherwise to the bottom. A side that holds more ends than it can
+     separate gives the extras to the other one. The ends of a side are ordered by where their other table
+     lies, so the connectors cross as little as they can. Each end is a port at the table's boundary; the
+     bottom boundary is the one of the node, which is `loopDown` lower when the table keeps room for a loop. */
+  function assignBandPorts(p, bandEnds, placed) {
+    function cx(e) { return e.x + e.w / 2; }
+    function cy(e) { return e.y + e.h / 2; }
+    Object.keys(bandEnds).forEach(function (name) {
+      var list = bandEnds[name], e = list[0].e, sides = { N: [], S: [] };
+      list.forEach(function (x) {
+        var up = placed && cy(x.other) < cy(e) - 0.5 && topIsFree(e);
+        sides[up ? 'N' : 'S'].push(x);
+      });
+      if (!placed) p.moved += list.length;
+      [['S', 'N'], ['N', 'S']].forEach(function (pair) {
+        while (sides[pair[0]].length > sideCapacity(e, pair[0]) && sides[pair[1]].length < sideCapacity(e, pair[1]) &&
+          (pair[1] === 'S' || topIsFree(e))) sides[pair[1]].push(sides[pair[0]].pop());
+      });
+      ['N', 'S'].forEach(function (side) {
+        var xs = sides[side];
+        if (!xs.length) return;
+        if (xs.length > sideCapacity(e, side)) p.crowded.push(e.name + ' (' + side + ' side)');
+        if (placed) xs.sort(function (a, b) { return cx(a.other) - cx(b.other); });
+        var pos = spreadAcross(e, side, xs.length);
+        xs.forEach(function (x, i) {
+          var id = e.name + '|' + side + '|' + i;
+          e.ports.push({ id: id, x: pos[i], y: side === 'N' ? 0 : e.h + e.loopDown, width: 0, height: 0,
+            layoutOptions: { 'elk.port.side': side === 'N' ? 'NORTH' : 'SOUTH' } });
+          if (x.role === 'src') x.r.portSrc = id; else x.r.portDst = id;
+        });
+      });
+    });
+  }
+
   function elkNode(e) {
-    var n = { id: e.name, width: e.w + e.loopRoom, height: e.h };
+    var n = { id: e.name, width: e.w + e.loopRoom, height: e.h + e.loopDown };
     if (e.ports.length) { n.layoutOptions = { 'elk.portConstraints': 'FIXED_POS' }; n.ports = e.ports; }
     return n;
   }
@@ -400,6 +491,7 @@
       [[0, r.to], [r.points.length - 1, r.from]].forEach(function (pair) {
         var pt = r.points[pair[0]], e = pair[1];
         if (e.loopRoom && Math.abs(pt.x - (e.x + e.w + e.loopRoom)) < 0.5) pt.x = e.x + e.w;
+        if (e.loopDown && Math.abs(pt.y - (e.y + e.h + e.loopDown)) < 0.5) pt.y = e.y + e.h;
       });
     });
   }
@@ -424,7 +516,7 @@
      move up, so no connector crosses the loop and no mark touches a loop mark. */
   function clearLoops(p) {
     p.entities.forEach(function (e) {
-      if (!e.loop) return;
+      if (!e.loop || bandOnly(e)) return;
       var span = loopSpan(e), range = sideRange(e, 'R'), side = e.x + e.w;
       var ends = [];
       p.rels.forEach(function (r) {
@@ -465,6 +557,7 @@
       b.firstRow = nRows;
       b.ents.forEach(function (e, i) {
         e.col = i % cols; e.row = b.firstRow + Math.floor(i / cols);
+        e.groupTop = !!b.zone && e.row === b.firstRow;   /* its top side faces the group's label room */
         (grid[e.row] = grid[e.row] || []).push(e);
       });
       b.lastRow = b.firstRow + Math.ceil(b.ents.length / cols) - 1;
@@ -474,7 +567,7 @@
       rowH[r] = 0;
       row.forEach(function (e) {
         colW[e.col] = Math.max(colW[e.col] || 0, e.w + e.loopRoom);
-        rowH[r] = Math.max(rowH[r], e.h);
+        rowH[r] = Math.max(rowH[r], e.h + e.loopDown);
       });
     });
 
@@ -488,16 +581,25 @@
     });
 
     /* classify each connector: adjacent in a row (side to side), or out of the child's bottom */
-    var links = [], gapLinks = [], gutterLinks = [];
+    var links = [], gapLinks = [], gutterLinks = [], taller = [];   /* taller[r]: a connector enters a table from the top, past the stub */
     function lane(list, i, link, key) { (list[i] = list[i] || []).push(link); link[key] = list[i].length - 1; }
     p.rels.forEach(function (r) {
       if (r.self) return;
       var a = r.from, b = r.to;
-      var l = { r: r, a: a, b: b, adjacent: a.row === b.row && Math.abs(a.col - b.col) === 1 };
+      /* a connector at a band-only table ends on its top or bottom, so it runs through the gutters */
+      var l = { r: r, a: a, b: b, adjacent: !bandOnly(a) && !bandOnly(b) && a.row === b.row && Math.abs(a.col - b.col) === 1 };
       var toRight = l.adjacent ? b.col > a.col : b.col >= a.col;
       l.sideB = toRight ? 'L' : 'R';
+      if (bandOnly(b)) {
+        l.sideB = b.row > a.row && !b.groupTop ? 'T' : 'B';
+        l.gutterB = l.sideB === 'T' ? b.row : b.row + 1;
+        if (l.sideB === 'T') taller[b.row] = true;
+      }
       if (l.adjacent) { l.sideA = toRight ? 'R' : 'L'; l.gap = toRight ? b.col : a.col; }
-      else { l.sideA = 'B'; l.gap = toRight ? b.col : b.col + 1; l.gutter = a.row + 1; lane(gutterLinks, l.gutter, l, 'gutterLane'); }
+      else {
+        l.sideA = 'B'; l.gap = toRight ? b.col : b.col + 1; l.gutter = a.row + 1; lane(gutterLinks, l.gutter, l, 'gutterLane');
+        if (l.gutterB !== undefined) lane(gutterLinks, l.gutterB, l, 'gutterLaneB');
+      }
       lane(gapLinks, l.gap, l, 'gapLane');
       links.push(l);
     });
@@ -515,11 +617,12 @@
       var w = ends.left + cnt * G.step + ends.right;
       return g > 0 && g < nCols ? Math.max(G.gridGapX, w) : w;
     }
+    function tailOf(r) { return r === nRows ? G.margin : taller[r] ? G.stub : G.endInset; }
     function gutterHeight(r) {
       var cnt = count(gutterLinks, r);
       if (r === 0) return G.margin + below[0];
       if (r === nRows) return above[r] + (cnt ? G.stub + cnt * G.step : 0) + G.margin;
-      return above[r] + Math.max(G.gridGapY, G.stub + cnt * G.step + G.endInset) + below[r];
+      return above[r] + Math.max(G.gridGapY, G.stub + cnt * G.step + tailOf(r)) + below[r];
     }
     var gapStart = [], gapW = [], colX = [], x = 0, g, r;
     for (g = 0; g <= nCols; g++) {
@@ -538,11 +641,16 @@
       var g2 = l.gap, cnt = count(gapLinks, g2), ends = gapEnds(g2, cnt);
       var spare = gapW[g2] - ends.left - ends.right - cnt * G.step;
       l.laneX = gapStart[g2] + ends.left + spare / 2 + (l.gapLane + 0.5) * G.step;
+      /* the height of lane `n` in gutter `gt`: the lanes of a gutter are centred between the stub below the tables
+         above it and the room above the tables below it */
+      function laneAt(gt, n) {
+        var c2 = count(gutterLinks, gt);
+        var spare2 = gutH[gt] - above[gt] - below[gt] - G.stub - c2 * G.step - tailOf(gt);
+        return gutStart[gt] + above[gt] + G.stub + spare2 / 2 + (n + 0.5) * G.step;
+      }
       if (!l.adjacent) {
-        var c2 = count(gutterLinks, l.gutter);
-        var tail = l.gutter === nRows ? G.margin : G.endInset;
-        var spare2 = gutH[l.gutter] - above[l.gutter] - below[l.gutter] - G.stub - c2 * G.step - tail;
-        l.laneY = gutStart[l.gutter] + above[l.gutter] + G.stub + spare2 / 2 + (l.gutterLane + 0.5) * G.step;
+        l.laneY = laneAt(l.gutter, l.gutterLane);
+        if (l.gutterB !== undefined) l.laneYB = laneAt(l.gutterB, l.gutterLaneB);
       }
     });
 
@@ -559,9 +667,13 @@
     }
     Object.keys(sides).forEach(function (k) {
       var s = sides[k], e = s.e, m = s.items.length;
-      if (s.side === 'B') {
+      if (s.side === 'B' || s.side === 'T') {
         s.items.sort(function (u, v) { return u.l.laneX - v.l.laneX; });
-        s.items.forEach(function (it, i) { it.l.ax = e.x + e.w * (i + 1) / (m + 1); });
+        var xs = bandOnly(e) ? spreadAcross(e, s.side === 'T' ? 'N' : 'S', m) : null;
+        s.items.forEach(function (it, i) {
+          var x = xs ? e.x + xs[i] : e.x + e.w * (i + 1) / (m + 1);
+          if (it.end === 'a') it.l.ax = x; else it.l.bx2 = x;
+        });
       } else {
         s.items.sort(function (u, v) { return comesFrom(u) - comesFrom(v); });
         var ys = spreadOnSide(e, s.side, m);
@@ -574,7 +686,10 @@
     /* routes, child to parent, then reversed: the shared drawing code wants parent to child */
     links.forEach(function (l) {
       var a = l.a, b = l.b, bx = l.sideB === 'L' ? b.x : b.x + b.w, pts;
-      if (l.adjacent) {
+      if (l.gutterB !== undefined) {   /* into the top or bottom of a band-only table, along the gutter beside it */
+        pts = [{ x: l.ax, y: a.y + a.h }, { x: l.ax, y: l.laneY }, { x: l.laneX, y: l.laneY }, { x: l.laneX, y: l.laneYB },
+          { x: l.bx2, y: l.laneYB }, { x: l.bx2, y: l.sideB === 'T' ? b.y : b.y + b.h }];
+      } else if (l.adjacent) {
         var sx = l.sideA === 'R' ? a.x + a.w : a.x;
         pts = [{ x: sx, y: l.ay }, { x: l.laneX, y: l.ay }, { x: l.laneX, y: l.by }, { x: bx, y: l.by }];
       } else {
@@ -592,7 +707,7 @@
       var x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
       b.ents.forEach(function (e) {
         x1 = Math.min(x1, e.x); y1 = Math.min(y1, e.y);
-        x2 = Math.max(x2, e.x + e.w + e.loopRoom); y2 = Math.max(y2, e.y + e.h);
+        x2 = Math.max(x2, e.x + e.w + e.loopRoom); y2 = Math.max(y2, e.y + e.h + e.loopDown);
       });
       b.zone.x = x1 - ZM.pad; b.zone.y = y1 - ZM.padTop;
       b.zone.w = x2 - x1 + 2 * ZM.pad; b.zone.h = y2 - y1 + ZM.padTop + ZM.pad;
@@ -631,7 +746,8 @@
       solid.push({ x: e.x, y: e.y, w: e.w, h: e.h });
       if (e.loop) {
         var sp = loopSpan(e);
-        solid.push({ x: e.x + e.w, y: sp.y1 - G.half, w: e.loopRoom, h: sp.y2 - sp.y1 + 2 * G.half });
+        if (bandOnly(e)) solid.push({ x: e.x + e.w - G.endInset - G.half, y: e.y + e.h / 2 - G.half, w: e.loopRoom + G.endInset + G.half, h: e.h / 2 + e.loopDown + G.half });
+        else solid.push({ x: e.x + e.w, y: sp.y1 - G.half, w: e.loopRoom, h: sp.y2 - sp.y1 + 2 * G.half });
       }
     });
     p.rels.forEach(function (r) {

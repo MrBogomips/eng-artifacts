@@ -1,6 +1,6 @@
 ---
 name: skill-eval
-description: "How the artifacts plugin measures whether an artifact skill pays for itself: the testbed of three cases (easy, medium, complex), the with-and-without comparison of time and tokens, how to write fair cases and mechanical graders, how to read the KPI report, review the kept deliverables and record the adopt, rework or reject decision. Use when writing the testbed for a new or changed artifact skill, running or re-running an evaluation, reading an evaluation report, deciding whether a skill is adopted, or when a proposal, design or task list must state its Effectiveness section."
+description: "How the artifacts plugin measures whether an artifact skill pays for itself: the testbed of three cases (easy, medium, complex), the with-and-without comparison of time and tokens, how to write fair cases and mechanical graders, how to read the KPI report, review the kept deliverables and record the adopt, rework or reject decision. Use when writing the testbed for a new artifact skill or a major refactoring of one, running or re-running an evaluation, reading an evaluation report, deciding whether a skill is adopted, or when a proposal, design or task list must state its Effectiveness section."
 ---
 
 # Skill evaluation
@@ -79,7 +79,7 @@ The numbers do not say whether the pages are right. Open the kept deliverables o
 
 ## Recording the decision
 
-The decision is the person's: `adopt`, `rework` or `reject`, with a reason, written on the `Decision:` line of the evaluation's entry in `evals/<skill>/RESULTS.md` (the entry starts as `Decision: pending`). An entry holds no absolute path, user name or transcript, so it can be committed as is; raw runs and kept deliverables stay in the ignored `evals/results/`. A change that adds or changes an artifact skill is archived only after `adopt` is recorded on an evaluation of its final version.
+The decision is the person's: `adopt`, `rework` or `reject`, with a reason, written on the `Decision:` line of the evaluation's entry in `evals/<skill>/RESULTS.md` (the entry starts as `Decision: pending`). An entry holds no absolute path, user name or transcript, so it can be committed as is; raw runs and kept deliverables stay in the ignored `evals/results/`. A change that needs an evaluation (a new artifact skill, a major refactoring of an existing one declared in its proposal, or the person's explicit request) is archived only after `adopt` is recorded on an evaluation of its final version. Any other change to an existing skill runs no evaluation and keeps the skill's last adopted one in its documentation.
 
 ## Documenting the result
 

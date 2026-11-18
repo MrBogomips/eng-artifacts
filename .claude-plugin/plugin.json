@@ -1,6 +1,6 @@
 {
   "name": "eng-artifacts",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams and UML class diagrams so far; WBS and other diagrams to follow) as self-contained pages that share one visual language, switch between light and dark, and can be re-themed as a whole.",
   "author": {
     "name": "MrBogomips",

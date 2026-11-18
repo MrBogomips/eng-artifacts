@@ -12,7 +12,7 @@
       "name": "eng-artifacts",
       "source": "./",
       "description": "Skills for the optimized production of software engineering artifacts (entity relationship diagrams and UML class diagrams so far) as self-contained pages with one shared visual language, a light/dark toggle and replaceable themes.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "category": "development",
       "tags": [
         "software-engineering",
