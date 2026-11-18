@@ -4,6 +4,8 @@ Read when Phase 3b starts, together with `.claude/skills/skill-eval/SKILL.md`. T
 
 Ask for no cost confirmation: the user decided evaluations are not capped, and the cost is reported.
 
+A derived skill evaluated at the person's request has no testbed yet: have it written first, as "A derived skill: validated, not measured" in `skill-eval` says, then run the steps below.
+
 1. Run `bash evals/run.sh <skill>`, with `--target-tokens` and `--target-time` when the proposal sets stricter targets. It prints the report and appends a `Decision: pending` entry to `evals/<skill>/RESULTS.md`. Never publish a report.
 2. Give the user the report (classification, KPI table, cost, flagged runs) and the paths of both arms' kept deliverables to compare, with what you saw in them.
 3. Ask for the decision and record it, with the user's reason, on the `Decision:` line of that entry in `RESULTS.md`; then route by it as Phase 3b in `SKILL.md` says (`adopt`, `rework`, `reject`).

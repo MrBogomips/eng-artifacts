@@ -1,4 +1,4 @@
-"""Documentation generator for the evaluated skills (python3, standard library only).
+"""Documentation generator for the adopted skills (python3, standard library only).
 
     python3 evals/kpi.py doc [<skill>] [--check] [--root <dir>]
 
@@ -15,6 +15,12 @@ The adopted evaluation is the newest entry of RESULTS.md whose `Decision:` line 
 a baseline (`Decision: n/a`), a pending, `rework` or `reject` entry never counts. Nothing is computed
 from the Markdown tables; the figures come from the JSON the evaluation wrote.
 
+A derived skill is not evaluated: its newest adopted entry is a validation, whose decision starts with
+`adopt (validated, not measured` and which carries `Plugin version:`, `Anchor:` (a skill that itself has
+an adopted entry) and `Sample:` lines. It needs no run and no summary JSON. Its Performance section is a
+fixed "Not measured" paragraph naming the anchor, and its row in the root table reads "not measured" for
+tokens and time, with the validation date and the anchor.
+
 Without `--check` the blocks are written (only when they differ). With `--check` nothing is written;
 the exit status is 1 and the file is named when a block is missing or differs from what would be
 generated. Exit status 2 means the inputs could not be read.
@@ -29,6 +35,7 @@ from decimal import ROUND_HALF_UP, Decimal
 DIFFICULTY = ("easy", "medium", "complex")
 PERF_MARKERS = ("<!-- performance:start -->", "<!-- performance:end -->")
 SKILLS_MARKERS = ("<!-- skills:start -->", "<!-- skills:end -->")
+VALIDATED_PREFIX = "adopt (validated, not measured"
 SKILLS_HEADER = ("| Skill | What it produces | Tokens | Time | Evaluated |\n"
                  "|---|---|---:|---:|---|")
 
@@ -90,13 +97,17 @@ def read_text(path):
 
 
 def adopted_entry(results_path):
-    """The newest RESULTS.md entry whose decision is `adopt`, or None. Entries are `## <date>: ...`."""
+    """The newest RESULTS.md entry whose decision is `adopt`, or None. Entries are `## <date>: ...`.
+
+    An evaluation entry carries its `runId`; a validation entry (a derived skill, decision starting with
+    VALIDATED_PREFIX) carries `validation: True`, its `anchor`, `sample` and `version` instead of a run."""
     text = read_text(results_path)
     entries, current = [], None
     for line in text.splitlines():
         head = re.match(r"^## (\d{4}-\d{2}-\d{2}):", line)
         if head:
-            current = {"date": head.group(1), "decision": None, "runId": None}
+            current = {"date": head.group(1), "decision": None, "runId": None,
+                       "anchor": None, "sample": None, "version": None}
             entries.append(current)
             continue
         if current is None:
@@ -107,11 +118,20 @@ def adopted_entry(results_path):
         run = re.match(r"^Deliverables: `evals/results/([0-9A-Za-z_-]+)/`", line)
         if run:
             current["runId"] = run.group(1)
+        for key, label in (("anchor", "Anchor"), ("sample", "Sample"), ("version", "Plugin version")):
+            field = re.match(r"^- %s:\s*`?([^`\s]+)`?\s*$" % label, line)
+            if field and current[key] is None:
+                current[key] = field.group(1)
     adopted = [e for e in entries if e["decision"] and re.match(r"(?i)adopt\b", e["decision"])]
     if not adopted:
         return None
     entry = adopted[-1]
-    if not entry["runId"]:
+    entry["validation"] = entry["decision"].startswith(VALIDATED_PREFIX)
+    if entry["validation"]:
+        for key, label in (("anchor", "Anchor"), ("version", "Plugin version")):
+            if not entry[key]:
+                raise DocError("%s: the validation entry of %s has no `- %s:` line" % (results_path, entry["date"], label))
+    elif not entry["runId"]:
         raise DocError("%s: the adopted entry of %s names no evaluation run (Deliverables line)"
                        % (results_path, entry["date"]))
     when = re.search(r"\((\d{4}-\d{2}-\d{2})\)", entry["decision"])
@@ -216,15 +236,41 @@ def render_performance(summary, decision):
     return "\n".join(lines)
 
 
+def render_validated(skill, item):
+    """The Performance section of a derived skill validated on a sample page, not measured."""
+    entry = item["decision"]
+    return "\n".join([
+        PERF_MARKERS[0],
+        "## Performance",
+        "",
+        "Not measured. This skill is derived from [`%s`](../%s/README.md): it reuses that skill's renderer, "
+        "layout and model conventions, whose measured performance is on its page. A person validated a sample "
+        "page on %s (plugin %s). **Decision:** adopt (validated, not measured)." % (
+            entry["anchor"], entry["anchor"], entry["decisionDate"], entry["version"]),
+        PERF_MARKERS[1],
+    ])
+
+
+NOT_MEASURED_NOTE = ('A row reading "not measured" is a derived skill: it reuses the renderer of the skill named in its '
+                     'last column, whose figures are on that skill\'s page, and a person validated a sample page of it.')
+
+
+def render_row(r):
+    if r.get("validated"):
+        return "| [`%s`](skills/%s/README.md) | %s | not measured | not measured | %s, derived from [`%s`](skills/%s/README.md) |" % (
+            r["skill"], r["skill"], r["summary"], r["date"], r["anchor"], r["anchor"])
+    return "| [`%s`](skills/%s/README.md) | %s | %s | %s | %s |" % (
+        r["skill"], r["skill"], r["summary"],
+        fmt_change(r["red"]["tokens"]), fmt_change(r["red"]["timeMs"]), r["date"])
+
+
 def render_skills(rows):
     if not rows:
         body = "No skill has an adopted evaluation yet."
     else:
-        body = SKILLS_HEADER + "\n" + "\n".join(
-            "| [`%s`](skills/%s/README.md) | %s | %s | %s | %s |" % (
-                r["skill"], r["skill"], r["summary"],
-                fmt_change(r["red"]["tokens"]), fmt_change(r["red"]["timeMs"]), r["date"])
-            for r in rows)
+        body = SKILLS_HEADER + "\n" + "\n".join(render_row(r) for r in rows)
+        if any(r.get("validated") for r in rows):
+            body += "\n\n" + NOT_MEASURED_NOTE
     return "\n".join([SKILLS_MARKERS[0], body, SKILLS_MARKERS[1]])
 
 
@@ -248,15 +294,23 @@ def skills_with_results(root):
 
 
 def collect(root):
-    """For each skill with an adopted evaluation: its summary, decision and README path."""
+    """For each skill with an adopted evaluation or validation: its summary (none for a validation),
+    decision and README path. The anchor of a validation must itself be in the result."""
     found = {}
     for skill in skills_with_results(root):
-        entry = adopted_entry(os.path.join(root, "evals", skill, "RESULTS.md"))
+        results = os.path.join(root, "evals", skill, "RESULTS.md")
+        entry = adopted_entry(results)
         if entry is None:
             continue
-        summary = load_summary(os.path.join(root, "evals", skill, "runs", entry["runId"] + ".json"))
-        found[skill] = {"summary": summary, "decision": entry,
+        summary = None if entry["validation"] else load_summary(
+            os.path.join(root, "evals", skill, "runs", entry["runId"] + ".json"))
+        found[skill] = {"summary": summary, "decision": entry, "results": results,
                         "readme": os.path.join(root, "skills", skill, "README.md")}
+    for skill, item in found.items():
+        entry = item["decision"]
+        if entry["validation"] and (entry["anchor"] == skill or entry["anchor"] not in found):
+            raise DocError("%s: the anchor `%s` of the validation of %s is not a skill with an adopted entry"
+                           % (item["results"], entry["anchor"], entry["date"]))
     return found
 
 
@@ -264,17 +318,24 @@ def plan(root, only):
     """The files to bring up to date: {path: new text}, from the adopted evaluations."""
     found = collect(root)
     if only and only not in found:
-        raise DocError("evals/%s: no adopted evaluation in RESULTS.md (a `Decision:` line starting with `adopt`)" % only)
+        raise DocError("evals/%s: no adopted evaluation or validation in RESULTS.md (a `Decision:` line starting with `adopt`)" % only)
     out, rows = {}, []
     for skill, item in found.items():
         item["blurb"] = front_summary(item["readme"])
-        rows.append({"skill": skill, "summary": item["blurb"], "date": item["summary"]["date"],
-                     "red": item["summary"]["totals"]["reduction"]})
+        if item["decision"]["validation"]:
+            rows.append({"skill": skill, "summary": item["blurb"], "date": item["decision"]["decisionDate"],
+                         "validated": True, "anchor": item["decision"]["anchor"]})
+            block = render_validated(skill, item)
+        else:
+            rows.append({"skill": skill, "summary": item["blurb"], "date": item["summary"]["date"],
+                         "red": item["summary"]["totals"]["reduction"]})
+            block = None
         if only and skill != only:
             continue
+        if block is None:
+            block = render_performance(item["summary"], item["decision"])
         text = read_text(item["readme"])
-        out[item["readme"]] = replace_block(item["readme"], text, PERF_MARKERS,
-                                            render_performance(item["summary"], item["decision"]))
+        out[item["readme"]] = replace_block(item["readme"], text, PERF_MARKERS, block)
     readme = os.path.join(root, "README.md")
     out[readme] = replace_block(readme, read_text(readme), SKILLS_MARKERS, render_skills(rows))
     return out
