@@ -6,7 +6,7 @@ Settles what a new artifact skill must produce before it is specified: from a pe
 ## Requirements
 
 ### Requirement: Exploration precedes a new artifact skill
-The proposal of a change that adds a new artifact skill SHALL be preceded by an exploration of that skill, made of a brief, three sketches and the person's choice. A change to an existing artifact skill SHALL NOT require one.
+The proposal of a change that adds a new artifact skill SHALL be preceded by an exploration of that skill, made of a brief, three sketches and the person's choice. A change to an existing artifact skill SHALL NOT require one, and neither SHALL a new artifact skill derived from an adopted anchor (capability `skill-derivation`).
 
 #### Scenario: New skill requested
 - **WHEN** a person asks for a new artifact skill
@@ -15,6 +15,10 @@ The proposal of a change that adds a new artifact skill SHALL be preceded by an 
 #### Scenario: Existing skill changed
 - **WHEN** a person asks to change an artifact skill that already exists
 - **THEN** the work goes to the proposal with no exploration
+
+#### Scenario: Derived skill requested
+- **WHEN** a person asks for a new artifact skill and names an adopted skill as its anchor, such as an object diagram derived from the class diagram
+- **THEN** the work goes to the proposal with no exploration, and the proposal carries a Derivation section
 
 ### Requirement: Brief of the skill
 The exploration SHALL start from a brief given by the person: the artifact type, who the artifact is for, the sources it starts from, and optionally a concrete use case. Nothing SHALL be sketched before the brief names at least the artifact type and its sources.
@@ -91,15 +95,19 @@ The brief SHALL be recorded as the body of the skill's issue, and the choice and
 - **THEN** the issue still states the brief, which sketch was chosen, its features and the hints
 
 ### Requirement: The proposal adapts the chosen sketch to the design
-The proposal of the new skill SHALL carry an Exploration section that cites the issue and states the chosen sketch, the hints, the features kept, how each feature maps to a role of the visual contract's vocabulary (reused or missing), and what is deliberately left out. A sketch's own colors, fonts and sizes SHALL NOT carry into the proposal.
+The proposal of the new skill SHALL carry an Exploration section that cites the issue and states the chosen sketch, the hints, the features kept, how each feature maps to a role of the visual contract's vocabulary (reused or missing), and what is deliberately left out. A sketch's own colors, fonts and sizes SHALL NOT carry into the proposal. A derived skill's proposal SHALL carry a Derivation section in its place.
 
 #### Scenario: Missing role named
 - **WHEN** the chosen sketch shows a feature no role of the vocabulary covers
 - **THEN** the Exploration section names it as a missing role, to be decided by the person, and does not copy the sketch's styling
 
 #### Scenario: Proposal without exploration
-- **WHEN** a proposal adds a new artifact skill and has no Exploration section
+- **WHEN** a proposal adds a new artifact skill that is not derived and has no Exploration section
 - **THEN** it is not approved until the section is added
+
+#### Scenario: Derived proposal
+- **WHEN** a proposal adds a derived artifact skill
+- **THEN** it has a Derivation section and no Exploration section
 
 ### Requirement: Sketch prompts seed the testbed
 The complex sketch prompt SHALL be the first draft of the new skill's complex testbed case, and the easy and medium cases SHALL be written from the brief by reducing that prompt to a subset of its features. All three SHALL be revised with the person's hints before the baseline is measured, and the sketch runs SHALL NOT count as the skill's baseline.
