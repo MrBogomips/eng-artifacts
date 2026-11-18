@@ -42,6 +42,17 @@ Graders only check facts, never quality, and never use a model as judge (no `llm
 
 Looks stay with the visual-reviewer; correctness is the person's call.
 
+## Seeding the testbed from the exploration
+
+A new artifact skill is explored before it is proposed (Phase 0b of the orchestrator): `evals/sketch.sh` runs three unassisted sketches, the person picks one and adds hints. The three sketch prompts are the first draft of the testbed.
+
+1. Copy the three cases of `_agents_workspace/explore-<slug>/cases/` to `evals/<skill>/{easy,medium,complex}/`.
+2. Revise each prompt with the person's hints and the chosen sketch's features, by the fair-case rules above. Rename the cases `<skill>-<case>`, add `tags: [<skill>]`, set `runs: 3` and add `Skill` back to `allowed_tools`.
+3. Replace the sketch's single `file_exists` grader by the mechanical graders: the deliverable, one `regex` per expected name, and `tool_used` for the skill.
+4. Run the baseline with `evals/run.sh <skill> --baseline`.
+
+The sketches never count as the baseline: they ran once, on unrevised prompts, with different tools. The baseline is measured by `evals/run.sh` on the final prompts.
+
 ## Running it
 
 `evals/run.sh <skill>` with the defaults: model `claude-opus-5-5`, effort `medium` (passed through `CLAUDE_CODE_EFFORT_LEVEL`, which the child sessions honor), three runs per arm, concurrency two, targets 20% fewer tokens and 20% less time summed over the cases' medians. There is no cost ceiling and no cost confirmation: cost is measured and reported. The report is never published. A proposal may set stricter targets with `--target-tokens` and `--target-time`, never looser ones.

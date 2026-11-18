@@ -28,7 +28,7 @@ shared/page/             page shell, page.css (the design's role classes and the
 shared/scripts/          artifact_page.py, the assembler: validates a model, checks the theme, writes one HTML page (shipped)
 skills/erd/              SKILL.md, references/model.md, scripts/erd_model.py (validation), assets/erd.js (renderer), erd-layout.js (layout) and erd.json (pinned elkjs) (shipped)
 tests/                   structural tests and fixtures (not shipped)
-evals/                   skill testbeds, run.sh, kpi.py (not shipped)
+evals/                   skill testbeds, run.sh, kpi.py, sketch.sh, sketch.py (not shipped)
 .claude/                 the development harness (not shipped)
 ```
 
@@ -48,15 +48,19 @@ python3 skills/erd/scripts/erd_model.py <file>.erd.json   # validate an ERD mode
 
 bash evals/run.sh <skill> [--model <id>] [--effort <level>] [--runs N] [-j N] [--baseline]   # evaluate a skill: with the plugin vs without it
 python3 evals/kpi.py doc [<skill>] [--check]   # write (or check) the Performance section of each adopted skill and the README skills table
+
+bash evals/sketch.sh <cases-dir> [--model <id>] [--effort <level>] [-j N]   # the exploration of a new artifact skill: three unassisted sketches (easy, medium, complex) and their report
 ```
 
-`evals/run.sh` starts real agent sessions (3 cases x 2 arms x 3 runs by default, model `claude-opus-5-5`, effort `medium`), with no cost ceiling and no cost confirmation, and never publishes a report. Raw results go to the ignored `evals/results/`; a summary is appended to `evals/<skill>/RESULTS.md` with a `Decision: pending` line that the user fills with `adopt`, `rework` or `reject`. The method is the `skill-eval` harness skill. There is no build or lint command.
+`evals/run.sh` starts real agent sessions (3 cases x 2 arms x 3 runs by default, model `claude-opus-5-5`, effort `medium`), with no cost ceiling and no cost confirmation, and never publishes a report. Raw results go to the ignored `evals/results/`; a summary is appended to `evals/<skill>/RESULTS.md` with a `Decision: pending` line that the user fills with `adopt`, `rework` or `reject`. The method is the `skill-eval` harness skill. `evals/sketch.sh` runs the three sketches of an exploration (one session per case, in the sandbox of `claude plugin eval`, on an empty stub plugin with the Skill and Agent tools disallowed, so no skill, project instructions, memory or design reach them) and prints a sketch report: per case the kept deliverable, whether it exists and the session was skill-free, tokens, time and cost. It never publishes and has no cost ceiling; raw output goes to the ignored `evals/results/sketch-<run-id>/`. There is no build or lint command.
 
 Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((VAR++))` under `set -e`.
 
 ## Harness: artifacts
 
 **Goal:** deliver changes to the plugin that are specified first and keep the visual contract intact.
+
+**Exploration:** a new artifact skill is explored before it is proposed (Phase 0b of the orchestrator): the person's brief, three unassisted sketches from `evals/sketch.sh`, the person's choice and hints, recorded on the issue. A change to an existing skill skips it.
 
 **Spec process:** OpenSpec (2.0.0) — the orchestrator activates it for the change proposal (proposal, spec deltas, design, tasks) and pauses for approval; hand-back via the approved `openspec/changes/<id>/`; at the end the change is archived into `openspec/specs/`.
 
@@ -75,6 +79,7 @@ Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((V
 | 2026-11-17 | Reference-aligned design (user's decision, change `align-design-with-reference-erd`): pale 34/24 left-aligned header bands, zones, key chips, system fonts in the default theme, highlighting, details table, zoom from 1:1, a two-state Dark mode toggle in place of the System / Light / Dark switch; the former default becomes the alternate theme | `skills/visual-contract`, `shared/`, `skills/erd` | the plugin's ERD read worse than a reference page the user preferred; align the whole design while ERD is the only type |
 | 2026-11-17 | Documentation step: after `adopt`, `python3 evals/kpi.py doc` writes the skill's Performance section and the README skills table; the structural tests check them | `skills/skill-eval`, `skills/artifacts-orchestrator`, `openspec/config.yaml` | capabilities and measured performance are part of a skill's delivery, in one format for every skill |
 | 2026-11-17 | Renamed the plugin and the repository to `eng-artifacts` (software engineering artifacts) and listed it in the `mrbogomips` marketplace | manifests, `README.md`, `CLAUDE.md`, `openspec/config.yaml`, harness descriptions | user's decision: a specific name for a plugin shared in a common marketplace |
+| 2026-11-18 | Added the exploration phase for a new artifact skill (Phase 0b in the orchestrator, `evals/sketch.sh`, the proposal's Exploration section, the testbed seeded from the sketches) | `skills/artifacts-orchestrator`, `skills/skill-eval`, `evals/`, `openspec/config.yaml`, `CLAUDE.md` | a new skill was specified from a description alone; the person now sees three unassisted renderings first and picks the reference (change `add-skill-exploration`) |
 
 ## Working documents
 
@@ -83,6 +88,7 @@ Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((V
 - **History** (committed): `openspec/changes/archive/`.
 - **Evaluation** (committed): `evals/<skill>/` testbeds (prompts and graders) and `evals/<skill>/RESULTS.md` (sanitized summaries with the user's decisions); `evals/results/` holds raw runs and kept deliverables and is gitignored.
 - **Tooling** (committed): `openspec/config.yaml`, edited by hand; `.agents/skills/openspec-*`, linked from `.claude/skills/`, generated by OpenSpec. Never edit the generated skills. `openspec update` regenerates them to match the global profile of whoever runs it; this repository was generated with the `core` profile.
+- **Exploration** (gitignored): the cases of a new skill's exploration in `_agents_workspace/explore-<slug>/cases/`, the sketch runs in `evals/results/sketch-<run-id>/`. The brief, the choice and the hints are recorded on the skill's GitHub issue; the proposal's Exploration section carries them into the change.
 - **Scratch** (gitignored): `_agents_workspace/`, the intermediate files of a harness run. Tool defaults such as `docs/superpowers/...` go here instead.
 
 Create, change and archive OpenSpec artifacts only through its own workflow (the `openspec-*` skills and the `openspec` CLI).
