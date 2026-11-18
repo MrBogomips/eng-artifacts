@@ -1,29 +1,31 @@
 #!/usr/bin/env bash
-# Run the three exploration sketches of a new artifact skill and print the sketch report.
+# Run the exploration sketches of a new artifact skill and print the sketch report.
 #
 #   evals/sketch.sh <cases-dir> [--model <id>] [--effort <level>|unpinned] [-j N]
 #
-# <cases-dir> holds the three cases easy/, medium/ and complex/, each in the testbed layout
-# (prompt.md and graders/). Each case runs once, in the sandbox of `claude plugin eval`, against an
-# empty stub plugin (a manifest and a copy of the cases, no skill) with the Skill and Agent tools
-# disallowed: the session sees no plugin skill, no project or user instructions, no memory and no
-# design. Defaults: model claude-opus-5-5, effort medium, concurrency 3. There is no cost ceiling,
-# and nothing is published. Raw output goes to evals/results/sketch-<run-id>/ (ignored by git); the
-# report (report.md, report.json) is printed and kept there. The effort is passed to the child
-# sessions through CLAUDE_CODE_EFFORT_LEVEL. Exit status: 0 all three sketches delivered and
-# skill-free, 1 a sketch is missing or invoked a skill, 2 usage or tooling failure.
+# <cases-dir> holds the one case complex/, in the testbed layout (prompt.md and graders/). That one
+# case runs three times, the identical prompt in three sessions, each in its own sandbox of
+# `claude plugin eval`, against an empty stub plugin (a manifest and a copy of the case, no skill)
+# with the Skill and Agent tools disallowed: a session sees no plugin skill, no project or user
+# instructions, no memory, no design and nothing of the other runs. An easy/ or medium/ case in the
+# folder is ignored, with a notice. Defaults: model claude-opus-5-5, effort xhigh, concurrency 3.
+# There is no cost ceiling, and nothing is published. Raw output goes to
+# evals/results/sketch-<run-id>/ (ignored by git); the report (report.md, report.json) is printed
+# and kept there. The effort is passed to the child sessions through CLAUDE_CODE_EFFORT_LEVEL.
+# Exit status: 0 all three runs delivered and skill-free, 1 a run is missing or invoked a skill,
+# 2 usage or tooling failure.
 # Needs: claude, python3. Works with BSD (macOS) and GNU tools.
 set -u
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 MODEL="claude-opus-5-5"
-EFFORT="medium"
+EFFORT="xhigh"
 JOBS=3
-CASES=(easy medium complex)
+RUNS=3
 
 usage() {
-    sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 [ $# -ge 1 ] || { usage >&2; exit 2; }
@@ -41,11 +43,12 @@ while [ $# -gt 0 ]; do
 done
 
 [ -d "$CASES_DIR" ] || { echo "sketch.sh: the cases folder \"$CASES_DIR\" does not exist" >&2; exit 2; }
-for c in "${CASES[@]}"; do
-    [ -f "$CASES_DIR/$c/prompt.md" ] || {
-        echo "sketch.sh: the case \"$c\" is missing: no $CASES_DIR/$c/prompt.md" >&2
-        exit 2
-    }
+[ -f "$CASES_DIR/complex/prompt.md" ] || {
+    echo "sketch.sh: the case \"complex\" is missing: no $CASES_DIR/complex/prompt.md" >&2
+    exit 2
+}
+for c in easy medium; do
+    [ -e "$CASES_DIR/$c" ] && echo "sketch.sh: the case \"$c\" is ignored: only \"complex\" runs, three times" >&2
 done
 command -v claude >/dev/null 2>&1 || { echo "sketch.sh: claude is not on PATH" >&2; exit 2; }
 command -v python3 >/dev/null 2>&1 || { echo "sketch.sh: python3 is required" >&2; exit 2; }
@@ -55,7 +58,7 @@ RUN_DIR="$HERE/results/$RUN_ID"
 STUB="$RUN_DIR/plugin"
 mkdir -p "$STUB/.claude-plugin" "$STUB/evals" || { echo "sketch.sh: cannot create $RUN_DIR" >&2; exit 2; }
 
-# the empty stub: a manifest, no skill, and the three cases
+# the empty stub: a manifest, no skill, and the complex case
 cat >"$STUB/.claude-plugin/plugin.json" <<'EOF'
 {
   "name": "sketch-stub",
@@ -63,9 +66,7 @@ cat >"$STUB/.claude-plugin/plugin.json" <<'EOF'
   "description": "Empty plugin that hosts the exploration sketches: no skill, no agent, no command."
 }
 EOF
-for c in "${CASES[@]}"; do
-    cp -R "$CASES_DIR/$c" "$STUB/evals/$c" || { echo "sketch.sh: cannot copy the case \"$c\"" >&2; exit 2; }
-done
+cp -R "$CASES_DIR/complex" "$STUB/evals/complex" || { echo "sketch.sh: cannot copy the case \"complex\"" >&2; exit 2; }
 
 KPI_EFFORT="not pinned"
 if [ "$EFFORT" != "unpinned" ]; then
@@ -73,9 +74,9 @@ if [ "$EFFORT" != "unpinned" ]; then
     KPI_EFFORT="$EFFORT"
 fi
 
-echo "sketch.sh: sketching as $RUN_ID (model $MODEL, effort $KPI_EFFORT, one run per case, -j $JOBS)" >&2
+echo "sketch.sh: sketching as $RUN_ID (model $MODEL, effort $KPI_EFFORT, $RUNS runs of the complex case, -j $JOBS)" >&2
 
-claude plugin eval "$STUB" --ablation none --runs 1 -j "$JOBS" --model "$MODEL" \
+claude plugin eval "$STUB" --ablation none --runs "$RUNS" -j "$JOBS" --model "$MODEL" \
     --keep-temp --no-publish --trust-plugin --threshold 0 \
     --allow-tools Bash Write Edit --disallow-tools Skill Agent \
     --output-dir "$RUN_DIR" --json "$RUN_DIR/aggregate.json" >"$RUN_DIR/eval.log" 2>&1

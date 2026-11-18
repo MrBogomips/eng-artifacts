@@ -44,14 +44,15 @@ Looks stay with the visual-reviewer; correctness is the person's call.
 
 ## Seeding the testbed from the exploration
 
-A new artifact skill is explored before it is proposed (Phase 0b of the orchestrator): `evals/sketch.sh` runs three unassisted sketches, the person picks one and adds hints. The three sketch prompts are the first draft of the testbed.
+A new artifact skill is explored before it is proposed (Phase 0b of the orchestrator): `evals/sketch.sh` runs one complex prompt three times, unassisted, the person picks a run and adds hints. That one complex prompt is the first draft of the testbed's complex case; the easy and medium cases are derived from it.
 
-1. Copy the three cases of `_agents_workspace/explore-<slug>/cases/` to `evals/<skill>/{easy,medium,complex}/`.
-2. Revise each prompt with the person's hints and the chosen sketch's features, by the fair-case rules above. Rename the cases `<skill>-<case>`, add `tags: [<skill>]`, set `runs: 3` and add `Skill` back to `allowed_tools`.
-3. Replace the sketch's single `file_exists` grader by the mechanical graders: the deliverable, one `regex` per expected name, and `tool_used` for the skill.
-4. Run the baseline with `evals/run.sh <skill> --baseline`.
+1. Copy `_agents_workspace/explore-<slug>/cases/complex/` to `evals/<skill>/complex/`.
+2. Write `evals/<skill>/easy/` and `evals/<skill>/medium/` from the brief by reducing the complex prompt to a subset of its features: easy keeps a few elements from a short description, with no structured source; medium keeps a larger artifact with groups and optional parts. The cases ask for fewer features of the same artifact, never for different ones.
+3. Revise all three prompts with the person's hints and the chosen run's features, by the fair-case rules above. Rename the cases `<skill>-<case>`, add `tags: [<skill>]`, set `runs: 3` and add `Skill` back to `allowed_tools`.
+4. Replace the sketch's single `file_exists` grader by the mechanical graders: the deliverable, one `regex` per expected name, and `tool_used` for the skill.
+5. Run the baseline with `evals/run.sh <skill> --baseline`.
 
-The sketches never count as the baseline: they ran once, on unrevised prompts, with different tools. The baseline is measured by `evals/run.sh` on the final prompts.
+The sketches never count as the baseline: they ran three times on one unrevised prompt, at another effort, with different tools. The baseline is measured by `evals/run.sh` on the final prompts.
 
 ## Running it
 

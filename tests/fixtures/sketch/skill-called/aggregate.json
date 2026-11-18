@@ -6,6 +6,14 @@
           {
             "error": null,
             "tracePath": null
+          },
+          {
+            "error": null,
+            "tracePath": null
+          },
+          {
+            "error": null,
+            "tracePath": null
           }
         ]
       },
@@ -21,50 +29,6 @@
         }
       ],
       "name": "sketch-complex"
-    },
-    {
-      "arms": {
-        "with": [
-          {
-            "error": null,
-            "tracePath": null
-          }
-        ]
-      },
-      "dir": "evals/easy",
-      "graders": [
-        {
-          "config": {
-            "exists": true,
-            "path": "easy.html"
-          },
-          "name": "file",
-          "type": "file_exists"
-        }
-      ],
-      "name": "sketch-easy"
-    },
-    {
-      "arms": {
-        "with": [
-          {
-            "error": null,
-            "tracePath": null
-          }
-        ]
-      },
-      "dir": "evals/medium",
-      "graders": [
-        {
-          "config": {
-            "exists": true,
-            "path": "medium.html"
-          },
-          "name": "file",
-          "type": "file_exists"
-        }
-      ],
-      "name": "sketch-medium"
     }
   ],
   "claudeVersion": "0.0.0-fixture",
