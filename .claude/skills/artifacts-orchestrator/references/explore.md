@@ -2,7 +2,7 @@
 
 Read when Phase 0b starts (a new artifact skill, after triage). The entry and exit conditions are in `SKILL.md`.
 
-A new artifact skill is not specified from a description alone: the person first sees what an unassisted session produces for one complex prompt, three times over, and picks the reference. The requirements are the `skill-exploration` capability in `openspec/specs/`, or, while the change is in flight, its spec delta.
+A new artifact skill that is not derived is not specified from a description alone (a skill derived from an adopted anchor skips this phase, see `SKILL.md`): the person first sees what an unassisted session produces for one complex prompt, three times over, and picks the reference. The requirements are the `skill-exploration` capability in `openspec/specs/`, or, while the change is in flight, its spec delta.
 
 1. **Brief.** Ask the person for the brief of the skill: the artifact type, who it is for, the sources it starts from, optionally a concrete use case. Do nothing until it names at least the artifact type and the sources; ask for what is missing.
 2. **Issue.** File the work item as in Phase 0 step 1, with the brief as the issue body.

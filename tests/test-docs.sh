@@ -2,8 +2,8 @@
 # Documentation of capabilities and performance: `kpi.py doc --check` on the repository (the skills
 # table and every Performance section match the adopted evaluations), the same check failing and
 # naming the file on a temporary copy where a value was edited by hand or a block is missing, the
-# adopted-evaluation rule (a baseline, pending or rework entry never counts), and the relative links
-# of the READMEs.
+# adopted-evaluation rule (a baseline, pending or rework entry never counts), a derived skill validated
+# on a sample page (documented as not measured, its anchor required), and the relative links of the READMEs.
 set -u
 . "$(dirname "$0")/lib.sh"
 need python3
@@ -84,6 +84,87 @@ sed 's/^Decision: adopt.*/Decision: rework (more cases)/' "$TMP/none/evals/erd/R
 out=$(check_in "$TMP/none"); rc=$?
 [ "$rc" = 1 ] || fail "docs:no-adopted" "exit status $rc, expected 1 (the skills table must lose the row)"
 printf '%s' "$out" | grep -q '^README.md:' || fail "docs:no-adopted" "the skills table is not reported stale: $out"
+
+# a derived skill validated on a sample page, not measured (design decision 3 of add-derived-skill-path)
+add_derived() { # add_derived <dir> [anchor]: a scratch skill with a validation entry and a README with its markers
+    local dir=$1 anchor=${2:-uml-class-diagram}
+    mkdir -p "$dir/skills/uml-object-diagram" "$dir/evals/uml-object-diagram/sample"
+    printf '%s\n' '---' 'summary: UML object diagram of instances and links, drawn like the class diagram' '---' '' \
+        '# uml-object-diagram' '' '<!-- performance:start -->' '<!-- performance:end -->' > "$dir/skills/uml-object-diagram/README.md"
+    cat > "$dir/evals/uml-object-diagram/RESULTS.md" <<RESULTS
+# Evaluation results: uml-object-diagram
+
+## 2026-11-20: validation
+
+- Plugin version: 0.5.0
+- Anchor: \`$anchor\`
+- Sample: \`evals/uml-object-diagram/sample/library.object.uml.json\`
+- Rendered with: default and alt themes, light and dark
+
+Decision: adopt (validated, not measured; derived from $anchor) (2026-11-20). Reads like the class diagram.
+RESULTS
+}
+
+copy_repo "$TMP/derived"
+add_derived "$TMP/derived"
+out=$(check_in "$TMP/derived"); rc=$?
+[ "$rc" = 1 ] || fail "docs:derived-stale" "exit status $rc, expected 1 before the section is generated"
+printf '%s' "$out" | grep -q '^skills/uml-object-diagram/README.md:' || fail "docs:derived-stale" "the README is not named: $out"
+printf '%s' "$out" | grep -q '^README.md:' || fail "docs:derived-stale" "the skills table is not reported stale: $out"
+python3 -I "$KPI" doc --root "$TMP/derived" >/dev/null 2>&1 || fail "docs:derived-generate" "doc failed on a validated derived skill"
+check_in "$TMP/derived" >/dev/null || fail "docs:derived-check" "--check fails right after generating"
+perf="$TMP/derived/skills/uml-object-diagram/README.md"
+grep -q '^## Performance$' "$perf" || fail "docs:derived-section" "no Performance heading"
+grep -q '^Not measured\. This skill is derived from \[`uml-class-diagram`\](\.\./uml-class-diagram/README\.md)' "$perf" \
+    || fail "docs:derived-section" "the not-measured paragraph does not link the anchor"
+grep -q 'validated a sample page on 2026-11-20 (plugin 0\.5\.0)' "$perf" || fail "docs:derived-section" "the validation date and plugin version are missing"
+grep -q '\*\*Decision:\*\* adopt (validated, not measured)' "$perf" || fail "docs:derived-section" "the decision is missing"
+row=$(grep '^| \[`uml-object-diagram`\]' "$TMP/derived/README.md")
+[ "$row" = '| [`uml-object-diagram`](skills/uml-object-diagram/README.md) | UML object diagram of instances and links, drawn like the class diagram | not measured | not measured | 2026-11-20, derived from [`uml-class-diagram`](skills/uml-class-diagram/README.md) |' ] \
+    || fail "docs:derived-row" "unexpected row: $row"
+[ "$(grep -c '^| \[`erd`\]' "$TMP/derived/README.md")" = 1 ] || fail "docs:derived-row" "the measured rows are lost"
+# the measured path is unchanged by the derived entry
+cmp -s "$ROOT/skills/erd/README.md" "$TMP/derived/skills/erd/README.md" || fail "docs:derived-measured" "the erd README changed"
+cmp -s "$ROOT/skills/uml-class-diagram/README.md" "$TMP/derived/skills/uml-class-diagram/README.md" || fail "docs:derived-measured" "the class diagram README changed"
+# a hand-edited derived row fails and names README.md
+sed 's/2026-11-20, derived from/2026-11-21, derived from/' "$TMP/derived/README.md" > "$TMP/derived/x" && mv "$TMP/derived/x" "$TMP/derived/README.md"
+out=$(check_in "$TMP/derived"); rc=$?
+[ "$rc" = 1 ] || fail "docs:derived-edited-row" "exit status $rc, expected 1"
+printf '%s' "$out" | grep -q '^README.md:' || fail "docs:derived-edited-row" "the file is not named: $out"
+# a hand-edited derived Performance section fails and names the skill README
+python3 -I "$KPI" doc --root "$TMP/derived" >/dev/null 2>&1
+sed 's/^Not measured\./Measured./' "$perf" > "$TMP/derived/x" && mv "$TMP/derived/x" "$perf"
+out=$(check_in "$TMP/derived"); rc=$?
+[ "$rc" = 1 ] || fail "docs:derived-edited-section" "exit status $rc, expected 1"
+printf '%s' "$out" | grep -q '^skills/uml-object-diagram/README.md:' || fail "docs:derived-edited-section" "the file is not named: $out"
+# the generator is deterministic on a derived skill
+python3 -I "$KPI" doc --root "$TMP/derived" >/dev/null 2>&1; cp "$perf" "$TMP/d1.md"
+python3 -I "$KPI" doc --root "$TMP/derived" >/dev/null 2>&1
+cmp -s "$TMP/d1.md" "$perf" || fail "docs:derived-determinism" "two runs give different files"
+
+# a validation whose anchor is unknown or has no adopted entry, or names no anchor: exit 2, the RESULTS.md named
+copy_repo "$TMP/dv-unknown"
+add_derived "$TMP/dv-unknown" no-such-skill
+out=$(check_in "$TMP/dv-unknown"); rc=$?
+[ "$rc" = 2 ] || fail "docs:anchor-unknown" "exit status $rc, expected 2"
+printf '%s' "$out" | grep -q 'evals/uml-object-diagram/RESULTS.md' || fail "docs:anchor-unknown" "the file is not named: $out"
+printf '%s' "$out" | grep -qi 'anchor' || fail "docs:anchor-unknown" "the message does not mention the anchor: $out"
+copy_repo "$TMP/dv-unadopted"
+add_derived "$TMP/dv-unadopted" erd
+sed 's/^Decision: adopt.*/Decision: rework (more cases)/' "$TMP/dv-unadopted/evals/erd/RESULTS.md" > "$TMP/dv-unadopted/x" \
+    && mv "$TMP/dv-unadopted/x" "$TMP/dv-unadopted/evals/erd/RESULTS.md"
+out=$(check_in "$TMP/dv-unadopted"); rc=$?
+[ "$rc" = 2 ] || fail "docs:anchor-unadopted" "exit status $rc, expected 2"
+printf '%s' "$out" | grep -q 'evals/uml-object-diagram/RESULTS.md' || fail "docs:anchor-unadopted" "the file is not named: $out"
+printf '%s' "$out" | grep -qi 'anchor' || fail "docs:anchor-unadopted" "the message does not mention the anchor: $out"
+copy_repo "$TMP/dv-missing"
+add_derived "$TMP/dv-missing"
+grep -v '^- Anchor:' "$TMP/dv-missing/evals/uml-object-diagram/RESULTS.md" > "$TMP/dv-missing/x" \
+    && mv "$TMP/dv-missing/x" "$TMP/dv-missing/evals/uml-object-diagram/RESULTS.md"
+out=$(check_in "$TMP/dv-missing"); rc=$?
+[ "$rc" = 2 ] || fail "docs:anchor-missing" "exit status $rc, expected 2"
+printf '%s' "$out" | grep -q 'evals/uml-object-diagram/RESULTS.md' || fail "docs:anchor-missing" "the file is not named: $out"
+printf '%s' "$out" | grep -qi 'anchor' || fail "docs:anchor-missing" "the message does not mention the anchor: $out"
 
 # the summary data holds no absolute path or user name
 for f in "$ROOT"/evals/*/runs/*.json; do
