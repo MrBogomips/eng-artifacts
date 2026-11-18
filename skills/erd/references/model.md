@@ -1,6 +1,6 @@
 # ERD model
 
-The file the skill writes: `<name>.erd.json`, plain JSON. It holds data only. Never write HTML, CSS, SVG, scripts, colors or positions: the plugin draws the page and lays the diagram out itself, and the validator rejects unknown fields.
+The file the skill writes: `<name>.erd.json`, plain JSON holding data only. The validator rejects any field not listed below.
 
 ## Fields
 
@@ -15,9 +15,9 @@ relationship   from, to (entity names), fromCard, toCard, kind, columns, label
 ```
 
 - `title` becomes the page title and heading; `description`, when present, appears under it.
-- `groups`: at most sixteen (the five group colors are assigned in order and cycle from the sixth, every zone carries its label), each entity in at most one; when the model defines groups, an entity without `group` is drawn in the neutral color (outside every group); when it defines none, every table is drawn in the accent color. Use groups for bounded contexts or subject areas. More than sixteen groups: merge groups or split the diagram.
+- `groups`: at most sixteen (the five group colors are assigned in order and cycle from the sixth, every zone carries its label), each entity in at most one; when the model defines groups, an entity without `group` is drawn in the neutral color (outside every group); when it defines none, every table is drawn in the accent color.
 - `type` is shown as written: `uuid`, `varchar(80)`, `numeric(10,2)`.
-- `pk` columns are drawn bold with a PK chip; several `pk` columns form a composite key. An `fk` column gets an FK chip, a `uk` column a UK chip (chips in the order PK, FK, UK). Column order is the order of the file.
+- `pk` columns are drawn bold with a PK chip; several `pk` columns form a composite key. An `fk` column gets an FK chip, a `uk` column a UK chip (chips in the order PK, FK, UK). Column order is the order of the file. The page's key-columns level shows exactly the columns marked `pk`, `fk` or `uk`.
 - `uk` marks a column with a `UNIQUE` constraint on its own; leave it off the columns of a composite key. `nullable` marks a column that may be empty and is drawn with a `null` marker before its type; a primary key column is never nullable.
 
 ## Relationships
@@ -38,9 +38,7 @@ A customer places many orders, an order is placed by exactly one customer: `from
 `kind` is `owned` or `referenced`, and defaults to `referenced`:
 
 - `owned` (identifying): the child exists only as part of the parent and its primary key includes the joining foreign key, like an order line in its order. Drawn as a solid connector.
-- `referenced` (non-identifying): the child only points to the parent, like an order to its customer. Drawn as a dashed connector.
-
-Take the kind from the user's words when they state it. Otherwise set `owned` when the child's primary key includes the joining foreign key, and leave the rest `referenced`.
+- `referenced` (non-identifying): the child only points to the parent, like an order to its customer. Drawn as a dashed connector, which the reader can hide on the page.
 
 `columns`, optional, names the joining columns as `[column of from, column of to]`, for example `["customer_id", "id"]`; both must exist in their entities. Leave it out for a composite join or when the schema does not say. `label` is a short phrase shown beside the connector (`placed by`).
 
@@ -90,4 +88,4 @@ A relationship from an entity to itself (an employee and their manager) is valid
 }
 ```
 
-Every grouped entity names a group id from `groups`; `audit_log` has no group, so it takes the neutral color. Validate a model with `python3 scripts/erd_model.py <file>` from the skill folder; it prints every problem and exits non-zero when there is one.
+Every grouped entity names a group id from `groups`; `audit_log` has no group, so it takes the neutral color. The page script validates the model before it draws anything, so there is no separate validation step. To check a model without producing a page, run `python3 "${CLAUDE_PLUGIN_ROOT}/skills/erd/scripts/erd_model.py" <file>`: it prints every problem and exits non-zero when there is one.

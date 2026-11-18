@@ -2,8 +2,10 @@
    connectors, with the legend and the relationships table under the drawing. Registered with the page
    core (shared/page/core.js) under the type "erd"; the layout is in erd-layout.js, loaded before this
    file. Layout is automatic: ELK `layered` with orthogonal routing when the ELK library loaded,
-   otherwise a grid with simple orthogonal connectors and a notice. No style value lives here: roles
-   come from page.css classes and the shared primitives, sizes derive from the theme's geometry tokens. */
+   otherwise a grid with simple orthogonal connectors and a notice. The page offers three levels of
+   detail and a switch for referenced relationships (view options), each of which draws the diagram
+   again. No style value lives here: roles come from page.css classes and the shared primitives, sizes
+   derive from the theme's geometry tokens. */
 (function () {
   'use strict';
   var A = window.Artifact;
@@ -20,17 +22,27 @@
     { flag: 'uk', label: 'UK', role: 'unique', text: 'Unique' }
   ];
 
+  var DETAILS = ['all', 'keys', 'names'];
+  var KIND_ORDER = ['owned', 'referenced'];
+
   /* ---------- model preparation ---------- */
 
   function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
-  function prepare(model) {
+  /* the columns a detail level draws: all, those with a key chip (primary, foreign or unique), none */
+  function shownColumn(c, detail) {
+    if (detail === 'all') return true;
+    if (detail === 'names') return false;
+    return KEY_CHIPS.some(function (k) { return c[k.flag]; });
+  }
+
+  function prepare(model, view) {
     var groups = model.groups || [], hasGroups = groups.length > 0;
     var groupNo = {}, zoneById = {}, zones = [];
     groups.forEach(function (g, i) { groupNo[g.id] = i + 1; });
     var entities = model.entities.map(function (e) {
       var rowIndex = {};
-      var rows = e.columns.map(function (c, i) {
+      var rows = e.columns.filter(function (c) { return shownColumn(c, view.detail); }).map(function (c, i) {
         rowIndex[c.name] = i;
         var chips = KEY_CHIPS.filter(function (k) { return c[k.flag]; });
         return { name: c.name, type: c.type, pk: !!c.pk, nullable: !!c.nullable, chips: chips };
@@ -51,12 +63,19 @@
       zones.push(z);
       zoneById[g.id] = z;
     });
-    var rels = (model.relationships || []).map(function (r, i) {
+    var rels = [];
+    (model.relationships || []).forEach(function (r) {
       [r.from, r.to].forEach(function (n) {
         if (!byName[n]) throw new Error('the relationship ' + r.from + ' to ' + r.to + ' names an entity that is not in the model: "' + n + '"');
       });
-      return { id: 'r' + i, from: byName[r.from], to: byName[r.to], fromCard: r.fromCard, toCard: r.toCard,
-        kind: r.kind || 'referenced', label: r.label || '', self: r.from === r.to, columns: r.columns || null };
+      var kind = r.kind || 'referenced';
+      if (kind === 'referenced' && !view.refs) return;
+      var from = byName[r.from], to = byName[r.to], cols = r.columns || null;
+      /* `columns` names the joining columns for the table; `joins` holds those the level draws, the rows the
+         connector attaches to and the highlight flags (null for an end whose column is not drawn) */
+      var joins = cols ? [from.rowIndex[cols[0]] === undefined ? null : cols[0], to.rowIndex[cols[1]] === undefined ? null : cols[1]] : null;
+      rels.push({ id: 'r' + rels.length, from: from, to: to, fromCard: r.fromCard, toCard: r.toCard,
+        kind: kind, label: r.label || '', self: r.from === r.to, columns: cols, joins: joins });
     });
     return { entities: entities, rels: rels, zones: zones, zoneById: zoneById, byName: byName, hasGroups: hasGroups };
   }
@@ -79,6 +98,7 @@
     e.w = Math.ceil(Math.max(G.minWidth, A.headerNodeMinWidth(e.name), bodyW));
     e.h = A.headerNodeHeight(e.rows.length);
     e.loopRoom = 0;
+    e.loopDown = 0;
   }
 
   /* ---------- drawing ---------- */
@@ -126,25 +146,19 @@
     return els;
   }
 
-  /* a self-relationship loop leaves the table's right side and returns to it */
-  function loopPoints(r) {
-    var e = r.from, right = e.x + e.w, sp = E.loopSpan(e);
-    var x2 = right + G.loopW;
-    return [{ x: right, y: sp.y1 }, { x: x2, y: sp.y1 }, { x: x2, y: sp.y2 }, { x: right, y: sp.y2 }];
-  }
+  /* a self-relationship loop: out of the table's right side and back into it (see E.loopPoints) */
+  function loopPoints(r) { return E.loopPoints(r.from); }
 
   function drawLoop(layer, r) {
-    var e = r.from, right = e.x + e.w, sp = E.loopSpan(e);
-    var x2 = right + G.loopW;
-    var pts = loopPoints(r);
+    var e = r.from, x2 = e.x + e.w + G.loopW;
+    var pts = loopPoints(r), n = pts.length;
     var g = A.edgePath(pts, { dashed: r.kind === 'referenced', hops: r.hops });
-    var out = { x: 1, y: 0 };
-    drawMarks(g, pts[0], out, r.toCard);
-    drawMarks(g, pts[3], out, r.fromCard);
+    drawMarks(g, pts[0], E.unitVector(pts[0], pts[1]), r.toCard);
+    drawMarks(g, pts[n - 1], E.unitVector(pts[n - 1], pts[n - 2]), r.fromCard);
     layer.insertBefore(g, layer.firstChild);
     var els = [g];
     if (r.label) {
-      var lab = A.edgeLabel(x2 + G.unit * 0.75, (sp.y1 + sp.y2) / 2, r.label, 'start');
+      var lab = A.edgeLabel(x2 + G.unit * 0.75, E.loopLabelY(e), r.label, 'start');
       layer.appendChild(lab);
       els.push(lab);
     }
@@ -253,25 +267,57 @@
     A.details({ title: 'Relationships', columns: ['Foreign key (child → parent)', 'Kind', 'Child end', 'Parent end'], rows: rows });
   }
 
-  /* what the model uses, for the legend */
-  function usage(model) {
+  /* what the drawing uses, for the legend */
+  function usage(p) {
     var used = {};
-    model.entities.forEach(function (e) {
-      e.columns.forEach(function (c) { ['pk', 'fk', 'uk', 'nullable'].forEach(function (f) { if (c[f]) used[f] = true; }); });
+    p.entities.forEach(function (e) {
+      e.rows.forEach(function (r) {
+        r.chips.forEach(function (k) { used[k.flag] = true; });
+        if (r.nullable) used.nullable = true;
+      });
     });
     return used;
+  }
+
+  function buildCounts(p) {
+    var parts = [];
+    if (p.zones.length) parts.push(plural(p.zones.length, 'group'));
+    parts.push(plural(p.entities.length, 'table'));
+    var counts = {}, per = [];
+    p.rels.forEach(function (r) { counts[r.kind] = (counts[r.kind] || 0) + 1; });
+    KIND_ORDER.forEach(function (k) { if (counts[k]) per.push(counts[k] + ' ' + k); });
+    parts.push(plural(p.rels.length, 'relationship') + (per.length ? ' (' + per.join(', ') + ')' : ''));
+    A.setMeta(parts.join(' · '));
+  }
+
+  /* ---------- view options ---------- */
+
+  function registerOptions(model) {
+    var rels = model.relationships || [];
+    var both = rels.some(function (r) { return (r.kind || 'referenced') === 'owned'; }) &&
+      rels.some(function (r) { return (r.kind || 'referenced') === 'referenced'; });
+    A.viewOptions([
+      { id: 'detail', type: 'choice', label: 'Detail', value: 'all', options: [
+        { value: 'all', label: 'All columns', key: '1' },
+        { value: 'keys', label: 'Key columns', key: '2' },
+        { value: 'names', label: 'Table names', key: '3' }] },
+      { id: 'refs', type: 'switch', label: 'Referenced', value: true, key: 'r', hidden: !both }
+    ]);
   }
 
   /* ---------- entry point ---------- */
 
   A.register('erd', function (model, mount) {
     G = E.geometry();
-    var p = prepare(model);
+    registerOptions(model);
+    var view = { detail: DETAILS.indexOf(A.view.detail) >= 0 ? A.view.detail : 'all', refs: A.view.refs !== false };
+    var p = prepare(model, view);
     E.last = p; /* the laid-out drawing, for the structural checks of the tests */
     p.entities.forEach(function (e) { measureEntity(e); });
     p.rels.forEach(function (r) {
       if (!r.self) return;
       r.from.loop = r;
+      if (E.bandOnly(r.from)) r.from.loopDown = G.stub; /* a band alone takes its loop's return below it */
       r.from.loopRoom = G.loopW + (r.label ? Math.ceil(A.textWidth(r.label, 'edge-label')) + Math.round(G.unit * 1.5) : 0);
     });
 
@@ -303,7 +349,7 @@
       var maxX = size.width, maxY = size.height;
       p.entities.forEach(function (e) {
         maxX = Math.max(maxX, e.x + e.w + e.loopRoom + G.margin);
-        maxY = Math.max(maxY, e.y + e.h + G.margin);
+        maxY = Math.max(maxY, e.y + e.h + e.loopDown + G.margin);
       });
       p.zones.forEach(function (z) {
         maxX = Math.max(maxX, z.x + z.w + G.margin);
@@ -318,12 +364,16 @@
       A.hl.bind(svg);
       p.entities.forEach(function (e) { A.hl.node(e.name, e.el, { label: 'Table ' + e.name + ': pin its highlight' }); });
       p.rels.forEach(function (r) {
-        var rows = r.columns ? [r.from.el.rowEls[r.from.rowIndex[r.columns[0]]], r.to.el.rowEls[r.to.rowIndex[r.columns[1]]]] : [];
+        var rows = [];
+        if (r.joins) {
+          if (r.joins[0] !== null) rows.push(r.from.el.rowEls[r.from.rowIndex[r.joins[0]]]);
+          if (r.joins[1] !== null) rows.push(r.to.el.rowEls[r.to.rowIndex[r.joins[1]]]);
+        }
         A.hl.link(r.id, r.from.name, r.to.name, { els: linked[r.id], rows: rows });
       });
-      A.setMeta(plural(p.entities.length, 'table') + ' · ' + plural(p.rels.length, 'relationship'));
-      buildLegend(p, usage(model));
-      if (p.rels.length) buildDetails(p);
+      buildCounts(p);
+      buildLegend(p, usage(p));
+      if (p.rels.length) buildDetails(p); else A.details({ title: 'Relationships', columns: [], rows: [] });
     });
   });
 })();
