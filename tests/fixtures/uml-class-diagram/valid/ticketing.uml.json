@@ -1,0 +1,1478 @@
+{
+ "title": "Event ticketing: domain layer",
+ "description": "The domain layer of an event ticketing service, one package per folder.",
+ "packages": [
+  {
+   "id": "shared",
+   "label": "shared"
+  },
+  {
+   "id": "catalog",
+   "label": "catalog"
+  },
+  {
+   "id": "booking",
+   "label": "booking"
+  },
+  {
+   "id": "payment",
+   "label": "payment"
+  }
+ ],
+ "classifiers": [
+  {
+   "name": "Currency",
+   "kind": "enumeration",
+   "package": "shared",
+   "literals": [
+    "EUR",
+    "USD",
+    "GBP"
+   ]
+  },
+  {
+   "name": "Money",
+   "kind": "class",
+   "package": "shared",
+   "stereotypes": [
+    "value object"
+   ],
+   "attributes": [
+    {
+     "name": "amount",
+     "type": "number",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "currency",
+     "type": "Currency",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "Money",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "amount",
+       "type": "number"
+      },
+      {
+       "name": "currency",
+       "type": "Currency"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "add",
+     "visibility": "public",
+     "returns": "Money",
+     "params": [
+      {
+       "name": "other",
+       "type": "Money"
+      }
+     ]
+    },
+    {
+     "name": "zero",
+     "visibility": "public",
+     "returns": "Money",
+     "params": [
+      {
+       "name": "currency",
+       "type": "Currency"
+      }
+     ],
+     "static": true
+    }
+   ]
+  },
+  {
+   "name": "Entity",
+   "kind": "class",
+   "abstract": true,
+   "package": "shared",
+   "typeParams": [
+    "TId"
+   ],
+   "attributes": [
+    {
+     "name": "id",
+     "type": "TId",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "Entity",
+     "visibility": "protected",
+     "params": [
+      {
+       "name": "id",
+       "type": "TId"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "equals",
+     "visibility": "public",
+     "returns": "boolean",
+     "params": [
+      {
+       "name": "other",
+       "type": "Entity<TId>"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "DomainEvent",
+   "kind": "interface",
+   "package": "shared",
+   "attributes": [
+    {
+     "name": "occurredAt",
+     "type": "Date",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ]
+  },
+  {
+   "name": "Repository",
+   "kind": "interface",
+   "package": "shared",
+   "typeParams": [
+    "T"
+   ],
+   "operations": [
+    {
+     "name": "findById",
+     "visibility": "public",
+     "returns": "Promise<T | undefined>",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      }
+     ]
+    },
+    {
+     "name": "save",
+     "visibility": "public",
+     "returns": "Promise<void>",
+     "params": [
+      {
+       "name": "item",
+       "type": "T"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Address",
+   "kind": "class",
+   "package": "catalog",
+   "stereotypes": [
+    "value object"
+   ],
+   "attributes": [
+    {
+     "name": "street",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "city",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "postalCode",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true,
+     "multiplicity": "0..1"
+    }
+   ],
+   "operations": [
+    {
+     "name": "Address",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "street",
+       "type": "string"
+      },
+      {
+       "name": "city",
+       "type": "string"
+      },
+      {
+       "name": "postalCode",
+       "type": "string"
+      }
+     ],
+     "constructor": true
+    }
+   ]
+  },
+  {
+   "name": "Section",
+   "kind": "class",
+   "package": "catalog",
+   "attributes": [
+    {
+     "name": "name",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "rows",
+     "type": "number",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "seatsPerRow",
+     "type": "number",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "Section",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "name",
+       "type": "string"
+      },
+      {
+       "name": "rows",
+       "type": "number"
+      },
+      {
+       "name": "seatsPerRow",
+       "type": "number"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "seat",
+     "visibility": "public",
+     "returns": "Seat",
+     "params": [
+      {
+       "name": "row",
+       "type": "number"
+      },
+      {
+       "name": "n",
+       "type": "number"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Venue",
+   "kind": "class",
+   "package": "catalog",
+   "stereotypes": [
+    "aggregate root"
+   ],
+   "attributes": [
+    {
+     "name": "sections",
+     "type": "Section[]",
+     "visibility": "private"
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "visibility": "public"
+    },
+    {
+     "name": "address",
+     "type": "Address",
+     "visibility": "public"
+    }
+   ],
+   "operations": [
+    {
+     "name": "Venue",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      },
+      {
+       "name": "name",
+       "type": "string"
+      },
+      {
+       "name": "address",
+       "type": "Address"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "capacity",
+     "visibility": "public",
+     "returns": "number"
+    },
+    {
+     "name": "addSection",
+     "visibility": "public",
+     "returns": "void",
+     "params": [
+      {
+       "name": "section",
+       "type": "Section"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "EventStatus",
+   "kind": "enumeration",
+   "package": "catalog",
+   "literals": [
+    "Draft",
+    "OnSale",
+    "SoldOut",
+    "Cancelled"
+   ]
+  },
+  {
+   "name": "PriceTier",
+   "kind": "class",
+   "package": "catalog",
+   "attributes": [
+    {
+     "name": "name",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "price",
+     "type": "Money",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "section",
+     "type": "Section",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "PriceTier",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "name",
+       "type": "string"
+      },
+      {
+       "name": "price",
+       "type": "Money"
+      },
+      {
+       "name": "section",
+       "type": "Section"
+      }
+     ],
+     "constructor": true
+    }
+   ]
+  },
+  {
+   "name": "EventCancelled",
+   "kind": "class",
+   "package": "catalog",
+   "attributes": [
+    {
+     "name": "occurredAt",
+     "type": "Date",
+     "visibility": "public",
+     "readOnly": true,
+     "default": "new Date()"
+    },
+    {
+     "name": "eventId",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "reason",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "EventCancelled",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "eventId",
+       "type": "string"
+      },
+      {
+       "name": "reason",
+       "type": "string"
+      }
+     ],
+     "constructor": true
+    }
+   ]
+  },
+  {
+   "name": "Event",
+   "kind": "class",
+   "package": "catalog",
+   "stereotypes": [
+    "aggregate root"
+   ],
+   "attributes": [
+    {
+     "name": "priceTiers",
+     "type": "PriceTier[]",
+     "visibility": "private"
+    },
+    {
+     "name": "status",
+     "type": "EventStatus",
+     "visibility": "public",
+     "default": "EventStatus.Draft"
+    },
+    {
+     "name": "title",
+     "type": "string",
+     "visibility": "public"
+    },
+    {
+     "name": "startsAt",
+     "type": "Date",
+     "visibility": "public"
+    },
+    {
+     "name": "venue",
+     "type": "Venue",
+     "visibility": "public"
+    }
+   ],
+   "operations": [
+    {
+     "name": "Event",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      },
+      {
+       "name": "title",
+       "type": "string"
+      },
+      {
+       "name": "startsAt",
+       "type": "Date"
+      },
+      {
+       "name": "venue",
+       "type": "Venue"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "publish",
+     "visibility": "public",
+     "returns": "void"
+    },
+    {
+     "name": "cancel",
+     "visibility": "public",
+     "returns": "EventCancelled",
+     "params": [
+      {
+       "name": "reason",
+       "type": "string"
+      }
+     ]
+    },
+    {
+     "name": "tierFor",
+     "visibility": "protected",
+     "returns": "PriceTier | undefined",
+     "params": [
+      {
+       "name": "section",
+       "type": "Section"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Seat",
+   "kind": "class",
+   "package": "booking",
+   "stereotypes": [
+    "value object"
+   ],
+   "attributes": [
+    {
+     "name": "row",
+     "type": "number",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "number",
+     "type": "number",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "Seat",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "row",
+       "type": "number"
+      },
+      {
+       "name": "number",
+       "type": "number"
+      }
+     ],
+     "constructor": true
+    }
+   ]
+  },
+  {
+   "name": "OrderStatus",
+   "kind": "enumeration",
+   "package": "booking",
+   "literals": [
+    "Pending",
+    "Confirmed",
+    "Cancelled"
+   ]
+  },
+  {
+   "name": "LoyaltyCard",
+   "kind": "class",
+   "package": "booking",
+   "attributes": [
+    {
+     "name": "number",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "points",
+     "type": "number",
+     "visibility": "public"
+    }
+   ],
+   "operations": [
+    {
+     "name": "LoyaltyCard",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "number",
+       "type": "string"
+      },
+      {
+       "name": "points",
+       "type": "number"
+      }
+     ],
+     "constructor": true
+    }
+   ]
+  },
+  {
+   "name": "Customer",
+   "kind": "class",
+   "package": "booking",
+   "stereotypes": [
+    "aggregate root"
+   ],
+   "attributes": [
+    {
+     "name": "orders",
+     "type": "Order[]",
+     "visibility": "public"
+    },
+    {
+     "name": "loyalty",
+     "type": "LoyaltyCard",
+     "visibility": "public",
+     "multiplicity": "0..1"
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "visibility": "public"
+    },
+    {
+     "name": "email",
+     "type": "string",
+     "visibility": "public"
+    }
+   ],
+   "operations": [
+    {
+     "name": "Customer",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      },
+      {
+       "name": "name",
+       "type": "string"
+      },
+      {
+       "name": "email",
+       "type": "string"
+      }
+     ],
+     "constructor": true
+    }
+   ]
+  },
+  {
+   "name": "Ticket",
+   "kind": "class",
+   "package": "booking",
+   "attributes": [
+    {
+     "name": "holderName",
+     "type": "string",
+     "visibility": "public",
+     "multiplicity": "0..1"
+    },
+    {
+     "name": "event",
+     "type": "Event",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "seat",
+     "type": "Seat",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "Ticket",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      },
+      {
+       "name": "event",
+       "type": "Event"
+      },
+      {
+       "name": "seat",
+       "type": "Seat"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "barcode",
+     "visibility": "public",
+     "returns": "string"
+    }
+   ]
+  },
+  {
+   "name": "OrderLine",
+   "kind": "class",
+   "package": "booking",
+   "attributes": [
+    {
+     "name": "ticket",
+     "type": "Ticket",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "price",
+     "type": "Money",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "OrderLine",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "ticket",
+       "type": "Ticket"
+      },
+      {
+       "name": "price",
+       "type": "Money"
+      }
+     ],
+     "constructor": true
+    }
+   ]
+  },
+  {
+   "name": "Order",
+   "kind": "class",
+   "package": "booking",
+   "stereotypes": [
+    "aggregate root"
+   ],
+   "attributes": [
+    {
+     "name": "MAX_TICKETS",
+     "type": "number",
+     "visibility": "private",
+     "static": true,
+     "readOnly": true,
+     "default": "10"
+    },
+    {
+     "name": "lines",
+     "type": "OrderLine[]",
+     "visibility": "private"
+    },
+    {
+     "name": "status",
+     "type": "OrderStatus",
+     "visibility": "public",
+     "default": "OrderStatus.Pending"
+    },
+    {
+     "name": "paidWith",
+     "type": "PaymentMethod",
+     "visibility": "public",
+     "multiplicity": "0..1"
+    },
+    {
+     "name": "customer",
+     "type": "Customer",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "Order",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      },
+      {
+       "name": "customer",
+       "type": "Customer"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "addTicket",
+     "visibility": "public",
+     "returns": "Ticket",
+     "params": [
+      {
+       "name": "event",
+       "type": "Event"
+      },
+      {
+       "name": "seat",
+       "type": "Seat"
+      },
+      {
+       "name": "tier",
+       "type": "PriceTier"
+      }
+     ]
+    },
+    {
+     "name": "total",
+     "visibility": "public",
+     "returns": "Money"
+    },
+    {
+     "name": "confirm",
+     "visibility": "public",
+     "returns": "Promise<Receipt>",
+     "params": [
+      {
+       "name": "payments",
+       "type": "PaymentService"
+      },
+      {
+       "name": "method",
+       "type": "PaymentMethod"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "OrderRepository",
+   "kind": "class",
+   "package": "booking",
+   "operations": [
+    {
+     "name": "findById",
+     "visibility": "public",
+     "returns": "Promise<Order | undefined>",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      }
+     ]
+    },
+    {
+     "name": "save",
+     "visibility": "public",
+     "returns": "Promise<void>",
+     "params": [
+      {
+       "name": "item",
+       "type": "Order"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PaymentMethod",
+   "kind": "class",
+   "abstract": true,
+   "package": "payment",
+   "operations": [
+    {
+     "name": "describe",
+     "visibility": "public",
+     "returns": "string",
+     "abstract": true
+    }
+   ]
+  },
+  {
+   "name": "CardPayment",
+   "kind": "class",
+   "package": "payment",
+   "attributes": [
+    {
+     "name": "last4",
+     "type": "string",
+     "visibility": "private"
+    },
+    {
+     "name": "expiry",
+     "type": "string",
+     "visibility": "private"
+    }
+   ],
+   "operations": [
+    {
+     "name": "CardPayment",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "last4",
+       "type": "string"
+      },
+      {
+       "name": "expiry",
+       "type": "string"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "describe",
+     "visibility": "public",
+     "returns": "string"
+    }
+   ]
+  },
+  {
+   "name": "WalletPayment",
+   "kind": "class",
+   "package": "payment",
+   "attributes": [
+    {
+     "name": "provider",
+     "type": "string",
+     "visibility": "public"
+    }
+   ],
+   "operations": [
+    {
+     "name": "WalletPayment",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "provider",
+       "type": "string"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "describe",
+     "visibility": "public",
+     "returns": "string"
+    }
+   ]
+  },
+  {
+   "name": "Receipt",
+   "kind": "class",
+   "package": "payment",
+   "attributes": [
+    {
+     "name": "id",
+     "type": "string",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "amount",
+     "type": "Money",
+     "visibility": "public",
+     "readOnly": true
+    },
+    {
+     "name": "paidAt",
+     "type": "Date",
+     "visibility": "public",
+     "readOnly": true
+    }
+   ],
+   "operations": [
+    {
+     "name": "Receipt",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "id",
+       "type": "string"
+      },
+      {
+       "name": "amount",
+       "type": "Money"
+      },
+      {
+       "name": "paidAt",
+       "type": "Date"
+      }
+     ],
+     "constructor": true
+    }
+   ]
+  },
+  {
+   "name": "PaymentService",
+   "kind": "interface",
+   "package": "payment",
+   "operations": [
+    {
+     "name": "charge",
+     "visibility": "public",
+     "returns": "Promise<Receipt>",
+     "params": [
+      {
+       "name": "amount",
+       "type": "Money"
+      },
+      {
+       "name": "method",
+       "type": "PaymentMethod"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "GatewayPaymentService",
+   "kind": "class",
+   "package": "payment",
+   "attributes": [
+    {
+     "name": "MAX_RETRIES",
+     "type": "number",
+     "visibility": "private",
+     "static": true,
+     "readOnly": true,
+     "default": "3"
+    },
+    {
+     "name": "endpoint",
+     "type": "string",
+     "visibility": "private"
+    }
+   ],
+   "operations": [
+    {
+     "name": "GatewayPaymentService",
+     "visibility": "public",
+     "params": [
+      {
+       "name": "endpoint",
+       "type": "string"
+      }
+     ],
+     "constructor": true
+    },
+    {
+     "name": "charge",
+     "visibility": "public",
+     "returns": "Promise<Receipt>",
+     "params": [
+      {
+       "name": "amount",
+       "type": "Money"
+      },
+      {
+       "name": "method",
+       "type": "PaymentMethod"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "generalization",
+   "from": "Venue",
+   "to": "Entity",
+   "bindings": {
+    "TId": "string"
+   }
+  },
+  {
+   "kind": "generalization",
+   "from": "Event",
+   "to": "Entity",
+   "bindings": {
+    "TId": "string"
+   }
+  },
+  {
+   "kind": "generalization",
+   "from": "Customer",
+   "to": "Entity",
+   "bindings": {
+    "TId": "string"
+   }
+  },
+  {
+   "kind": "generalization",
+   "from": "Ticket",
+   "to": "Entity",
+   "bindings": {
+    "TId": "string"
+   }
+  },
+  {
+   "kind": "generalization",
+   "from": "Order",
+   "to": "Entity",
+   "bindings": {
+    "TId": "string"
+   }
+  },
+  {
+   "kind": "generalization",
+   "from": "CardPayment",
+   "to": "PaymentMethod"
+  },
+  {
+   "kind": "generalization",
+   "from": "WalletPayment",
+   "to": "PaymentMethod"
+  },
+  {
+   "kind": "realization",
+   "from": "EventCancelled",
+   "to": "DomainEvent"
+  },
+  {
+   "kind": "realization",
+   "from": "OrderRepository",
+   "to": "Repository",
+   "bindings": {
+    "T": "Order"
+   }
+  },
+  {
+   "kind": "realization",
+   "from": "GatewayPaymentService",
+   "to": "PaymentService"
+  },
+  {
+   "kind": "composition",
+   "from": "Venue",
+   "to": "Section",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "multiplicity": "0..*",
+    "role": "sections"
+   }
+  },
+  {
+   "kind": "composition",
+   "from": "Event",
+   "to": "PriceTier",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "multiplicity": "0..*",
+    "role": "priceTiers"
+   }
+  },
+  {
+   "kind": "composition",
+   "from": "Order",
+   "to": "OrderLine",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "multiplicity": "0..*",
+    "role": "lines"
+   }
+  },
+  {
+   "kind": "aggregation",
+   "from": "Customer",
+   "to": "Order",
+   "fromEnd": {
+    "multiplicity": "1",
+    "role": "customer",
+    "navigable": true
+   },
+   "toEnd": {
+    "multiplicity": "0..*",
+    "role": "orders"
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Venue",
+   "to": "Address",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "address",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Event",
+   "to": "Venue",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "venue",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Event",
+   "to": "EventStatus",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "status",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "PriceTier",
+   "to": "Money",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "price",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "PriceTier",
+   "to": "Section",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "section",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Ticket",
+   "to": "Event",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "event",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Ticket",
+   "to": "Seat",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "seat",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Customer",
+   "to": "LoyaltyCard",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "multiplicity": "0..1",
+    "role": "loyalty",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Order",
+   "to": "OrderStatus",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "status",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Order",
+   "to": "PaymentMethod",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "0..1",
+    "role": "paidWith",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "OrderLine",
+   "to": "Ticket",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "ticket",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "OrderLine",
+   "to": "Money",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "price",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Money",
+   "to": "Currency",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "currency",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Receipt",
+   "to": "Money",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "multiplicity": "1",
+    "role": "amount",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "dependency",
+   "from": "Section",
+   "to": "Seat"
+  },
+  {
+   "kind": "dependency",
+   "from": "Event",
+   "to": "EventCancelled"
+  },
+  {
+   "kind": "dependency",
+   "from": "Event",
+   "to": "Section"
+  },
+  {
+   "kind": "dependency",
+   "from": "Order",
+   "to": "Event"
+  },
+  {
+   "kind": "dependency",
+   "from": "Order",
+   "to": "Seat"
+  },
+  {
+   "kind": "dependency",
+   "from": "Order",
+   "to": "PriceTier"
+  },
+  {
+   "kind": "dependency",
+   "from": "Order",
+   "to": "Ticket"
+  },
+  {
+   "kind": "dependency",
+   "from": "Order",
+   "to": "Money"
+  },
+  {
+   "kind": "dependency",
+   "from": "Order",
+   "to": "PaymentService"
+  },
+  {
+   "kind": "dependency",
+   "from": "Order",
+   "to": "Receipt"
+  },
+  {
+   "kind": "dependency",
+   "from": "OrderRepository",
+   "to": "Order"
+  },
+  {
+   "kind": "dependency",
+   "from": "GatewayPaymentService",
+   "to": "Money"
+  },
+  {
+   "kind": "dependency",
+   "from": "GatewayPaymentService",
+   "to": "PaymentMethod"
+  },
+  {
+   "kind": "dependency",
+   "from": "GatewayPaymentService",
+   "to": "Receipt"
+  },
+  {
+   "kind": "dependency",
+   "from": "PaymentService",
+   "to": "Money"
+  },
+  {
+   "kind": "dependency",
+   "from": "PaymentService",
+   "to": "PaymentMethod"
+  },
+  {
+   "kind": "dependency",
+   "from": "PaymentService",
+   "to": "Receipt"
+  }
+ ]
+}

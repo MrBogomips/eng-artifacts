@@ -1,0 +1,20 @@
+{
+  "title": "Six groups",
+  "groups": [
+    { "id": "g1", "label": "Sales" }, { "id": "g2", "label": "Catalog" }, { "id": "g3", "label": "Billing" },
+    { "id": "g4", "label": "Shipping" }, { "id": "g5", "label": "People" }, { "id": "g6", "label": "Audit" }
+  ],
+  "entities": [
+    { "name": "a", "group": "g1", "columns": [ { "name": "id", "type": "int", "pk": true } ] },
+    { "name": "b", "group": "g2", "columns": [ { "name": "id", "type": "int", "pk": true } ] },
+    { "name": "c", "group": "g3", "columns": [ { "name": "id", "type": "int", "pk": true } ] },
+    { "name": "d", "group": "g4", "columns": [ { "name": "id", "type": "int", "pk": true } ] },
+    { "name": "e", "group": "g5", "columns": [ { "name": "id", "type": "int", "pk": true } ] },
+    { "name": "f", "group": "g6", "columns": [ { "name": "id", "type": "int", "pk": true } ] }
+  ],
+  "relationships": [
+    { "from": "a", "to": "b", "fromCard": "1..*", "toCard": "1" },
+    { "from": "c", "to": "d", "fromCard": "0..*", "toCard": "0..1" },
+    { "from": "e", "to": "f", "fromCard": "1", "toCard": "1" }
+  ]
+}

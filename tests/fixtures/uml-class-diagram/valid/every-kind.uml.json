@@ -1,0 +1,169 @@
+{
+ "title": "Every relationship kind",
+ "packages": [
+  {
+   "id": "core",
+   "label": "core"
+  },
+  {
+   "id": "ext",
+   "label": "ext"
+  }
+ ],
+ "classifiers": [
+  {
+   "name": "Shape",
+   "kind": "class",
+   "abstract": true,
+   "package": "core",
+   "operations": [
+    {
+     "name": "area",
+     "returns": "number",
+     "abstract": true,
+     "visibility": "public"
+    }
+   ]
+  },
+  {
+   "name": "Circle",
+   "kind": "class",
+   "package": "core",
+   "attributes": [
+    {
+     "name": "radius",
+     "type": "number",
+     "visibility": "private"
+    }
+   ],
+   "operations": [
+    {
+     "name": "area",
+     "returns": "number",
+     "visibility": "public"
+    }
+   ]
+  },
+  {
+   "name": "Drawable",
+   "kind": "interface",
+   "package": "core",
+   "operations": [
+    {
+     "name": "draw",
+     "visibility": "public"
+    }
+   ]
+  },
+  {
+   "name": "Canvas",
+   "kind": "class",
+   "package": "ext",
+   "attributes": [
+    {
+     "name": "shapes",
+     "type": "Shape[]",
+     "visibility": "private"
+    }
+   ]
+  },
+  {
+   "name": "Layer",
+   "kind": "class",
+   "package": "ext"
+  },
+  {
+   "name": "Palette",
+   "kind": "class",
+   "package": "ext"
+  },
+  {
+   "name": "Renderer",
+   "kind": "class",
+   "package": "ext",
+   "operations": [
+    {
+     "name": "render",
+     "params": [
+      {
+       "name": "canvas",
+       "type": "Canvas"
+      }
+     ],
+     "visibility": "public"
+    }
+   ]
+  },
+  {
+   "name": "Unpackaged",
+   "kind": "class"
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "generalization",
+   "from": "Circle",
+   "to": "Shape"
+  },
+  {
+   "kind": "realization",
+   "from": "Circle",
+   "to": "Drawable"
+  },
+  {
+   "kind": "composition",
+   "from": "Canvas",
+   "to": "Layer",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "role": "layers",
+    "multiplicity": "1..*"
+   }
+  },
+  {
+   "kind": "aggregation",
+   "from": "Canvas",
+   "to": "Shape",
+   "fromEnd": {
+    "multiplicity": "0..1"
+   },
+   "toEnd": {
+    "role": "shapes",
+    "multiplicity": "*",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Canvas",
+   "to": "Palette",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "role": "palette",
+    "multiplicity": "1",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "dependency",
+   "from": "Renderer",
+   "to": "Canvas",
+   "label": "use"
+  },
+  {
+   "kind": "association",
+   "from": "Renderer",
+   "to": "Unpackaged",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "multiplicity": "0..1"
+   }
+  }
+ ]
+}

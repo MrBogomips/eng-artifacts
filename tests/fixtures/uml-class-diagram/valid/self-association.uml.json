@@ -1,0 +1,31 @@
+{
+ "title": "Self association",
+ "classifiers": [
+  {
+   "name": "Employee",
+   "kind": "class",
+   "attributes": [
+    {
+     "name": "name",
+     "type": "string"
+    }
+   ]
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "association",
+   "from": "Employee",
+   "to": "Employee",
+   "fromEnd": {
+    "role": "reports",
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "role": "manager",
+    "multiplicity": "0..1",
+    "navigable": true
+   }
+  }
+ ]
+}

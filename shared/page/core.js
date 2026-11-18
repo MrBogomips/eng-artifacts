@@ -144,11 +144,14 @@
     return A.el('text', attrs, [str]);
   };
 
-  /* group number 1..5 -> role class; 'neutral' -> the neutral role (a node outside every group of a
-     diagram that has groups); anything else -> no class (the node falls back to --accent) */
+  /* group number 1..16 -> role class: the five group colors are assigned in order of first appearance
+     and cycle from the sixth, so group 6 takes the first color; 'neutral' -> the neutral role (a node
+     outside every group of a diagram that has groups); anything else -> no class (the node falls back
+     to --accent) */
+  A.GROUP_COLORS = 5;
   A.groupClass = function (n) {
     if (n === 'neutral') return 'g-neutral';
-    return n >= 1 && n <= 5 ? 'g-' + n : '';
+    return n >= 1 ? 'g-' + (((Math.floor(n) - 1) % A.GROUP_COLORS) + 1) : '';
   };
 
   function topRoundedRect(x, y, w, h, r) {
@@ -171,52 +174,92 @@
      label sits. */
   A.zoneMetrics = { padTop: 40, pad: 24, labelX: 16, labelY: 20 };
 
-  /* Height of a header-band node with `rows` body rows. */
-  A.headerNodeHeight = function (rows) {
-    var m = A.headerMetrics;
-    return m.band + rows * m.row + m.padBottom;
+  /* Height of a header-band node with `rows` body rows, each one row high, or, given `heights` (an
+     array of row heights, for a node with a half row), the sum of those. */
+  A.headerNodeHeight = function (rows, heights) {
+    var m = A.headerMetrics, total = 0, i;
+    if (heights) { for (i = 0; i < heights.length; i++) total += heights[i]; }
+    else total = rows * m.row;
+    return total > 0 ? m.band + total + m.padBottom : m.band;   /* no body rows: the band alone */
   };
 
-  /* Least width that fits `title` in the band. */
-  A.headerNodeMinWidth = function (title) {
-    return Math.ceil(A.textWidth(title, 't-band') + 2 * A.headerMetrics.titleInset);
+  /* Least width that fits `title` in the band, and, when the band carries chips (`bandChips`, the
+     same list the node is drawn with), the chips too: the title, a gap of one title inset, the chips
+     and the chip inset at the right edge. */
+  A.headerNodeMinWidth = function (title, bandChips) {
+    var m = A.headerMetrics, w = A.textWidth(title, 't-band') + 2 * m.titleInset;
+    if (bandChips && bandChips.length) {
+      var chipsW = 0;
+      bandChips.forEach(function (c, i) { chipsW += A.chipWidth(c.label) + (i ? A.chipMetrics.gap : 0); });
+      w = A.textWidth(title, 't-band') + m.titleInset + m.titleInset + chipsW + m.chipInset;
+    }
+    return Math.ceil(w);
   };
 
-  /* Vertical center of body row `i` (0-based) of a header-band node whose top is at `y`. */
-  A.headerRowCenter = function (y, i) {
-    var m = A.headerMetrics;
-    return y + m.band + i * m.row + m.row / 2;
+  /* Vertical center of body row `i` (0-based) of a header-band node whose top is at `y`; `heights` as
+     for headerNodeHeight. */
+  A.headerRowCenter = function (y, i, heights) {
+    var m = A.headerMetrics, top = y + m.band, k;
+    for (k = 0; k < i; k++) top += heights ? heights[k] : m.row;
+    return top + (heights ? heights[i] : m.row) / 2;
   };
 
   /* The header-band node of the design: body, band (rounded on its top corners only), the line under
      the band, the body rows (a hairline above each but the first, and the ground that a highlight
-     tints), then the outline again with no fill. The title is left-aligned and centered vertically in
+     tints), then the outline again with no fill. A node with no body rows is its band alone, rounded
+     on all four corners, with no line under it. The title is left-aligned and centered vertically in
      the band. Returns the <g> (class node-group); g.rowEls[i] is the <g class="row"> of body row i, to
      which the caller adds the row's content, placing it with headerRowCenter.
-     opts: x, y, width, rows (number of body rows), group (1..5, 'neutral' or 0), title, italic,
-     ungrouped (a node outside every group of a diagram that has groups: dashed outline) */
+     opts: x, y, width, rows (number of body rows), group (1..16, 'neutral' or 0), title, italic,
+     ungrouped (a node outside every group of a diagram that has groups: dashed outline).
+     Optional, all off by default, so a node drawn without them is drawn exactly as before:
+       rules      row indexes above which the line of the .node-rule role replaces the hairline (the
+                  rule between the compartments of a class)
+       rowHeights an array of row heights (a compartment that is empty keeps a half row)
+       bandChips  [{label, role}] chips right-aligned in the band, the chip inset from the right edge */
   A.headerNode = function (o) {
     var r = A.px('--radius');
     var m = A.headerMetrics;
-    var height = A.headerNodeHeight(o.rows);
+    var heights = o.rowHeights || null;
+    var height = A.headerNodeHeight(o.rows, heights);
     var dash = o.ungrouped ? ' ungrouped' : '';
+    var rules = o.rules || [];
     var g = A.el('g', { 'class': 'hnode node-group ' + A.groupClass(o.group) });
     g.rowEls = [];
     g.appendChild(A.el('rect', { 'class': 'node' + dash, x: o.x, y: o.y, width: o.width, height: height, rx: r, ry: r }));
-    g.appendChild(A.el('path', { 'class': 'band', d: topRoundedRect(o.x, o.y, o.width, m.band, r) }));
-    g.appendChild(A.el('line', { 'class': 'node-rule', x1: o.x, x2: o.x + o.width, y1: o.y + m.band, y2: o.y + m.band }));
+    if (height > m.band) {
+      g.appendChild(A.el('path', { 'class': 'band', d: topRoundedRect(o.x, o.y, o.width, m.band, r) }));
+      g.appendChild(A.el('line', { 'class': 'node-rule', x1: o.x, x2: o.x + o.width, y1: o.y + m.band, y2: o.y + m.band }));
+    } else {
+      g.appendChild(A.el('rect', { 'class': 'band', x: o.x, y: o.y, width: o.width, height: m.band, rx: r, ry: r }));
+    }
+    var top = o.y + m.band;
     for (var i = 0; i < o.rows; i++) {
-      var top = o.y + m.band + i * m.row;
+      var rh = heights ? heights[i] : m.row;
+      var ruled = rules.indexOf(i) >= 0;
+      var sep = null;
+      if (ruled) sep = A.el('line', { 'class': 'node-rule', x1: o.x, x2: o.x + o.width, y1: top, y2: top });
+      else if (i) sep = A.el('line', { 'class': 'row-sep', x1: o.x + m.chipInset, x2: o.x + o.width - m.chipInset, y1: top, y2: top });
       var row = A.el('g', { 'class': 'row' }, [
-        A.el('rect', { 'class': 'row-bg', x: o.x + 1, y: top + (i ? 0.5 : 0.75), width: o.width - 2, height: m.row - (i ? 0.5 : 0.75) }),
-        i ? A.el('line', { 'class': 'row-sep', x1: o.x + m.chipInset, x2: o.x + o.width - m.chipInset, y1: top, y2: top }) : null
+        A.el('rect', { 'class': 'row-bg', x: o.x + 1, y: top + (i ? 0.5 : 0.75), width: o.width - 2, height: rh - (i ? 0.5 : 0.75) }),
+        sep
       ]);
       g.appendChild(row);
       g.rowEls.push(row);
+      top += rh;
     }
     g.appendChild(A.el('rect', { 'class': 'node-outline' + dash, x: o.x, y: o.y, width: o.width, height: height, rx: r, ry: r }));
     g.appendChild(A.text(o.x + m.titleInset, o.y + m.band / 2 + 0.5, o.title,
       't-band band-text' + (o.italic ? ' t-italic' : ''), { 'text-anchor': 'start' }));
+    if (o.bandChips && o.bandChips.length) {
+      var chipsW = 0;
+      o.bandChips.forEach(function (c, k) { chipsW += A.chipWidth(c.label) + (k ? A.chipMetrics.gap : 0); });
+      var cx = o.x + o.width - m.chipInset - chipsW;
+      o.bandChips.forEach(function (c) {
+        g.appendChild(A.chip(cx, o.y + m.band / 2, c.label, c.role));
+        cx += A.chipWidth(c.label) + A.chipMetrics.gap;
+      });
+    }
     return g;
   };
 
@@ -249,8 +292,8 @@
     return Math.ceil(A.textWidth(label, 't-chip') + 2 * A.chipMetrics.padX);
   };
 
-  /* A chip with its left edge at x, centered on cy. role: primary | foreign | unique, which sets --k
-     (a key token). Returns the <g>. */
+  /* A chip with its left edge at x, centered on cy. role: primary | foreign | unique | stereotype,
+     which sets --k (a key token). Returns the <g>. */
   A.chip = function (x, cy, label, role) {
     var cm = A.chipMetrics, w = A.chipWidth(label), r = A.smallRadius();
     return A.el('g', { 'class': 'chip-group k-' + role }, [
@@ -263,13 +306,78 @@
     return points.map(function (p, i) { return (i ? 'L' : 'M') + p.x + ' ' + p.y; }).join('');
   }
 
-  /* An orthogonal connector through `points` ([{x,y}, ...]). opts: dashed, mark, head. Returns the
-     <g> (class edge-group): the line, its head, and a wide invisible line that catches the pointer.
-     The caller adds notation marks to the same group and registers it with A.hl.link. */
+  /* ---------- line hops ----------
+     Where a horizontal run of one connector crosses a vertical run of another, the horizontal one hops:
+     a semicircle of radius 0.4 times --arrowhead, bulging upward, in the same path. A crossing nearer
+     than one --arrowhead to a bend or to a node end (the end of either run) does not hop, a shared end
+     point is never a crossing, and two hops on one run never touch. Only horizontal runs hop, so two
+     connectors never both jump at one point, and every crossing shows a hop: a reader tells a crossing
+     from a junction. */
+  A.hopRadius = function () { return A.px('--arrowhead') * 0.4; };
+
+  /* polylines: an array of point lists, in draw order. Returns an array of the same length: for each
+     polyline, the crossing points [{x, y}] where it hops over another connector's vertical run. */
+  A.hops = function (polylines) {
+    var u = A.px('--arrowhead'), r = A.hopRadius(), eps = 0.01, verticals = [];
+    polylines.forEach(function (pts, idx) {
+      for (var k = 0; k + 1 < pts.length; k++) {
+        var p = pts[k], q = pts[k + 1];
+        if (Math.abs(p.x - q.x) <= eps && Math.abs(p.y - q.y) > eps) {
+          verticals.push({ idx: idx, x: p.x, y1: Math.min(p.y, q.y), y2: Math.max(p.y, q.y) });
+        }
+      }
+    });
+    return polylines.map(function (pts, idx) {
+      var found = [];
+      for (var i = 0; i + 1 < pts.length; i++) {
+        var a = pts[i], b = pts[i + 1];
+        if (Math.abs(a.y - b.y) > eps || Math.abs(a.x - b.x) <= eps) continue;
+        var lo = Math.min(a.x, b.x), hi = Math.max(a.x, b.x), onRun = [];
+        verticals.forEach(function (v) {
+          if (v.idx === idx) return;
+          if (v.x - lo < u || hi - v.x < u) return;                      /* near a bend or a node end */
+          if (v.y2 - a.y < u || a.y - v.y1 < u) return;                  /* the vertical ends here */
+          onRun.push(v.x);
+        });
+        onRun.sort(function (p, q) { return p - q; });
+        var last = -Infinity;
+        onRun.forEach(function (x) {
+          if (x - last < 2 * r + 2) return;                              /* two hops would touch */
+          last = x;
+          found.push({ x: x, y: a.y });
+        });
+      }
+      return found;
+    });
+  };
+
+  /* The path of a connector with its hops (points from A.hops) in place. */
+  function hoppedPathData(points, hops) {
+    if (!hops || !hops.length) return pathData(points);
+    var r = A.hopRadius(), d = 'M' + points[0].x + ' ' + points[0].y;
+    for (var i = 0; i + 1 < points.length; i++) {
+      var a = points[i], b = points[i + 1];
+      var here = Math.abs(a.y - b.y) < 0.01 ? hops.filter(function (h) {
+        return Math.abs(h.y - a.y) < 0.01 && h.x > Math.min(a.x, b.x) && h.x < Math.max(a.x, b.x);
+      }) : [];
+      var dir = b.x >= a.x ? 1 : -1;
+      here.sort(function (p, q) { return dir * (p.x - q.x); });
+      here.forEach(function (h) {
+        d += 'L' + (h.x - dir * r) + ' ' + a.y + 'A' + r + ' ' + r + ' 0 0 ' + (dir > 0 ? 1 : 0) + ' ' + (h.x + dir * r) + ' ' + a.y;
+      });
+      d += 'L' + b.x + ' ' + b.y;
+    }
+    return d;
+  }
+
+  /* An orthogonal connector through `points` ([{x,y}, ...]). opts: dashed, mark, head, hops (the
+     crossing points from A.hops). Returns the <g> (class edge-group): the line, its head, and a wide
+     invisible line that catches the pointer. The caller adds notation marks to the same group and
+     registers it with A.hl.link. */
   A.edgePath = function (points, o) {
     o = o || {};
     var g = A.el('g', { 'class': 'edge-group' });
-    g.appendChild(A.el('path', { 'class': 'edge' + (o.dashed ? ' dashed' : '') + (o.mark ? ' mark' : ''), d: pathData(points) }));
+    g.appendChild(A.el('path', { 'class': 'edge' + (o.dashed ? ' dashed' : '') + (o.mark ? ' mark' : ''), d: hoppedPathData(points, o.hops) }));
     g.appendChild(A.el('path', { 'class': 'edge-hit', d: pathData(points) }));
     if (o.head && points.length > 1) {
       var a = points[points.length - 2], b = points[points.length - 1];
@@ -314,25 +422,33 @@
   /* ---------- linked highlighting ----------
      A renderer declares what is connected to what; the registry does the rest. Pointing at a node, a
      connector or a row of the details table flags that element and what it connects with `hl` and puts
-     `hovering` on the drawing, so page.css highlights the flagged and dims the others. On a touch
-     screen a tap does the same and a second tap, or a tap elsewhere, clears it. */
+     `hovering` on the drawing, so page.css highlights the flagged and dims the others. A click (or a
+     tap, or Enter or the space bar on a focused node) pins the highlight: while one is pinned, hovering changes
+     nothing, and it ends with Esc, a second click on the pinned element, or a click on the drawing's
+     empty part. A click on another element moves the pin. */
   A.hl = (function () {
-    var nodes, links, touching, svg, active, flagged, pointer = 'mouse';
+    var nodes, links, touching, svg, active, pinned, flagged, buttons, pointer = 'mouse';
     var api = {};
 
-    function init() { nodes = {}; links = {}; touching = {}; svg = null; active = null; flagged = []; }
+    function init() { nodes = {}; links = {}; touching = {}; svg = null; active = null; pinned = null; flagged = []; buttons = {}; }
     init();
 
     function flag(el) {
       if (el && !el.classList.contains('hl')) { el.classList.add('hl'); flagged.push(el); }
     }
 
-    function clear() {
+    function unflag() {
       flagged.forEach(function (el) { el.classList.remove('hl'); });
       flagged = [];
       active = null;
       if (svg) svg.classList.remove('hovering');
     }
+
+    function mark() {
+      Object.keys(buttons).forEach(function (k) { buttons[k].setAttribute('aria-pressed', k === pinned ? 'true' : 'false'); });
+    }
+
+    function clear() { unflag(); pinned = null; mark(); }
 
     function flagLink(id) {
       var l = links[id];
@@ -344,7 +460,7 @@
     }
 
     function show(key) {
-      clear();
+      unflag();
       active = key;
       if (svg) svg.classList.add('hovering');
       var id = key.slice(2);
@@ -353,12 +469,20 @@
       (touching[id] || []).forEach(flagLink);
     }
 
+    function pin(key) {
+      if (pinned === key) { clear(); return; }
+      pinned = key;
+      show(key);
+      mark();
+    }
+
+    function hover(key) { if (!pinned && pointer === 'mouse') show(key); }
+    function leave() { if (!pinned && pointer === 'mouse') unflag(); }
+
     function listen(el, key) {
-      el.addEventListener('mouseenter', function () { if (pointer === 'mouse') show(key); });
-      el.addEventListener('mouseleave', function () { if (pointer === 'mouse') clear(); });
-      el.addEventListener('click', function () {
-        if (pointer !== 'mouse') { if (active === key) clear(); else show(key); }
-      });
+      el.addEventListener('mouseenter', function () { hover(key); });
+      el.addEventListener('mouseleave', leave);
+      el.addEventListener('click', function () { pin(key); });
     }
 
     document.addEventListener('pointerdown', function (ev) { pointer = ev.pointerType === 'mouse' ? 'mouse' : 'touch'; }, true);
@@ -366,16 +490,37 @@
     /* forget everything registered: called before a drawing is drawn again */
     api.reset = function () { clear(); init(); var h = document.getElementById('hint'); if (h) h.hidden = true; };
 
-    /* the drawing's <svg>: it carries `hovering`, and a tap on its empty part clears */
+    /* end the pinned highlight (Esc, a click on empty space) */
+    api.clear = clear;
+    api.isPinned = function () { return !!pinned; };
+
+    /* the drawing's <svg>: it carries `hovering`, and a click on its empty part clears the pin */
     api.bind = function (el) {
       svg = el;
       el.addEventListener('click', function (ev) {
-        if (pointer !== 'mouse' && !(ev.target.closest && ev.target.closest('.node-group, .edge-group'))) clear();
+        if (!(ev.target.closest && ev.target.closest('.node-group, .edge-group'))) clear();
       });
     };
 
-    /* a node: id and its element (the group that is flagged and dimmed) */
-    api.node = function (id, el) { nodes[id] = el; listen(el, 'n:' + id); };
+    /* a node: id and its element (the group that is flagged and dimmed). opts.label is the accessible
+       name: the node is then reachable with Tab, pinned with Enter or the space bar, and a focused node shows
+       the focus ring (the .focus-ring shape drawn around it, visible on keyboard focus). */
+    api.node = function (id, el, opts) {
+      nodes[id] = el;
+      listen(el, 'n:' + id);
+      if (!opts || !opts.label) return;
+      var key = 'n:' + id, bb = el.getBBox(), gap = 3, r = A.px('--radius') + gap;
+      el.insertBefore(A.el('rect', { 'class': 'focus-ring', x: bb.x - gap, y: bb.y - gap, width: bb.width + 2 * gap,
+        height: bb.height + 2 * gap, rx: r, ry: r }), null);
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', opts.label);
+      el.setAttribute('aria-pressed', 'false');
+      buttons[key] = el;
+      el.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pin(key); }
+      });
+    };
 
     /* a connector between nodes a and b. opts.els: the elements to flag (the connector's group first,
        then anything that belongs to it, a label for instance); opts.rows: row elements at its ends */
@@ -392,8 +537,11 @@
       if (!links[id]) return;
       links[id].tr = tr;
       listen(tr, 'l:' + id);
-      tr.addEventListener('focus', function () { show('l:' + id); });
-      tr.addEventListener('blur', clear);
+      tr.addEventListener('focus', function () { if (!pinned) show('l:' + id); });
+      tr.addEventListener('blur', function () { if (!pinned) unflag(); });
+      tr.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pin('l:' + id); }
+      });
     };
 
     return api;
@@ -436,6 +584,10 @@
         .then(function () { chrome('drawn', mount); })
         .catch(A.fail);
     }
+
+    /* a renderer's view options call this to draw again; the zoom and the options are kept, a pinned
+       highlight is cleared by draw's reset */
+    A.redraw = draw;
 
     A.loadFonts(2500).then(function (fonts) {
       return draw().then(function () {

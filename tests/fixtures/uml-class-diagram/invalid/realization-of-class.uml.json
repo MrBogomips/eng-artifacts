@@ -1,0 +1,20 @@
+{
+ "title": "t",
+ "classifiers": [
+  {
+   "name": "A",
+   "kind": "class"
+  },
+  {
+   "name": "B",
+   "kind": "class"
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "realization",
+   "from": "A",
+   "to": "B"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "title": "t",
+ "classifiers": [
+  {
+   "name": "A",
+   "kind": "class"
+  },
+  {
+   "name": "B",
+   "kind": "class"
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "association",
+   "from": "A",
+   "to": "B",
+   "fromEnd": {
+    "multiplicity": "1"
+   },
+   "toEnd": {
+    "role": "b"
+   }
+  }
+ ]
+}

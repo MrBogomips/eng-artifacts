@@ -12,8 +12,8 @@ Draws an entity relationship diagram (ERD) from a description, from SQL DDL or f
   - tables as header-band nodes: pale group-tinted band with the name at the left, one row per column with colored key chips (PK, FK, UK, in that order), primary keys in bold, a `null` marker before the type of a nullable column;
   - each group drawn as a zone (a tinted, labelled area that contains its tables); a table outside every group has a dashed outline;
   - relationships in crow's foot notation with the cardinality at each end, solid when owned and dashed when referenced, and the ends sitting on the joining columns when the model names them;
-  - automatic layout, and zoom (out, in, Fit, 1:1; the page starts at 1:1);
-  - under the drawing, a legend of what the page uses and a relationships table (child and parent, kind, cardinality in words); pointing at a table, a connector or a row of the table highlights what it connects and dims the rest (a tap does the same on a touch screen);
+  - automatic layout, connectors that hop over the ones they cross, and zoom (out, in, Fit, 1:1; the page starts at 1:1; Ctrl or Cmd with the wheel and a pinch zoom around the pointer, dragging the empty part pans, and the keys `+ - F 0 T Esc` work too);
+  - under the drawing, a legend of what the page uses and a relationships table (child and parent, kind, cardinality in words); pointing at a table, a connector or a row of the table highlights what it connects and dims the rest, and a click pins the highlight until Esc, a second click or a click on empty space (a tap works the same way); Tab reaches a table and Enter pins it;
   - a Dark mode toggle that starts from your system preference and remembers your choice.
 - **A model** `<name>.erd.json` beside it: plain data, the only file the skill writes by hand. It is what a later change edits, so the diagram can be revised without starting over.
 
@@ -34,7 +34,7 @@ Ask for them in the request.
 
 - **Relationship kind.** Owned (the child exists only as part of its parent, solid line) or referenced (the child only points to its parent, dashed line). Say which, or leave it to the skill, which treats a foreign key that is part of the child's primary key as owned.
 - **Cardinality.** `1`, `0..1`, `0..*` and `1..*` at each end. The skill uses `1..*` only when you say "at least one".
-- **Groups.** Name up to five areas or contexts; each takes one of the theme's group colors. Tables outside every group are drawn in the neutral color.
+- **Groups.** Name up to sixteen areas or contexts; they take the theme's five group colors in order and cycle from the sixth, and every zone is labelled. Tables outside every group are drawn in the neutral color.
 - **Theme.** `default` (system fonts, pale header bands), `alt` (solid bands, Google Fonts), or the path of your own theme file. Every theme works in light and dark. A theme file written for plugin 0.1.0 lacks the tokens added in 0.2.0 (the three key colors, the chip, zone and highlight mixes, the zone radius and the dim opacity) and is refused with the list of what is missing: copy those tokens from `shared/themes/default.css`. A theme may name system font stacks only, or load web fonts from Google Fonts; no other font source is accepted.
 - **Location.** A file or folder for the output.
 

@@ -15,7 +15,7 @@ relationship   from, to (entity names), fromCard, toCard, kind, columns, label
 ```
 
 - `title` becomes the page title and heading; `description`, when present, appears under it.
-- `groups`: at most five, each entity in at most one; when the model defines groups, an entity without `group` is drawn in the neutral color (outside every group); when it defines none, every table is drawn in the accent color. Use groups for bounded contexts or subject areas. More than five groups: merge groups or split the diagram.
+- `groups`: at most sixteen (the five group colors are assigned in order and cycle from the sixth, every zone carries its label), each entity in at most one; when the model defines groups, an entity without `group` is drawn in the neutral color (outside every group); when it defines none, every table is drawn in the accent color. Use groups for bounded contexts or subject areas. More than sixteen groups: merge groups or split the diagram.
 - `type` is shown as written: `uuid`, `varchar(80)`, `numeric(10,2)`.
 - `pk` columns are drawn bold with a PK chip; several `pk` columns form a composite key. An `fk` column gets an FK chip, a `uk` column a UK chip (chips in the order PK, FK, UK). Column order is the order of the file.
 - `uk` marks a column with a `UNIQUE` constraint on its own; leave it off the columns of a composite key. `nullable` marks a column that may be empty and is drawn with a `null` marker before its type; a primary key column is never nullable.

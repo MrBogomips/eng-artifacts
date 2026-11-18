@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # VC-1 and the plugin boundary, as static checks.
 #  1. No hex, rgb(), hsl() or named color and no font family name in shared/ or skills/ outside
-#     shared/themes/ (sample models *.erd.json are content and are ignored).
+#     shared/themes/ (sample models *.erd.json and *.uml.json are content and are ignored).
 #  2. No plugin file references the development harness (.claude/, .agents/, openspec/, tests/,
 #     evals/, _agents_workspace/).
 # Usage: validate-style-source.sh [plugin-root]
@@ -33,7 +33,7 @@ if [ -d shared/themes ]; then
 fi
 
 files() {
-    find $DIRS -type f ! -path 'shared/themes/*' ! -name '*.erd.json' -print0
+    find $DIRS -type f ! -path 'shared/themes/*' ! -name '*.erd.json' ! -name '*.uml.json' -print0
 }
 
 scan() { # scan <label> <ERE>

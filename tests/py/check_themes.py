@@ -4,8 +4,11 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
+from colorlib import contrast, mix, parse_hex
 from themelib import (GENERIC_FAMILIES, GROUPS, font_families, is_color, parse_theme,
                       vocabulary_from_design)
+
+KEY_ROLES = ("--key-primary", "--key-foreign", "--key-unique", "--key-stereotype")
 
 root, theme_dir = sys.argv[1], sys.argv[2]
 design = os.path.join(root, ".claude/skills/visual-contract/references/design.md")
@@ -52,6 +55,34 @@ for name, t in themes.items():
     for tok in sorted(set(dm) | set(de)):
         if dm.get(tok) != de.get(tok):
             bad(p, "dark blocks differ on %s (%s vs %s)" % (tok, dm.get(tok), de.get(tok)))
+    # the four key roles, each with a light and a dark value, each legible (4.5:1) on its chip ground
+    chip_mix = light.get("--chip-mix", "").rstrip("%")
+    for tok in KEY_ROLES:
+        if tok not in light:
+            bad(p, "key role %s is missing" % tok)
+    for label, block in (("light", light), ("dark", dm)):
+        try:
+            node, pct = block.get("--node") or light["--node"], float(chip_mix)
+        except (KeyError, ValueError):
+            bad(p, "cannot check the key chips: --node or --chip-mix is missing or not a number")
+            break
+        for tok in KEY_ROLES:
+            if tok not in block:
+                continue
+            try:
+                ratio = contrast(parse_hex(block[tok]), mix(block[tok], pct, node))
+            except ValueError as e:
+                bad(p, "%s in the %s block: %s" % (tok, label, e))
+                continue
+            if ratio < 4.5:
+                bad(p, "%s on its chip ground in %s is %.2f:1, below 4.5:1" % (tok, label, ratio))
+    # the text of a view option: --node on its selected ground (--accent), --ink on the others (--grid)
+    for label, block in (("light", light), ("dark", dm)):
+        for fg, bg in (("--node", "--accent"), ("--ink", "--grid")):
+            if fg in block and bg in block:
+                ratio = contrast(parse_hex(block[fg]), parse_hex(block[bg]))
+                if ratio < 4.5:
+                    bad(p, "%s on %s in %s is %.2f:1, below 4.5:1 (the text of a view option)" % (fg, bg, label, ratio))
     # fonts: fallback stack ending in a generic family, and import matches the families used
     fam_used = set()
     for tok in ("--font-display", "--font-body", "--font-data"):

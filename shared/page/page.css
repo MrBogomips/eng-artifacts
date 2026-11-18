@@ -88,6 +88,28 @@ body {
   .mode-track, .mode-thumb { transition: none; }
 }
 
+/* ---- view options of an artifact type: a choice is a row of segments, a switch is a small copy of the
+   toggle above. Selected segment: an --accent ground with --node text (the toggle's on track);
+   unselected: the --grid ground with --ink text; both carry the --line outline of the toggle, so they
+   read at 3:1 against the surface. Keyboard focus draws the --mark ring, which the selected state
+   never uses. ---- */
+.view-options { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.vo-group { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+.vo-label { color: var(--ink-2); }
+.vo-seg { display: inline-flex; }
+.vo-opt { appearance: none; margin: 0 0 0 -1.5px; padding: 3px 10px; color: var(--ink); background: var(--grid);
+          border: 1.5px solid var(--line); font-family: var(--font-body); font-size: 13px; line-height: 1.4; cursor: pointer; }
+.vo-opt:first-child { margin-left: 0; border-radius: min(var(--radius), 6px) 0 0 min(var(--radius), 6px); }
+.vo-opt:last-child { border-radius: 0 min(var(--radius), 6px) min(var(--radius), 6px) 0; }
+.vo-opt.on { color: var(--node); background: var(--accent); position: relative; }
+.vo-opt:focus-visible { outline: 2px solid var(--mark); outline-offset: 2px; position: relative; }
+/* a switch: the toggle at a smaller size (30 by 18 track, 12 thumb, 12px text); its states, roles and
+   focus ring are the toggle's own */
+.vo-switch { gap: 6px; font-size: 12px; }
+.vo-switch .mode-track { width: 30px; height: 18px; border-radius: 9px; }
+.vo-switch .mode-thumb { width: 12px; height: 12px; }
+.vo-switch input:checked + .mode-track .mode-thumb { transform: translateX(12px); }
+
 /* ---- notices and errors ---- */
 .notice, .error {
   margin: 0 0 12px;
@@ -112,10 +134,15 @@ body {
   border: 1px solid var(--grid);
   border-radius: var(--panel-radius);
 }
+/* touch-action: a touch scrolls the frame natively; a pinch is handled by the page */
+.frame { touch-action: pan-x pan-y; }
+.frame.panning { cursor: grabbing; user-select: none; }
 #drawing { padding: 16px; width: max-content; min-width: 100%; }
 #drawing > svg { display: block; max-width: none; }
 
 .hint { margin: 8px 2px 0; color: var(--ink-2); font-size: 12px; }
+.kbd { padding: 0 5px; border: 1px solid var(--grid); border-radius: min(var(--radius), 4px);
+       font-family: var(--font-data); font-size: 11px; color: var(--ink); }
 
 /* ---- the cards under the drawing: legend and details table, side by side above 900px ---- */
 .below { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: 16px; margin-top: 16px; }
@@ -153,6 +180,7 @@ body {
 .t-chip       { font-family: var(--font-body); font-size: 10.5px; font-weight: 700; letter-spacing: .03em; }
 .t-null       { font-family: var(--font-data); font-size: 10.5px; font-weight: 400; font-style: italic; fill: var(--ink-2); }
 .t-italic     { font-style: italic; }
+.t-static     { text-decoration: underline; }
 
 /* ---- drawing roles: the formulas of the visual design ---- */
 /* node body, outline, header band */
@@ -218,6 +246,13 @@ body {
   .edge-group, .edge-label, .node-group { transition: none; }
 }
 
+/* keyboard focus on a node: the toggle's ring, drawn as a shape around the node (SVG has no outline
+   offset); hidden until the node has keyboard focus */
+.focus-ring { fill: none; stroke: var(--mark); stroke-width: 2px; visibility: hidden; pointer-events: none; }
+.node-group:focus { outline: none; }
+.node-group:focus-visible .focus-ring { visibility: visible; }
+.node-group { cursor: pointer; }
+
 /* a boundary around nodes that belong together */
 .boundary  { fill: color-mix(in oklab, var(--ink) 3%, var(--surface));
              stroke: var(--line); stroke-width: var(--stroke); stroke-dasharray: 5 4; }
@@ -235,3 +270,4 @@ body {
 .g-4 { --c: var(--group-4); } .g-5 { --c: var(--group-5); }
 .g-neutral { --c: var(--neutral); }
 .k-primary { --k: var(--key-primary); } .k-foreign { --k: var(--key-foreign); } .k-unique { --k: var(--key-unique); }
+.k-stereotype { --k: var(--key-stereotype); }

@@ -1,0 +1,126 @@
+{
+ "title": "Library",
+ "description": "Books, copies, members and loans.",
+ "classifiers": [
+  {
+   "name": "Person",
+   "kind": "class",
+   "abstract": true,
+   "attributes": [
+    {
+     "name": "name",
+     "type": "string",
+     "visibility": "public"
+    }
+   ]
+  },
+  {
+   "name": "Member",
+   "kind": "class",
+   "attributes": [
+    {
+     "name": "membershipNumber",
+     "type": "string",
+     "visibility": "public"
+    }
+   ],
+   "operations": [
+    {
+     "name": "borrow",
+     "visibility": "public",
+     "returns": "Loan",
+     "params": [
+      {
+       "name": "copy",
+       "type": "Copy"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Book",
+   "kind": "class",
+   "attributes": [
+    {
+     "name": "title",
+     "type": "string"
+    },
+    {
+     "name": "isbn",
+     "type": "string"
+    }
+   ]
+  },
+  {
+   "name": "Copy",
+   "kind": "class",
+   "attributes": [
+    {
+     "name": "barcode",
+     "type": "string"
+    }
+   ]
+  },
+  {
+   "name": "Loan",
+   "kind": "class",
+   "attributes": [
+    {
+     "name": "borrowedOn",
+     "type": "Date"
+    },
+    {
+     "name": "dueOn",
+     "type": "Date"
+    }
+   ]
+  }
+ ],
+ "relationships": [
+  {
+   "kind": "generalization",
+   "from": "Member",
+   "to": "Person"
+  },
+  {
+   "kind": "association",
+   "from": "Copy",
+   "to": "Book",
+   "fromEnd": {
+    "multiplicity": "1..*"
+   },
+   "toEnd": {
+    "role": "book",
+    "multiplicity": "1",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Loan",
+   "to": "Member",
+   "fromEnd": {
+    "multiplicity": "*"
+   },
+   "toEnd": {
+    "role": "member",
+    "multiplicity": "1",
+    "navigable": true
+   }
+  },
+  {
+   "kind": "association",
+   "from": "Loan",
+   "to": "Copy",
+   "fromEnd": {
+    "multiplicity": "0..1"
+   },
+   "toEnd": {
+    "role": "copy",
+    "multiplicity": "1",
+    "navigable": true
+   }
+  }
+ ]
+}

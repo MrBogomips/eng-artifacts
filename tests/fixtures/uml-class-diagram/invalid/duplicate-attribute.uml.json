@@ -1,0 +1,17 @@
+{
+ "title": "t",
+ "classifiers": [
+  {
+   "name": "Order",
+   "kind": "class",
+   "attributes": [
+    {
+     "name": "id"
+    },
+    {
+     "name": "id"
+    }
+   ]
+  }
+ ]
+}

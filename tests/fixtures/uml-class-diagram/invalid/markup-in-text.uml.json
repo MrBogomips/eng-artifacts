@@ -1,0 +1,15 @@
+{
+ "title": "t",
+ "classifiers": [
+  {
+   "name": "Order",
+   "kind": "class",
+   "attributes": [
+    {
+     "name": "id",
+     "type": "<script>alert(1)</script>"
+    }
+   ]
+  }
+ ]
+}

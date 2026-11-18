@@ -1,0 +1,17 @@
+{
+ "title": "t",
+ "classifiers": [
+  {
+   "name": "Status",
+   "kind": "enumeration",
+   "literals": [
+    "A"
+   ],
+   "operations": [
+    {
+     "name": "f"
+    }
+   ]
+  }
+ ]
+}

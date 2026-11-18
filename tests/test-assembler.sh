@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Page assembly: every valid ERD fixture builds under the default, the alternate and a project theme;
+# Page assembly: every valid ERD and UML class diagram fixture builds under the default, the alternate and a project theme;
 # an incomplete theme is rejected listing every missing token; invalid models write no file; every
 # external script URL in a produced page is on an allowed CDN and pinned to an exact version.
 set -u
@@ -37,7 +37,7 @@ PY
     # the Dark mode toggle replaces the three-button switch; the page head carries zoom and the cards exist
     grep -q 'type="checkbox" id="mode-toggle" role="switch"' "$page" || fail "$label" "the page has no Dark mode toggle"
     grep -q '<span class="mode-label">Dark mode</span>' "$page" || fail "$label" "the toggle is not labelled Dark mode"
-    grep -qE 'mode-switch|data-mode=|aria-pressed' "$page" && fail "$label" "the page still carries the System / Light / Dark switch"
+    grep -qE 'mode-switch|data-mode=|aria-pressed="' "$page" && fail "$label" "the page still carries the System / Light / Dark switch"
     for id in zoom-out zoom-in zoom-fit zoom-actual legend-card details-card; do
         grep -q "id=\"$id\"" "$page" || fail "$label" "the page lacks #$id"
     done
@@ -64,6 +64,42 @@ for f in "$FIX"/valid/*.erd.json; do
         check_page "$out" "$label"
     done
 done
+
+# every valid UML class diagram fixture builds under the same three themes, through the hyphenated
+# type name (its validator is scripts/uml_class_diagram_model.py)
+for f in "$ROOT"/tests/fixtures/uml-class-diagram/valid/*.uml.json; do
+    name=$(basename "$f" .uml.json)
+    for theme in default alt "$PROJECT"; do
+        tname=$(basename "$theme" .css)
+        out="$TMP/uml-$name-$tname.html"
+        label="assembler:uml-class-diagram/$name/$tname"
+        msg=$(python3 -I "$ASM" --type uml-class-diagram --model "$f" --theme "$theme" --out "$out" 2>&1) || { fail "$label" "build failed: $msg"; continue; }
+        [ -s "$out" ] || { fail "$label" "no page written"; continue; }
+        check_page "$out" "$label"
+        grep -q 'data-type="uml-class-diagram"' "$out" || fail "$label" "the page does not carry its type"
+        grep -q 'id="view-options"' "$out" || fail "$label" "the page has no view-options slot"
+    done
+done
+
+# invalid UML models: nothing written, the validator's message shown
+for f in "$ROOT"/tests/fixtures/uml-class-diagram/invalid/*.uml.json; do
+    name=$(basename "$f" .uml.json)
+    out="$TMP/uml-invalid-$name.html"
+    msg=$(python3 -I "$ASM" --type uml-class-diagram --model "$f" --out "$out" 2>&1) && fail "assembler:uml-class-diagram/invalid/$name" "accepted"
+    [ ! -e "$out" ] || fail "assembler:uml-class-diagram/invalid/$name" "a page was written"
+    printf '%s' "$msg" | grep -q "error: .*$name.uml.json: " || fail "assembler:uml-class-diagram/invalid/$name" "no error naming the model: $msg"
+done
+
+# a project theme written before the stereotype role existed is rejected, the token named
+python3 - "$ROOT/shared/themes/default.css" "$TMP/no-stereotype.css" <<'PY'
+import sys
+t = "\n".join(l for l in open(sys.argv[1]).read().split("\n") if "--key-stereotype" not in l)
+open(sys.argv[2], "w").write(t)
+PY
+out="$TMP/no-stereotype.html"
+msg=$(python3 -I "$ASM" --type uml-class-diagram --model "$ROOT/tests/fixtures/uml-class-diagram/valid/small.uml.json" --theme "$TMP/no-stereotype.css" --out "$out" 2>&1) && fail "assembler:theme without --key-stereotype" "accepted"
+[ ! -e "$out" ] || fail "assembler:theme without --key-stereotype" "a page was written"
+printf '%s' "$msg" | grep -qF 'missing token --key-stereotype in the light block' || fail "assembler:theme without --key-stereotype" "message does not name the token: $msg"
 
 # the project theme's values are what the page carries
 grep -q '#2a8f4d' "$TMP/small-project-theme.html" || fail "assembler:project theme" "the page does not use the project theme's values"

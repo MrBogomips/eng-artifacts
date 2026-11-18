@@ -19,20 +19,21 @@ The visual design is decided. The role vocabulary and drawing rules (`design.md`
 
 ## State
 
-The plugin exists (version 0.2.0) with one artifact type, ERD. It is published at `github.com/MrBogomips/eng-artifacts` (renamed from `artifacts`, then `engartifacts`) and listed in the `mrbogomips` marketplace (`MrBogomips/claude-plugins`): it installs with `claude plugin marketplace add MrBogomips/claude-plugins` then `claude plugin install eng-artifacts@mrbogomips`. The repository also stays a marketplace of its own (`eng-artifacts@eng-artifacts`), as the `plugin-package` spec requires. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
+The plugin exists (version 0.3.0) with two artifact types, ERD and UML class diagram. It is published at `github.com/MrBogomips/eng-artifacts` (renamed from `artifacts`, then `engartifacts`) and listed in the `mrbogomips` marketplace (`MrBogomips/claude-plugins`): it installs with `claude plugin marketplace add MrBogomips/claude-plugins` then `claude plugin install eng-artifacts@mrbogomips`. The repository also stays a marketplace of its own (`eng-artifacts@eng-artifacts`), as the `plugin-package` spec requires. Single-plugin repository whose root is the plugin, as in `MrBogomips/agentic-harness`: `.claude-plugin/plugin.json` plus a one-entry `.claude-plugin/marketplace.json` pointing at `./`, same version in both (`plugin.json` is the source of truth).
 
 ```
 .claude-plugin/          manifests (shipped)
 shared/themes/           the style source: default.css, alt.css (shipped)
-shared/page/             page shell, page.css (the design's role classes and the page chrome), core.js (measurement, primitives, highlight registry), chrome.js (Dark mode toggle, zoom, legend and details cards) (shipped)
+shared/page/             page shell, page.css (the design's role classes and the page chrome), core.js (measurement, primitives, line hops, highlight registry with the pinned highlight), chrome.js (Dark mode toggle, zoom with pan, Ctrl/pinch and keyboard shortcuts, view options, legend and details cards) (shipped)
 shared/scripts/          artifact_page.py, the assembler: validates a model, checks the theme, writes one HTML page (shipped)
 skills/erd/              SKILL.md, references/model.md, scripts/erd_model.py (validation), assets/erd.js (renderer), erd-layout.js (layout) and erd.json (pinned elkjs) (shipped)
+skills/uml-class-diagram/ SKILL.md, README.md, references/model.md, scripts/uml_class_diagram_model.py (validation), assets/uml-class-diagram.js (renderer), uml-class-diagram-layout.js (layout) and uml-class-diagram.json (pinned elkjs) (shipped)
 tests/                   structural tests and fixtures (not shipped)
 evals/                   skill testbeds, run.sh, kpi.py, sketch.sh, sketch.py (not shipped)
 .claude/                 the development harness (not shipped)
 ```
 
-A later artifact type adds a folder under `skills/` with its own model, validator and renderer, and touches `shared/` only for a new primitive. A page is assembled in a fixed order: theme, page styles, `core.js`, `chrome.js`, the type's external scripts, the type renderer (its `<type>-*.js` helper files first, then `<type>.js`), the model as JSON. External scripts load only from `cdn.jsdelivr.net`, `cdnjs.cloudflare.com` or `unpkg.com`, pinned to an exact version. The ERD layout uses `elkjs` 0.11.1 from jsDelivr, with a grid fallback and a notice when it cannot load.
+A later artifact type adds a folder under `skills/` with its own model, validator and renderer, and touches `shared/` only for a new primitive. A page is assembled in a fixed order: theme, page styles, `core.js`, `chrome.js`, the type's external scripts, the type renderer (its `<type>-*.js` helper files first, then `<type>.js`), the model as JSON. External scripts load only from `cdn.jsdelivr.net`, `cdnjs.cloudflare.com` or `unpkg.com`, pinned to an exact version. The ERD and UML class diagram layouts use `elkjs` 0.11.1 from jsDelivr, with a grid fallback and a notice when it cannot load. The assembler reads a type's validator from `scripts/<type with hyphens as underscores>_model.py`, so the type `uml-class-diagram` has `uml_class_diagram_model.py`; model files are named `<name>.<erd|uml>.json`. A type with view options (a level of detail, a layer that can be hidden) describes them with `A.viewOptions` and redraws through `A.redraw`.
 
 ## Commands
 
@@ -45,6 +46,8 @@ bash tests/run-structural-tests.sh   # every tests/validate-*.sh and tests/test-
 bash tests/validate-themes.sh [dir]  # one structural test on its own
 python3 shared/scripts/artifact_page.py --type erd --model <file>.erd.json --theme <default|alt|path> --out <file>.html   # produce a page
 python3 skills/erd/scripts/erd_model.py <file>.erd.json   # validate an ERD model
+python3 shared/scripts/artifact_page.py --type uml-class-diagram --model <file>.uml.json --theme <default|alt|path> --out <file>.html   # produce a UML class diagram page
+python3 skills/uml-class-diagram/scripts/uml_class_diagram_model.py <file>.uml.json   # validate a UML class diagram model
 
 bash evals/run.sh <skill> [--model <id>] [--effort <level>] [--runs N] [-j N] [--baseline]   # evaluate a skill: with the plugin vs without it
 python3 evals/kpi.py doc [<skill>] [--check]   # write (or check) the Performance section of each adopted skill and the README skills table
@@ -81,6 +84,8 @@ Scripts are macOS (BSD) and Linux compatible: no `grep -P`, no `sed -i`, no `((V
 | 2026-11-17 | Renamed the plugin and the repository to `eng-artifacts` (software engineering artifacts) and listed it in the `mrbogomips` marketplace | manifests, `README.md`, `CLAUDE.md`, `openspec/config.yaml`, harness descriptions | user's decision: a specific name for a plugin shared in a common marketplace |
 | 2026-11-18 | Added the exploration phase for a new artifact skill (Phase 0b in the orchestrator, `evals/sketch.sh`, the proposal's Exploration section, the testbed seeded from the sketches) | `skills/artifacts-orchestrator`, `skills/skill-eval`, `evals/`, `openspec/config.yaml`, `CLAUDE.md` | a new skill was specified from a description alone; the person now sees three unassisted renderings first and picks the reference (change `add-skill-exploration`) |
 | 2026-11-18 | The exploration runs one complex prompt three times, at `claude-opus-5-5` / `xhigh`, in place of three prompts of rising difficulty; the report is per run and states the shared prompt; the testbed's easy and medium cases are derived from the complex prompt | `evals/sketch.sh`, `evals/sketch.py`, `skills/artifacts-orchestrator`, `skills/skill-eval`, `openspec/config.yaml`, `CLAUDE.md` | an unassisted model handles easy artifacts well; what shapes a skill is its results on advanced cases and how much they vary between attempts (change `revise-skill-exploration`) |
+| 2026-11-18 | Design extended for the second artifact type (user's decisions, change `add-uml-class-diagram-artifact`): a fourth key role `--key-stereotype` for the stereotype chip, up to sixteen groups with the five group colors cycling (ERD groups and UML packages alike), the UML notation shapes completed (six kinds, open arrowhead, generic box, compartment rule), line hops at crossings, the `.focus-ring` class | `skills/visual-contract`, `shared/themes/`, `shared/page/` | a class diagram needs stereotypes and more packages than five, and real diagrams cross lines |
+| 2026-11-18 | Shared page interactions added for every artifact type, ERD included: a click pins the highlight (also by keyboard), drag to pan, Ctrl/Cmd wheel and pinch zoom, keyboard shortcuts, a view-options control that redraws; the assembler reads `scripts/<type with - as _>_model.py`; the plugin goes to 0.3.0 with the `uml-class-diagram` skill | `shared/page/`, `shared/scripts/artifact_page.py`, `skills/uml-class-diagram`, manifests | chosen by the user from the exploration of the class diagram (issue #5); the two types stay coherent |
 
 ## Working documents
 
