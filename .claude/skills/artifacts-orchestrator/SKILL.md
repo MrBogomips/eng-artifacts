@@ -7,9 +7,11 @@ description: "Entry point for all work in the eng-artifacts plugin repository: i
 
 Delivers one change to the artifacts plugin at a time: specified with OpenSpec, built by `artifact-builder`, checked by `visual-reviewer` against the visual contract, archived when it passes.
 
+This file loads on every prompt in the repository, so it holds only triage and the phase sequence; the steps of the longer phases are in `references/`, one file per phase. Triage first (Phase 0): a trivial request needs nothing more. Read each file when the step that names it is reached, not before. `CLAUDE.md` is already in context; the agents load `visual-contract` themselves (read it only to answer a design question); the `openspec-*` workflows apply `openspec/config.yaml`; a script's options are in its header. Read a spec in `openspec/specs/` only when a step leaves a question open.
+
 ## Execution mode: subagent
 
-Pattern: Producer-Reviewer. The builder and the reviewer exchange written files, which is enough for a review loop and leaves an audit trail, so no agent team is formed.
+Pattern: Producer-Reviewer. The builder and the reviewer exchange written files, enough for a review loop and an audit trail, so no agent team is formed.
 
 ## Agents
 
@@ -17,6 +19,7 @@ Pattern: Producer-Reviewer. The builder and the reviewer exchange written files,
 |-------|---------------|------|-------|--------|
 | `artifact-builder` | `artifact-builder` | implements the change's tasks | `visual-contract` | working tree + `02_builder_handoff.md` |
 | `visual-reviewer` | `visual-reviewer` | independent check of the visual contract | `visual-contract` | `03_reviewer_report.md` + `renders/` |
+| skill reviewer | `general-purpose`, `model: opus` | review of the touched skills' text, context-management focus (Phase 3a) | `skill-creator` | edits to `SKILL.md` and `references/` + `03a_skill_review.md` |
 
 Intermediate files live under `_agents_workspace/<change-id>/` (gitignored). An audit with no change uses `_agents_workspace/audit-<YYYYMMDD>/`.
 
@@ -28,9 +31,10 @@ Intermediate files live under `_agents_workspace/<change-id>/` (gitignored). An 
 | Current behavior of the plugin | OpenSpec | `openspec/specs/` |
 | Progress of a change's tasks | OpenSpec | the checkboxes in `openspec/changes/<id>/tasks.md` |
 | The work item and its state (open, closed) | GitHub Issues | the issue |
-| What a new artifact skill should show: the brief, the three unassisted runs of one complex prompt, the person's choice | the orchestrator (Phase 0b), `evals/sketch.sh` | the issue (brief, choice, hints), `_agents_workspace/explore-<slug>/cases/`, `evals/results/sketch-<run-id>/` |
+| What a new artifact skill should show: the brief, the three sketches, the person's choice | the orchestrator (Phase 0b), `evals/sketch.sh` | the issue (brief, choice, hints), `_agents_workspace/explore-<slug>/cases/`, `evals/results/sketch-<run-id>/` |
 | Whether a skill pays for itself: the method, the testbed, the KPI report | `skill-eval` skill, `evals/` | `.claude/skills/skill-eval/`, `evals/run.sh`, `evals/<skill>/` |
 | The adoption decision of an artifact skill | the user | the `Decision:` line in `evals/<skill>/RESULTS.md` |
+| How a skill's text manages its context: the skill review | the orchestrator (Phase 3a), `skill-creator` | the reviewed skill's `SKILL.md` and `references/`, `03a_skill_review.md` |
 | Building, review, evaluation, integration | this orchestrator | the phases below |
 
 Each concern has one owner. Read OpenSpec artifacts and issues in place; never copy their content into `_agents_workspace/`, and keep no status file of your own.
@@ -39,17 +43,17 @@ Each concern has one owner. Read OpenSpec artifacts and issues in place; never c
 
 ### Phase 0: intake and triage (orchestrator)
 
-This skill is the repository's entry point, so it runs for every prompt. Triage first:
+Triage every prompt first:
 
 - **Trivial, conversational, or outside the plugin** (a question, an explanation, a look at a file): answer directly and stop. No agents, no workspace.
 - **A change that keeps the specified behavior** (formatting, a typo, a version bump, a fix that restores what a spec already says): make it directly, without an OpenSpec change. If it touches anything that affects appearance, still run Phase 3 on it.
-- **A change to the plugin's observable behavior** (a new or changed artifact skill, the shared style source, tokens, a theme, the switch): continue below. A **new** artifact skill goes through Phase 0b (explore) before its proposal; a change to an **existing** artifact skill skips it and goes straight to the spec.
+- **A change to the plugin's observable behavior** (a new or changed artifact skill, the shared style source, tokens, a theme, the switch): continue below. A **new** artifact skill goes through Phase 0b (explore) first, which files its issue and ends in step 2; a change to an **existing** artifact skill skips it.
 - **An audit request** ("are the artifacts coherent?", "check dark mode"): write a brief naming the scope, run Phase 3 alone, report.
 
 For a change to observable behavior:
 
-1. **Work item → GitHub Issues.** If `git remote get-url origin` succeeds, run `gh issue list --state open --json number,title,state,labels`. If an issue matches the request, carry its number through the run. If the work is new, tell the user the title you are about to file, then `gh issue create`. If the repository has no remote yet, skip the tracker and say so in the final summary. For a new artifact skill, file the issue in Phase 0b, with the brief as its body.
-2. **Spec → OpenSpec.** For a new artifact skill, run Phase 0b first. Run `openspec list --json`. If no change under `openspec/changes/` covers the request, the spec process owns the next step: invoke the `openspec-propose` skill with a contextual prompt built from what you already hold: the goal, the artifact types affected, the constraints, the issue number, and the requirement that the proposal address invariants VC-1 to VC-6. For a new artifact skill, also what Phase 0b produced. That workflow produces planning artifacts and stops. Present the proposal and **pause** until the user approves it. To revise it, use `openspec-update-change`.
+1. **Work item → GitHub Issues.** If `git remote get-url origin` succeeds, run `gh issue list --state open --json number,title,state,labels`. If an issue matches the request, carry its number through the run. If the work is new, tell the user the title you are about to file, then `gh issue create`. If the repository has no remote yet, skip the tracker and say so in the final summary.
+2. **Spec → OpenSpec.** Run `openspec list --json`. If no change under `openspec/changes/` covers the request, the spec process owns the next step: invoke the `openspec-propose` skill with a prompt built from what you hold: the goal, the artifact types affected, the constraints, the issue number, and the requirement that the proposal address invariants VC-1 to VC-6. For a new artifact skill, also what Phase 0b produced. That workflow produces planning artifacts and stops. Present the proposal and **pause** until the user approves it. To revise it, use `openspec-update-change`.
 3. **Context check.** With an approved change:
    - `_agents_workspace/<change-id>/` absent → first run; go to Phase 1.
    - present, and the request is partial ("fix the review findings", "run the review again") → re-run only the phase concerned, passing the existing files to the agent.
@@ -57,15 +61,7 @@ For a change to observable behavior:
 
 ### Phase 0b: explore (orchestrator, a new artifact skill only)
 
-A new artifact skill is not specified from a description alone: the person first sees what an unassisted session produces for one complex prompt, three times over, and picks the reference. Skip this phase for a change to an existing skill. The requirements are the `skill-exploration` capability in `openspec/specs/`, or, while the change is in flight, its spec delta.
-
-1. **Brief.** Ask the person for the brief of the skill: the artifact type, who it is for, the sources it starts from, optionally a concrete use case. Do nothing until it names at least the artifact type and the sources; ask for what is missing.
-2. **Issue.** File the work item as in Phase 0 step 1, with the brief as the issue body.
-3. **Case.** Write one case, `complex/`, under `_agents_workspace/explore-<slug>/cases/`, in the testbed layout (`prompt.md` with `name: sketch-complex`, `runs: 3`, `max_turns`, `timeout_seconds` and `allowed_tools` without `Skill`; `graders/file.md`, a `file_exists` grader on the deliverable). The prompt covers the advanced and complex cases typical of the artifact type: every feature the brief implies, from a structured source where the brief names one. Write it by the fair-case rules of `skill-eval`: it names one self-contained HTML page and its file name, asks for features as a user would, and never mentions the plugin, a skill or the plugin's design. Use the brief's use case where it has one.
-4. **Sketch.** Run `evals/sketch.sh _agents_workspace/explore-<slug>/cases` (options in its header). It runs the same prompt three times, one session per run, each in its own isolated sandbox against an empty stub plugin with the Skill and Agent tools disallowed, at model `claude-opus-5-5` and effort `xhigh` by default, keeps the three deliverables under `evals/results/sketch-<run-id>/` and prints the sketch report. There is no cost ceiling and nothing is published.
-5. **Present.** Open the three deliverables in a browser. Give the person the report (cost included, and the prompt fingerprint the three runs share) and your own short inventory in two lists: the features present in all three runs (what the unassisted model does constantly), and the features present in only some, naming which run has each (the variability of the unassisted model); functionality and richness first. Ask one question: which run is closest to the functionality and richness wanted, or whether none fits, and any hints. Never recommend a run: the choice is the person's.
-6. **Record.** Comment on the issue with the chosen run (or that none fits), the two feature lists, the features in all three runs and the features in only some with the runs that have them (so the record stands without the ignored files), and the hints. Paths are relative to the repository (`evals/results/sketch-<run-id>/...`), never absolute; no user name and no transcript. The sandbox gives each session the account's e-mail address, so check that a sketch does not echo it (or any other personal detail) before you quote from it; the sketches themselves are never committed or published.
-7. **Hand on.** Invoke `openspec-propose` (Phase 0 step 2) with the brief, the complex prompt, the chosen run's deliverable path, the hints and the issue number. The proposal carries an Exploration section (see `openspec/config.yaml`). The complex prompt seeds the skill's testbed, and its easy and medium cases are derived from it (see `skill-eval`); the sketches never count as its baseline.
+Entry: triage found a new artifact skill. The person's brief, the issue, one complex case run three times by `evals/sketch.sh`, the person's choice of a run recorded on the issue. Exit: `openspec-propose` (Phase 0 step 2) with what the phase produced. Read `references/explore.md` when the phase starts.
 
 ### Phase 1: prepare (orchestrator)
 
@@ -84,36 +80,27 @@ If the hand-off reports a blocked task or a contradiction in the change, stop th
 
 Dispatch one `Agent` call, `subagent_type: visual-reviewer`, in the foreground, with the paths of the brief and the hand-off. It writes `_agents_workspace/<change-id>/03_reviewer_report.md`. Read the report's overall verdict:
 
-- **`pass`** → Phase 4.
+- **`pass`** → Phase 3a when the change adds or changes a `SKILL.md`, otherwise Phase 3b or Phase 4.
 - **`fail`** → send the report to `artifact-builder` for a fix round (Phase 2 with the report as extra input), then review again. Two fix rounds at most. If the verdict is still `fail`, stop and give the user the open findings with their evidence; do not go on to Phase 4.
-- **`incomplete`** → something could not be rendered. Tell the user which invariants are not verified and what tool is missing. Go to Phase 4 only if the user accepts the gap, and record the gap in the summary.
+- **`incomplete`** → something could not be rendered. Tell the user which invariants are not verified and what tool is missing. Go on (Phase 3a, 3b or 4) only if the user accepts the gap, and record the gap in the summary.
 
 Keep each round's report: rename the previous one `03_reviewer_report.round<N>.md` before the next review.
 
+### Phase 3a: skill review (one subagent, `skill-creator`)
+
+Entry: the change adds or changes a skill's `SKILL.md` (plugin or harness, never `openspec-*`), after the visual review's `pass` (or an accepted `incomplete`), or straight after the build when nothing is visual. One `general-purpose` subagent on `opus` reviews the skills' text with `skill-creator`; then the structural tests and the change's validation run. Exit: Phase 3b for a change that needs an evaluation, otherwise Phase 4. Read `references/skill-review.md` when the phase starts: it holds the subagent's prompt.
+
 ### Phase 3b: evaluate (orchestrator)
 
-Applies to a change that adds or changes an artifact skill; read `.claude/skills/skill-eval/SKILL.md` first. It runs after a `pass` from the visual review (or after the user accepts an `incomplete` one), with no cost confirmation: the user decided evaluations are not capped, and the cost is reported.
+Entry: a change that needs an evaluation (a new artifact skill, a major refactoring of an existing one declared in its approved proposal, or the person's explicit request); any other change to an existing skill skips it and goes to Phase 4. It runs after the visual review's `pass` (or an accepted `incomplete`) and after Phase 3a when that applies, on the skill as the review left it. `evals/run.sh` measures and the user records the decision in `evals/<skill>/RESULTS.md`. Read `references/evaluate.md` and `.claude/skills/skill-eval/SKILL.md` when the phase starts. Routing by the decision:
 
-1. Run `bash evals/run.sh <skill>` (the proposal may set stricter targets, passed as `--target-tokens` and `--target-time`). It prints the report and appends an entry to `evals/<skill>/RESULTS.md` with `Decision: pending` and writes its sanitized summary `evals/<skill>/runs/<run-id>.json`. Never publish a report.
-2. Give the user the report: the classification, the KPI table (tokens and time, both arms, the change), the cost, the flagged runs, and the paths of the kept deliverables of both arms to compare. Say what you saw in them.
-3. Ask for the decision and record it, with the user's reason, on the `Decision:` line of that entry in `RESULTS.md`:
-   - `adopt`: go to Phase 4;
-   - `rework`: a builder fix round (Phase 2) with the report and the user's notes as input, within the same two-round cap as the review, then review again and evaluate again;
-   - `reject`: stop; no archive.
-4. An `incomplete` report is run once more; if it is still `incomplete`, tell the user which runs failed.
-
-Nothing here is a new agent: the numbers come from the script and the judgement from the user. A decision is never inferred from the classification.
+- `adopt`: go to Phase 4;
+- `rework`: a builder fix round (Phase 2) with the report and the user's notes as input, within the same two-round cap as the review, then review again and evaluate again;
+- `reject`: stop; no archive.
 
 ### Phase 4: integrate (orchestrator)
 
-1. For a skill change that has an `adopt` recorded, run the documentation step (see `.claude/skills/skill-eval/SKILL.md`, "Documenting the result"): check that `skills/<skill>/README.md` has its `summary:` front block and the performance markers, run `python3 evals/kpi.py doc`, then `bash tests/run-structural-tests.sh` (its docs test fails when the Performance section or the root README skills table is missing or out of date). The documentation is part of the work committed below.
-2. Run `openspec validate <change-id> --strict` again and check that every checkbox in `tasks.md` is ticked. For a skill change, check that `evals/<skill>/RESULTS.md` holds an evaluation of the final version with the decision `adopt` and that the skill's README and the README skills table show it.
-3. Give the user a summary: what was built, the reviewer's verdict per invariant, the evaluation's classification and decision, anything not verified, the files changed.
-4. On the user's go-ahead, and not before:
-   - commit the work on the topic branch;
-   - archive the change with the `openspec-archive-change` skill, as the last commit before merge, so that `openspec/specs/` on `main` matches the behavior on `main`;
-   - if an issue is carried: `gh issue comment <number>` with the summary and the change id, and `gh issue close <number>` once the work is merged.
-5. Keep `_agents_workspace/<change-id>/` for later inspection.
+Entry: an `adopt` recorded for a change that was evaluated, or the review passed (Phase 3, then 3a when it applies) for a change with no evaluation. The documentation step for an adopted skill, validation, the summary to the user, then, on the user's go-ahead and not before, commit, archive as the last commit before merge, and the issue comment and close. Read `references/integrate.md` when the phase starts.
 
 Never rewrite the prose of a proposal or an issue that a person wrote: the spec and the tracker own intent, this orchestrator owns execution.
 
@@ -131,13 +118,11 @@ Never rewrite the prose of a proposal or an issue that a person wrote: the spec 
 | The decision is `reject` or still `pending` | no archive |
 | The reviewer cannot render | verdict `incomplete`; the user decides whether to accept the gap |
 | The builder disputes a finding | keep both positions with their evidence in the summary; the user decides |
+| `skill-creator` is not available for Phase 3a | skip the skill review; say so in the summary |
+| The skill review conflicts with a spec | keep the text; the conflict goes to `openspec-update-change` |
+| The structural tests or validation fail after the skill review | one fix by the same subagent; then revert its edits to the failing file and ask the user |
 | `gh` fails or is not authenticated | continue without the tracker; say in the summary what was not written to the issue |
 
 ## Test scenarios
 
-- **Normal.** "Add a WBS skill." No change exists → an issue is filed, `openspec-propose` writes the change, the user approves → brief → the builder implements and ticks the tasks → the reviewer renders two artifact types in two themes and both modes, verdict `pass` → summary → on go-ahead: commit, archive, issue commented and closed.
-- **Explore.** "Add a WBS skill." The brief is asked for and names the artifact type and its sources → the issue is filed with the brief → one complex case is written and `evals/sketch.sh` returns three skill-free deliverables of the same prompt → the person opens them with the inventory of what is constant and what varies, chooses the second run with a hint, nothing is recommended → the issue is commented → `openspec-propose` writes a proposal with an Exploration section. "Add a field to the ERD skill" skips this phase.
-- **Fix loop.** The reviewer reports `VC-1 fail` for a literal color in a template → the builder moves the value to a token role in the shared source → the second review re-checks every invariant and passes.
-- **Evaluation.** The reviewer says `pass` on a new skill → Phase 3b runs the testbed, the report says `below target` with time unmet → the user compares the deliverables, records `adopt` with a reason in `RESULTS.md` → Phase 4. Had the user recorded `rework`, the builder gets the report and the notes, then review and evaluation repeat.
-- **Error.** No renderer is available for the artifact's medium → verdict `incomplete` with VC-5 and VC-6 `not verified` → the user is told which tool is missing and decides; nothing is archived as passing by default.
-- **Trivial.** "What does the visual contract say about dark mode?" → answered directly from `visual-contract`; no agents, no workspace.
+In `references/test-scenarios.md`: read it when checking or changing this workflow, not during a run.
