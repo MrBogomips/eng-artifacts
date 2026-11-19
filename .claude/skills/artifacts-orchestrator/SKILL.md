@@ -7,7 +7,7 @@ description: "Entry point for all work in the eng-artifacts plugin repository: i
 
 Delivers one change to the artifacts plugin at a time: specified with OpenSpec, built by `artifact-builder`, checked by `visual-reviewer` against the visual contract, archived when it passes (and, for a new artifact skill, when its evaluation or, if it is derived, its validated sample is adopted).
 
-This file loads on every prompt in the repository, so it holds only triage and the phase sequence; the steps of the longer phases are in `references/`, one file per phase. Triage first (Phase 0): a trivial request needs nothing more. Read each file when the step that names it is reached, not before. `CLAUDE.md` is already in context; the agents load `visual-contract` themselves (read it only to answer a design question); the `openspec-*` workflows apply `openspec/config.yaml`; a script's options are in its header. Read a spec in `openspec/specs/` only when a step leaves a question open.
+This file loads on every prompt in the repository, so it holds only triage and the phase sequence; the steps of the longer phases are in `references/`, one file per phase. Triage first (Phase 0): a trivial request needs nothing more. Read each file when the step that names it is reached, not before. `AGENTS.md` is already in context; the agents load `visual-contract` themselves (read it only to answer a design question); the `openspec-*` workflows apply `openspec/config.yaml`; a script's options are in its header. Read a spec in `openspec/specs/` only when a step leaves a question open.
 
 ## Execution mode: subagent
 

@@ -2,7 +2,7 @@ schema: spec-driven
 
 context: |
   This repository is a public Claude Code plugin, eng-artifacts: a collection of skills for the
-  optimized production of software engineering artifacts (WBS, UML, diagrams). CLAUDE.md is the authority for repository conventions.
+  optimized production of software engineering artifacts (WBS, UML, diagrams). AGENTS.md is the authority for repository conventions.
   The repository is public: no artifact contains personal paths, client, company or person names,
   email addresses or private URLs. Examples use neutral placeholders.
 
