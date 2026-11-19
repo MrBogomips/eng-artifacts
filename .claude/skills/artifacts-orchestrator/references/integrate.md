@@ -9,4 +9,4 @@ Read when Phase 4 starts. The entry conditions and the go-ahead gate are in `SKI
    - commit the work on the topic branch;
    - archive the change with the `openspec-archive-change` skill, as the last commit before merge, so that `openspec/specs/` on `main` matches the behavior on `main`;
    - if an issue is carried: `gh issue comment <number>` with the summary and the change id, and `gh issue close <number>` once the work is merged.
-5. Keep `_agents_workspace/<change-id>/` for later inspection.
+5. Keep `_agents_workspace/<change-id>/` for later inspection until the session closes with `done`, which deletes the scratch (`DoD.md`, On Done).
