@@ -30,7 +30,7 @@ for script in "$TESTS_DIR"/validate-*.sh "$TESTS_DIR"/test-*.sh; do
 done
 
 # `claude plugin validate --strict` on the plugin as installed: a copy of the repository without the
-# development files. Validated in place, the repository's own CLAUDE.md (development guidance, not
+# development files. Validated in place, the repository's own AGENTS.md (development guidance, not
 # shipped) is reported as a warning, which --strict turns into a failure.
 validate_plugin() {
     local stage rc entry
