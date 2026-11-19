@@ -1,0 +1,9 @@
+{
+  "title": "Stereotypes and members",
+  "packages": [
+    { "id": "m", "name": "shop", "stereotypes": ["model"] },
+    { "id": "p", "name": "audit", "stereotypes": ["profile", "frozen"], "members": [ { "name": "Stamp", "kind": "class" }, { "name": "Level", "kind": "enumeration" } ] },
+    { "id": "d", "name": "domain", "parent": "m", "members": [ { "name": "Order" }, { "name": "Pricing", "kind": "interface" }, { "name": "State", "kind": "enumeration" } ] }
+  ],
+  "dependencies": [ { "from": "d", "to": "p", "kind": "import" } ]
+}

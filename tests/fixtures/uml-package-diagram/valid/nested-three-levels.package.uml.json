@@ -1,0 +1,16 @@
+{
+  "title": "Three levels of nesting",
+  "packages": [
+    { "id": "app", "name": "app" },
+    { "id": "domain", "name": "domain", "parent": "app" },
+    { "id": "ordering", "name": "ordering", "parent": "domain", "members": [ { "name": "Order" }, { "name": "OrderRepository", "kind": "interface" } ] },
+    { "id": "catalog", "name": "catalog", "parent": "domain", "members": [ { "name": "Product" } ] },
+    { "id": "web", "name": "web", "parent": "app" },
+    { "id": "infra", "name": "infra" }
+  ],
+  "dependencies": [
+    { "from": "web", "to": "domain", "kind": "import" },
+    { "from": "ordering", "to": "catalog", "kind": "access" },
+    { "from": "infra", "to": "ordering", "kind": "import" }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "title": "A library on one afternoon",
+  "description": "One branch and its catalogue, three members, copies of two books, an active and an overdue loan, a reservation queue and the loan states.",
+  "packages": [
+    { "id": "people", "label": "people" },
+    { "id": "catalogue", "label": "catalogue" },
+    { "id": "lending", "label": "lending" }
+  ],
+  "objects": [
+    { "id": "central", "class": "Branch", "name": "central",
+      "slots": [ { "name": "opens", "type": "Time", "value": "09:00" }, { "name": "closes", "type": "Time", "value": "18:00" } ] },
+
+    { "id": "alice", "class": "Member", "name": "alice", "package": "people",
+      "slots": [ { "name": "email", "value": "alice@example.org" }, { "name": "joined", "type": "Date", "value": "2024-03-12" } ] },
+    { "id": "bob", "class": "Member", "name": "bob", "package": "people", "stereotypes": ["guest"],
+      "slots": [ { "name": "email", "value": "bob@example.org" } ] },
+    { "id": "walkin", "class": "Member", "package": "people",
+      "slots": [ { "name": "joined", "type": "Date", "value": "2026-11-18" } ] },
+
+    { "id": "catalogue", "class": "Catalogue", "name": "catalogue", "package": "catalogue", "stereotypes": ["singleton"],
+      "slots": [ { "name": "titles", "type": "int", "value": "2" } ] },
+    { "id": "book1", "class": "Book", "name": "book1", "package": "catalogue",
+      "slots": [ { "name": "title", "value": "Compilers" }, { "name": "year", "type": "int", "value": "2006" } ] },
+    { "id": "book2", "class": "Book", "name": "book2", "package": "catalogue",
+      "slots": [ { "name": "title", "value": "Databases" }, { "name": "year", "type": "int", "value": "2019" } ] },
+    { "id": "copy7", "class": "Copy", "name": "copy7", "package": "catalogue",
+      "slots": [ { "name": "barcode", "value": "C-007" } ] },
+    { "id": "copy8", "class": "Copy", "name": "copy8", "package": "catalogue",
+      "slots": [ { "name": "barcode", "value": "C-008" } ] },
+
+    { "id": "loan1", "class": "Loan", "name": "loan1", "package": "lending",
+      "slots": [ { "name": "due", "type": "Date", "value": "2026-12-01" }, { "name": "renewals", "value": "0" } ] },
+    { "id": "loan2", "class": "Loan", "name": "loan2", "package": "lending",
+      "slots": [ { "name": "due", "type": "Date", "value": "2026-10-30" }, { "name": "renewals", "type": "int", "value": "2" } ] },
+    { "id": "stActive", "class": "LoanState", "literal": "Active", "package": "lending" },
+    { "id": "stOverdue", "class": "LoanState", "literal": "Overdue", "package": "lending" },
+    { "id": "queue", "class": "ReservationQueue", "name": "queue", "package": "lending",
+      "slots": [ { "name": "length", "type": "int", "value": "2" } ] },
+    { "id": "r1", "class": "Reservation", "package": "lending",
+      "slots": [ { "name": "position", "value": "1" } ] },
+    { "id": "r2", "class": "Reservation", "package": "lending",
+      "slots": [ { "name": "position", "value": "2" } ] }
+  ],
+  "links": [
+    { "from": "central", "to": "catalogue", "name": "holds", "toEnd": { "role": "catalogue", "navigable": true } },
+    { "from": "walkin", "to": "central", "name": "joined at" },
+
+    { "from": "catalogue", "to": "book1", "toEnd": { "role": "titles" } },
+    { "from": "catalogue", "to": "book2", "toEnd": { "role": "titles" } },
+    { "from": "book1", "to": "copy7", "toEnd": { "role": "copies", "navigable": true } },
+    { "from": "book2", "to": "copy8", "toEnd": { "role": "copies", "navigable": true } },
+
+    { "from": "loan1", "to": "alice", "fromEnd": { "role": "loans" }, "toEnd": { "role": "borrower", "navigable": true } },
+    { "from": "loan1", "to": "copy7", "toEnd": { "role": "item", "navigable": true } },
+    { "from": "loan1", "to": "stActive", "toEnd": { "role": "state", "navigable": true } },
+    { "from": "loan2", "to": "bob", "fromEnd": { "role": "loans" }, "toEnd": { "role": "borrower", "navigable": true } },
+    { "from": "loan2", "to": "copy8", "toEnd": { "role": "item", "navigable": true } },
+    { "from": "loan2", "to": "stOverdue", "toEnd": { "role": "state", "navigable": true } },
+
+    { "from": "alice", "to": "alice", "name": "referred", "fromEnd": { "role": "referrer" }, "toEnd": { "role": "referee", "navigable": true } },
+    { "from": "bob", "to": "alice", "name": "referred by" },
+
+    { "from": "queue", "to": "book2", "name": "for", "toEnd": { "role": "book", "navigable": true } },
+    { "from": "queue", "to": "r1", "toEnd": { "role": "first", "navigable": true } },
+    { "from": "r1", "to": "r2", "name": "next", "toEnd": { "navigable": true } },
+    { "from": "r1", "to": "alice", "toEnd": { "role": "requester", "navigable": true } },
+    { "from": "r2", "to": "walkin", "toEnd": { "role": "requester", "navigable": true } }
+  ]
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Page assembly: every valid ERD and UML class diagram fixture builds under the default, the alternate and a project theme;
+# Page assembly: every valid ERD, UML class, object and package diagram fixture builds under the default, the alternate and a project theme;
 # an incomplete theme is rejected listing every missing token; invalid models write no file; every
 # external script URL in a produced page is on an allowed CDN and pinned to an exact version.
 set -u
@@ -79,6 +79,58 @@ for f in "$ROOT"/tests/fixtures/uml-class-diagram/valid/*.uml.json; do
         grep -q 'data-type="uml-class-diagram"' "$out" || fail "$label" "the page does not carry its type"
         grep -q 'id="view-options"' "$out" || fail "$label" "the page has no view-options slot"
     done
+done
+
+# every valid UML object diagram fixture builds under the same three themes (its validator is
+# scripts/uml_object_diagram_model.py); the shared UML scripts are inlined once, before the renderer
+for f in "$ROOT"/tests/fixtures/uml-object-diagram/valid/*.object.uml.json; do
+    name=$(basename "$f" .object.uml.json)
+    for theme in default alt "$PROJECT"; do
+        tname=$(basename "$theme" .css)
+        out="$TMP/object-$name-$tname.html"
+        label="assembler:uml-object-diagram/$name/$tname"
+        msg=$(python3 -I "$ASM" --type uml-object-diagram --model "$f" --theme "$theme" --out "$out" 2>&1) || { fail "$label" "build failed: $msg"; continue; }
+        [ -s "$out" ] || { fail "$label" "no page written"; continue; }
+        check_page "$out" "$label"
+        grep -q 'data-type="uml-object-diagram"' "$out" || fail "$label" "the page does not carry its type"
+        grep -q 'id="view-options"' "$out" || fail "$label" "the page has no view-options slot"
+        [ "$(grep -c 'U.layoutElk = ' "$out")" = 1 ] && [ "$(grep -c 'U.drawNode = ' "$out")" = 1 ] || fail "$label" "the shared UML scripts are not inlined exactly once"
+    done
+done
+
+# invalid UML object diagram models: nothing written, the validator's message shown
+for f in "$ROOT"/tests/fixtures/uml-object-diagram/invalid/*.object.uml.json; do
+    name=$(basename "$f" .object.uml.json)
+    out="$TMP/object-invalid-$name.html"
+    msg=$(python3 -I "$ASM" --type uml-object-diagram --model "$f" --out "$out" 2>&1) && fail "assembler:uml-object-diagram/invalid/$name" "accepted"
+    [ ! -e "$out" ] || fail "assembler:uml-object-diagram/invalid/$name" "a page was written"
+    printf '%s' "$msg" | grep -q "error: .*$name.object.uml.json: " || fail "assembler:uml-object-diagram/invalid/$name" "no error naming the model: $msg"
+done
+
+# every valid UML package diagram fixture builds under the same three themes (its validator is
+# scripts/uml_package_diagram_model.py), with the shared UML scripts inlined once
+for f in "$ROOT"/tests/fixtures/uml-package-diagram/valid/*.package.uml.json; do
+    name=$(basename "$f" .package.uml.json)
+    for theme in default alt "$PROJECT"; do
+        tname=$(basename "$theme" .css)
+        out="$TMP/package-$name-$tname.html"
+        label="assembler:uml-package-diagram/$name/$tname"
+        msg=$(python3 -I "$ASM" --type uml-package-diagram --model "$f" --theme "$theme" --out "$out" 2>&1) || { fail "$label" "build failed: $msg"; continue; }
+        [ -s "$out" ] || { fail "$label" "no page written"; continue; }
+        check_page "$out" "$label"
+        grep -q 'data-type="uml-package-diagram"' "$out" || fail "$label" "the page does not carry its type"
+        grep -q 'id="view-options"' "$out" || fail "$label" "the page has no view-options slot"
+        [ "$(grep -c 'U.layoutElk = ' "$out")" = 1 ] && [ "$(grep -c 'U.drawFolder = ' "$out")" = 1 ] || fail "$label" "the shared UML scripts are not inlined exactly once"
+    done
+done
+
+# invalid UML package diagram models: nothing written, the validator's message shown
+for f in "$ROOT"/tests/fixtures/uml-package-diagram/invalid/*.package.uml.json; do
+    name=$(basename "$f" .package.uml.json)
+    out="$TMP/package-invalid-$name.html"
+    msg=$(python3 -I "$ASM" --type uml-package-diagram --model "$f" --out "$out" 2>&1) && fail "assembler:uml-package-diagram/invalid/$name" "accepted"
+    [ ! -e "$out" ] || fail "assembler:uml-package-diagram/invalid/$name" "a page was written"
+    printf '%s' "$msg" | grep -q "error: .*$name.package.uml.json: " || fail "assembler:uml-package-diagram/invalid/$name" "no error naming the model: $msg"
 done
 
 # invalid UML models: nothing written, the validator's message shown
@@ -172,5 +224,31 @@ for bad in 'https://cdn.jsdelivr.net/npm/elkjs/lib/elk.bundled.js' 'https://cdn.
     python3 -I "$ASM" --type erd --model "$FIX/valid/small.erd.json" --plugin-root "$CP" --out "$TMP/bad.html" >/dev/null 2>&1 && fail "assembler:external script" "accepted $bad"
     [ ! -e "$TMP/bad.html" ] || fail "assembler:external script" "a page was written for $bad"
 done
+
+# shared scripts (the "shared" list of assets/<type>.json): inlined once, in the order named, after the
+# external scripts and before the type's own renderer; a missing file, a path leaving shared/ and a
+# non-script stop the page, name the type and the file, and write nothing
+printf '// shared-one\n' > "$CP/shared/one.js"
+printf '// shared-two\n' > "$CP/shared/two.js"
+printf 'not a script\n' > "$CP/shared/notes.txt"
+printf '// outside\n' > "$CP/outside.js"
+printf '{"scripts":[{"src":"https://cdn.jsdelivr.net/npm/elkjs@0.11.1/lib/elk.bundled.js"}],"shared":["two.js","one.js"]}\n' > "$CP/skills/erd/assets/erd.json"
+python3 -I "$ASM" --type erd --model "$FIX/valid/small.erd.json" --plugin-root "$CP" --out "$TMP/shared.html" >/dev/null 2>&1 || fail "assembler:shared scripts" "build failed"
+python3 -I - "$TMP/shared.html" <<'PY' || fail "assembler:shared scripts" "not inlined once, in the order named, between the external scripts and the renderer"
+import sys
+t = open(sys.argv[1]).read()
+ext, two, one, rend = t.find("elk.bundled.js"), t.find("// shared-two"), t.find("// shared-one"), t.find("A.register('erd'")
+sys.exit(0 if t.count("// shared-one") == 1 and t.count("// shared-two") == 1 and 0 < ext < two < one < rend else 1)
+PY
+for bad in gone.js ../outside.js notes.txt /etc/passwd; do
+    printf '{"shared":["%s"]}\n' "$bad" > "$CP/skills/erd/assets/erd.json"
+    rm -f "$TMP/shared-bad.html"
+    msg=$(python3 -I "$ASM" --type erd --model "$FIX/valid/small.erd.json" --plugin-root "$CP" --out "$TMP/shared-bad.html" 2>&1) && fail "assembler:shared script $bad" "accepted"
+    [ ! -e "$TMP/shared-bad.html" ] || fail "assembler:shared script $bad" "a page was written"
+    printf '%s' "$msg" | grep -qF "type erd: shared script" || fail "assembler:shared script $bad" "message does not name the type: $msg"
+    printf '%s' "$msg" | grep -qF "$bad" || fail "assembler:shared script $bad" "message does not name the file: $msg"
+done
+printf '{"shared":"one.js"}\n' > "$CP/skills/erd/assets/erd.json"
+python3 -I "$ASM" --type erd --model "$FIX/valid/small.erd.json" --plugin-root "$CP" --out "$TMP/shared-bad.html" >/dev/null 2>&1 && fail "assembler:shared not a list" "accepted"
 
 finish test-assembler

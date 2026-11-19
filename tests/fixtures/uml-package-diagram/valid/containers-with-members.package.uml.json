@@ -1,0 +1,18 @@
+{
+  "title": "Containers with members",
+  "packages": [
+    { "id": "root", "name": "root", "stereotypes": ["model"], "members": [ { "name": "Settings" }, { "name": "Clock", "kind": "interface" } ] },
+    { "id": "a", "name": "alpha", "parent": "root", "members": [ { "name": "AlphaService" }, { "name": "AlphaKind", "kind": "enumeration" } ] },
+    { "id": "a1", "name": "alpha-one", "parent": "a", "members": [ { "name": "One" } ] },
+    { "id": "a2", "name": "alpha-two", "parent": "a" },
+    { "id": "b", "name": "beta", "parent": "root", "members": [ { "name": "BetaPort", "kind": "interface" } ] },
+    { "id": "b1", "name": "beta-one", "parent": "b", "members": [ { "name": "B1" } ] },
+    { "id": "c", "name": "gamma" }
+  ],
+  "dependencies": [
+    { "from": "a1", "to": "b1", "kind": "import" },
+    { "from": "a2", "to": "b", "kind": "access" },
+    { "from": "c", "to": "a", "kind": "dependency", "label": "uses" },
+    { "from": "c", "to": "root", "kind": "merge" }
+  ]
+}

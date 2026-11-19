@@ -1,0 +1,36 @@
+{
+  "title": "Layers of an online shop",
+  "description": "A model with four layers, the domain and the infrastructure nested one level further, and a profile applied to the model.",
+  "packages": [
+    { "id": "shop", "name": "shop", "stereotypes": ["model"] },
+    { "id": "presentation", "name": "presentation", "parent": "shop",
+      "members": [ { "name": "CheckoutPage" }, { "name": "CatalogPage" } ] },
+    { "id": "application", "name": "application", "parent": "shop",
+      "members": [ { "name": "PlaceOrder" }, { "name": "SearchProducts" } ] },
+    { "id": "domain", "name": "domain", "parent": "shop" },
+    { "id": "ordering", "name": "ordering", "parent": "domain",
+      "members": [ { "name": "Order" }, { "name": "OrderRepository", "kind": "interface" }, { "name": "OrderState", "kind": "enumeration" } ] },
+    { "id": "catalog", "name": "catalog", "parent": "domain",
+      "members": [ { "name": "Product" }, { "name": "ProductRepository", "kind": "interface" } ] },
+    { "id": "billing", "name": "billing", "parent": "domain",
+      "members": [ { "name": "Invoice" }, { "name": "PaymentMethod", "kind": "enumeration" } ] },
+    { "id": "infrastructure", "name": "infrastructure", "parent": "shop" },
+    { "id": "persistence", "name": "persistence", "parent": "infrastructure",
+      "members": [ { "name": "SqlOrderRepository" } ] },
+    { "id": "messaging", "name": "messaging", "parent": "infrastructure",
+      "members": [ { "name": "EventPublisher" } ] },
+    { "id": "audit", "name": "audit", "stereotypes": ["profile"],
+      "members": [ { "name": "Audited", "kind": "interface" } ] }
+  ],
+  "dependencies": [
+    { "from": "presentation", "to": "application", "kind": "import" },
+    { "from": "application", "to": "domain", "kind": "import" },
+    { "from": "infrastructure", "to": "domain", "kind": "import" },
+    { "from": "persistence", "to": "ordering", "kind": "import" },
+    { "from": "billing", "to": "ordering", "kind": "access" },
+    { "from": "catalog", "to": "ordering", "kind": "merge" },
+    { "from": "shop", "to": "audit", "kind": "merge" },
+    { "from": "messaging", "to": "billing", "kind": "dependency", "label": "events" },
+    { "from": "application", "to": "audit", "kind": "dependency" }
+  ]
+}

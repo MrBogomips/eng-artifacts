@@ -6,14 +6,16 @@
 Loads the artifact type from skills/<type>/ (its validator scripts/<type>_model.py, with hyphens of
 the type name read as underscores: uml-class-diagram -> uml_class_diagram_model.py, its renderer
 assets/<type>.js with any helper files assets/<type>-*.js that it needs, and, optionally,
-assets/<type>.json naming external scripts), validates the model,
+assets/<type>.json naming external scripts and shared scripts), validates the model,
 checks the theme against the default theme's token set, and writes ONE html file with the theme,
 page styles, scripts and the model inlined. Nothing is written unless every check passes; on
 failure every problem is printed and the exit status is 1 (2 for a usage error).
 
 Inlining order: theme style first (an @import, when the theme has one, must open its stylesheet),
-page style, core.js, chrome.js, the type's external scripts, the type renderer (its helper files
-first, in name order, then <type>.js), the model as JSON, then the boot call. A theme may name system fonts only and import nothing; one that loads fonts
+page style, core.js, chrome.js, the type's external scripts, the type's shared scripts (the "shared"
+list of assets/<type>.json: files under shared/ that several types of one family use, in the order
+named), the type renderer (its helper files first, in name order, then <type>.js), the model as JSON,
+then the boot call. A theme may name system fonts only and import nothing; one that loads fonts
 loads them from Google Fonts only.
 """
 import argparse
@@ -113,6 +115,37 @@ def check_external_scripts(scripts, problems):
     return out
 
 
+def shared_script_path(base, art_type, name, problems):
+    """The real path of a shared script, or None after reporting why it cannot be used."""
+    if not isinstance(name, str) or not name or os.path.isabs(name):
+        problems.append("type %s: shared script %r is not a relative path inside shared/" % (art_type, name))
+        return None
+    full = os.path.realpath(os.path.join(base, name))
+    if os.path.commonpath([base, full]) != base:
+        problems.append("type %s: shared script \"%s\" leaves the shared/ folder" % (art_type, name))
+    elif not name.endswith(".js"):
+        problems.append("type %s: shared script \"%s\" is not a .js file" % (art_type, name))
+    elif not os.path.isfile(full):
+        problems.append("type %s: shared script \"%s\" does not exist" % (art_type, name))
+    else:
+        return full
+    return None
+
+
+def read_shared_scripts(root, art_type, names, problems):
+    """The text of the shared scripts a type names, in the order named, or None after reporting every
+    problem found (each names the type and the file)."""
+    if not isinstance(names, list):
+        problems.append("type %s: \"shared\" in assets/%s.json must be a list of file paths" % (art_type, art_type))
+        return None
+    base = os.path.realpath(os.path.join(root, "shared"))
+    paths = [shared_script_path(base, art_type, n, problems) for n in names]
+    if None in paths:
+        return None
+    texts = [read_text(p, problems, "the shared script") for p in paths]
+    return None if None in texts else texts
+
+
 def script_tag(s):
     attrs = ' src="%s"' % html.escape(s["src"], quote=True)
     if s.get("integrity"):
@@ -176,22 +209,28 @@ def assemble(root, art_type, model_path, theme, problems=None):
     chrome_js = read_text(os.path.join(root, "shared", "page", "chrome.js"), problems, "the page chrome")
     type_js = read_renderer(type_dir, art_type, problems)
     scripts = []
+    shared_names = []
     manifest = os.path.join(type_dir, "assets", "%s.json" % art_type)
     if os.path.isfile(manifest):
         mtext = read_text(manifest, problems, "the type manifest")
         try:
-            scripts = json.loads(mtext).get("scripts", []) if mtext else []
-        except ValueError as exc:
-            problems.append("%s: not valid JSON: %s" % (manifest, exc))
+            data = json.loads(mtext) if mtext else {}
+            scripts = data.get("scripts", [])
+            shared_names = data.get("shared", [])
+        except (ValueError, AttributeError) as exc:
+            problems.append("%s: not valid JSON, or not an object: %s" % (manifest, exc))
     scripts = check_external_scripts(scripts, problems)
+    shared_parts = read_shared_scripts(root, art_type, shared_names, problems)
 
-    if problems or None in (shell, page_css, core_js, chrome_js, type_js, theme_text, model):
+    if problems or None in (shell, page_css, core_js, chrome_js, type_js, shared_parts, theme_text, model):
         raise AssemblyError(problems)
 
     for text, closer, label in ((theme_text, "style", "the theme"), (page_css, "style", "page.css"),
                                 (core_js, "script", "core.js"), (chrome_js, "script", "chrome.js"),
                                 (type_js, "script", "the renderer")):
         safe_inline(text, closer, label, problems)
+    for name, text in zip(shared_names, shared_parts):
+        safe_inline(text, "script", "shared/%s" % name, problems)
     if problems:
         raise AssemblyError(problems)
 
@@ -206,7 +245,7 @@ def assemble(root, art_type, model_path, theme, problems=None):
         "CORE_JS": core_js,
         "CHROME_JS": chrome_js,
         "EXTERNAL_SCRIPTS": "\n".join(script_tag(s) for s in scripts),
-        "TYPE_JS": type_js,
+        "TYPE_JS": "\n".join(shared_parts + [type_js]),
         "MODEL_JSON": json_for_script(model),
     }
     unknown = sorted(set(PLACEHOLDER.findall(shell)) - set(values))

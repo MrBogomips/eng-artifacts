@@ -1,0 +1,15 @@
+{
+  "title": "Objects in packages, one outside",
+  "packages": [ { "id": "people", "label": "people" }, { "id": "stock", "label": "stock" } ],
+  "objects": [
+    { "id": "alice", "class": "Member", "name": "alice", "package": "people" },
+    { "id": "bob", "class": "Member", "name": "bob", "package": "people", "slots": [ { "name": "email", "value": "bob@example.org" } ] },
+    { "id": "copy1", "class": "Copy", "name": "copy1", "package": "stock" },
+    { "id": "clock", "class": "Clock", "name": "clock", "slots": [ { "name": "now", "value": "10:00" } ] }
+  ],
+  "links": [
+    { "from": "alice", "to": "bob", "name": "knows" },
+    { "from": "alice", "to": "copy1", "toEnd": { "navigable": true } },
+    { "from": "clock", "to": "copy1", "name": "stamps" }
+  ]
+}

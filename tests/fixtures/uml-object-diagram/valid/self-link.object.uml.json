@@ -1,0 +1,11 @@
+{
+  "title": "A self link",
+  "objects": [
+    { "id": "alice", "class": "Member", "name": "alice", "slots": [ { "name": "email", "value": "alice@example.org" } ] },
+    { "id": "bob", "class": "Member", "name": "bob" }
+  ],
+  "links": [
+    { "from": "alice", "to": "alice", "name": "referred", "fromEnd": { "role": "referrer" }, "toEnd": { "role": "referee", "navigable": true } },
+    { "from": "alice", "to": "bob" }
+  ]
+}

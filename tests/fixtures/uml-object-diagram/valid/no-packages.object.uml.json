@@ -1,0 +1,7 @@
+{
+  "title": "No packages, no links",
+  "objects": [
+    { "id": "a", "class": "Thing", "name": "a", "slots": [ { "name": "x", "value": "1" } ] },
+    { "id": "b", "class": "Thing" }
+  ]
+}

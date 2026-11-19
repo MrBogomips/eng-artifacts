@@ -84,4 +84,19 @@ rm "$TMP/plugin/skills/x/SKILL.md"
 printf '{"default": "#123456"}\n' > "$TMP/plugin/skills/x/sample.erd.json"
 bash "$ROOT/tests/validate-style-source.sh" "$TMP/plugin" >/dev/null 2>&1 || fail "style source: sample model" "color in *.erd.json was reported"
 
+# shared scripts of a type: a missing file, a path leaving shared/ and a non-script are each reported
+# with the type and the file
+mkdir -p "$TMP/shared-plugin/shared" "$TMP/shared-plugin/skills/demo/assets"
+printf '// shared\n' > "$TMP/shared-plugin/shared/ok.js"
+printf 'text\n' > "$TMP/shared-plugin/shared/notes.txt"
+printf '// outside\n' > "$TMP/shared-plugin/outside.js"
+printf '{"shared":["ok.js"]}\n' > "$TMP/shared-plugin/skills/demo/assets/demo.json"
+bash "$ROOT/tests/validate-shared-scripts.sh" "$TMP/shared-plugin" >/dev/null 2>&1 || fail "shared scripts: valid list" "a valid list was rejected"
+printf '{"shared":["gone.js"]}\n' > "$TMP/shared-plugin/skills/demo/assets/demo.json"
+expect_fail "shared scripts: missing file" 'type demo: shared script "gone.js" does not exist' bash "$ROOT/tests/validate-shared-scripts.sh" "$TMP/shared-plugin"
+printf '{"shared":["../outside.js"]}\n' > "$TMP/shared-plugin/skills/demo/assets/demo.json"
+expect_fail "shared scripts: path leaving shared/" 'type demo: shared script "../outside.js" leaves the shared/ folder' bash "$ROOT/tests/validate-shared-scripts.sh" "$TMP/shared-plugin"
+printf '{"shared":["notes.txt"]}\n' > "$TMP/shared-plugin/skills/demo/assets/demo.json"
+expect_fail "shared scripts: not a script" 'type demo: shared script "notes.txt" is not a .js file' bash "$ROOT/tests/validate-shared-scripts.sh" "$TMP/shared-plugin"
+
 finish test-checks-reject
