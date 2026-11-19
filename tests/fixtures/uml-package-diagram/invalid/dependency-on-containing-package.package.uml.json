@@ -1,0 +1,2 @@
+{ "title": "t", "packages": [ { "id": "domain", "name": "domain" }, { "id": "domain.ordering", "name": "ordering", "parent": "domain" } ],
+  "dependencies": [ { "from": "domain.ordering", "to": "domain", "kind": "dependency" } ] }

@@ -16,6 +16,10 @@ What sets it apart:
 |---|---|---:|---:|---|
 | [`erd`](skills/erd/README.md) | Entity relationship diagram as one self-contained HTML page, in crow's foot notation, with groups, light/dark switch and replaceable themes | -46.9% | -87.9% | 2026-11-17 |
 | [`uml-class-diagram`](skills/uml-class-diagram/README.md) | UML class diagram from source code, a domain description or a DDD model, as one self-contained HTML page with packages, three levels of detail, light/dark switch and replaceable themes | -85.5% | -89.8% | 2026-11-18 |
+| [`uml-object-diagram`](skills/uml-object-diagram/README.md) | UML object diagram of instances and links, drawn like the class diagram | not measured | not measured | 2026-11-19, derived from [`uml-class-diagram`](skills/uml-class-diagram/README.md) |
+| [`uml-package-diagram`](skills/uml-package-diagram/README.md) | UML package diagram of nested packages and their import, access and merge dependencies, drawn like the class diagram | not measured | not measured | 2026-11-19, derived from [`uml-class-diagram`](skills/uml-class-diagram/README.md) |
+
+A row reading "not measured" is a derived skill: it reuses the renderer of the skill named in its last column, whose figures are on that skill's page, and a person validated a sample page of it.
 <!-- skills:end -->
 
 Tokens and Time are the change with the plugin against the same prompts without it (lower is better), summed over the skill's test cases; the skill's page has the per-case figures.

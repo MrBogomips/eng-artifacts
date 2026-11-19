@@ -1,0 +1,1 @@
+{ "title": "t", "objects": [ { "id": "a", "class": "A", "x": 10, "y": 20, "position": "top", "style": "red" } ] }

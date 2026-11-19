@@ -2,10 +2,12 @@
    stereotype chips in the band, attributes and operations below), one zone per package, joined by
    connectors with the UML notation ends, with the legend, the counts line and the relationships table.
    Registered with the page core (shared/page/core.js) under the type "uml-class-diagram"; the layout
-   is in uml-class-diagram-layout.js, loaded before this file. The page offers three levels of detail
-   and a switch for dependencies (view options), each of which draws the diagram again. No style value
-   lives here: roles come from page.css classes and the shared primitives, sizes derive from the
-   theme's geometry tokens. */
+   and the notation it shares with the other UML types are in shared/uml/ (uml-layout.js and
+   uml-notation.js, loaded before this file). Only what is the class diagram's own is here: the model
+   preparation, the members and relationships of a class, the generic box, the legend, the table and the
+   view options. The page offers three levels of detail and a switch for dependencies (view options),
+   each of which draws the diagram again. No style value lives here: roles come from page.css classes and
+   the shared primitives, sizes derive from the theme's geometry tokens. */
 (function () {
   'use strict';
   var A = window.Artifact;
@@ -14,6 +16,7 @@
   var HM = A.headerMetrics; /* proportions of the header-band node: owned by the shared primitive */
   var CM = A.chipMetrics;
   var G = null;             /* geometry of this drawing, from the theme's tokens (see U.geometry) */
+  var plural = U.plural, guillemets = U.guillemets;
 
   var VIS = { 'public': '+', 'protected': '#', 'private': '-', 'package': '~' };
   var KIND_WORDS = { generalization: 'specializes', realization: 'realizes', composition: 'composes',
@@ -32,9 +35,6 @@
     dependency: 'Dependency: the client uses the supplier'
   };
   var DETAILS = ['all', 'public', 'names'];
-
-  function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
-  function guillemets(s) { return '«' + s + '»'; }
 
   /* ---------- multiplicity in words ---------- */
 
@@ -79,8 +79,8 @@
       if (c.kind === 'interface') chips.push({ label: guillemets('interface'), role: 'stereotype' });
       if (c.kind === 'enumeration') chips.push({ label: guillemets('enumeration'), role: 'stereotype' });
       (c.stereotypes || []).forEach(function (s) { chips.push({ label: guillemets(s), role: 'stereotype' }); });
-      var node = { name: c.name, src: c, kind: c.kind, pid: pid, group: group, ungrouped: hasPackages && !pid, zone: null,
-        chips: chips, params: (c.typeParams || []).join(', '), padTop: 0, padR: 0, generic: 0, loop: null };
+      var node = { name: c.name, title: c.name, titleItalic: c.kind === 'class' && !!c.abstract, src: c, kind: c.kind, pid: pid,
+        group: group, ungrouped: hasPackages && !pid, zone: null, chips: chips, params: (c.typeParams || []).join(', '), padTop: 0, padR: 0, generic: 0, loop: null };
       if (view.detail === 'names') node.members = { attrs: [], ops: [] };
       else if (c.kind === 'enumeration') node.members = { attrs: [], ops: [] };
       else node.members = memberRows(c, view.detail);
@@ -105,20 +105,8 @@
     return { nodes: nodes, rels: rels, zones: zones, zoneById: zoneById, byName: byName, hasPackages: hasPackages };
   }
 
-  function endLabel(end) {
-    if (!end || (!end.role && !end.multiplicity)) return null;
-    var w = (end.role ? A.textWidth(end.role, 'edge-label') : 0) + (end.multiplicity ? A.textWidth(end.multiplicity, 't-data') : 0) +
-      (end.role && end.multiplicity ? G.unit * 0.5 : 0);
-    return { role: end.role || '', mult: end.multiplicity || '', text: (end.role ? end.role + ' ' : '') + (end.multiplicity || ''),
-      w: Math.ceil(w) + G.labelPad, h: G.labelH };
-  }
-
-  function plainLabel(text) {
-    return { role: text, mult: '', text: text, w: Math.ceil(A.textWidth(text, 'edge-label')) + G.labelPad, h: G.labelH };
-  }
-
   /* The end shapes and labels of a relationship, derived from its kind and its ends. */
-  var REACH = { triangle: 1, diamond: 1.6, hollowDiamond: 1.6, arrow: 1 };
+  var REACH = U.REACH;
   function prepareRel(r, id, byName) {
     var shape = { from: null, to: null };
     var fromEnd = r.fromEnd || null, toEnd = r.toEnd || null;
@@ -132,21 +120,16 @@
     }
     var center = null;
     if (r.bindings && Object.keys(r.bindings).length) {
-      center = plainLabel('<' + Object.keys(r.bindings).map(function (k) { return k + ' → ' + r.bindings[k]; }).join(', ') + '>');
-    } else if (r.label) center = plainLabel(r.label);
+      center = U.plainLabel('<' + Object.keys(r.bindings).map(function (k) { return k + ' → ' + r.bindings[k]; }).join(', ') + '>');
+    } else if (r.label) center = U.plainLabel(r.label);
     var u = G.unit;
     return { id: id, src: r, kind: r.kind, from: byName[r.from], to: byName[r.to], self: r.from === r.to,
       shape: shape, dashed: r.kind === 'realization' || r.kind === 'dependency',
       reach: { from: shape.from ? u * REACH[shape.from] : 0, to: shape.to ? u * REACH[shape.to] : 0 },
-      labels: { from: endLabel(fromEnd), to: endLabel(toEnd), center: center } };
+      labels: { from: U.endLabel(fromEnd), to: U.endLabel(toEnd), center: center } };
   }
 
   /* ---------- measuring a class ---------- */
-
-  function rowWidth(row) {
-    var cls = 't-member' + (row.italic ? ' t-italic' : '') + (row.isStatic ? ' t-static' : '');
-    return A.textWidth(row.lead + row.name, cls) + (row.rest ? A.textWidth(row.rest, 't-data' + (row.italic ? ' t-italic' : '')) + G.unit * 0.25 : 0);
-  }
 
   /* The body of a class as a list of rows: the attributes, a half row when a compartment is empty, the
      operations; the index above which the rule between the compartments is drawn; each row's height. */
@@ -168,12 +151,7 @@
 
   function measureNode(n) {
     buildBody(n);
-    var bodyW = 0;
-    n.rows.forEach(function (r) { if (r) bodyW = Math.max(bodyW, rowWidth(r)); });
-    bodyW += 2 * HM.padX;
-    n.w = Math.ceil(Math.max(G.minWidth, A.headerNodeMinWidth(n.name, n.chips), bodyW));
-    n.h = A.headerNodeHeight(n.rows.length, n.rowHeights);
-    n.padTop = 0; n.padR = 0; n.generic = 0;
+    U.sizeNode(n);
     if (n.params) {
       n.genericH = CM.height;
       n.generic = Math.ceil(A.textWidth(n.params, 't-data') + 2 * CM.padX);
@@ -184,114 +162,34 @@
 
   /* ---------- drawing ---------- */
 
-  function endShape(g, pt, dir, shape) {
-    if (!shape) return;
-    var u = G.unit, half = G.half, nx = -dir.y, ny = dir.x;
-    function at(d, side) { return { x: pt.x + dir.x * d + nx * side, y: pt.y + dir.y * d + ny * side }; }
-    function str(p) { return p.x + ',' + p.y; }
-    if (shape === 'arrow') {
-      [-half, half].forEach(function (s) {
-        var p = at(u, s);
-        g.appendChild(A.el('line', { 'class': 'notation', x1: pt.x, y1: pt.y, x2: p.x, y2: p.y }));
-      });
-    } else if (shape === 'triangle') {
-      g.appendChild(A.el('polygon', { 'class': 'notation-ring', points: [str(pt), str(at(u, -half)), str(at(u, half))].join(' ') }));
-    } else {
-      var pts = [str(pt), str(at(u * 0.8, -half)), str(at(u * 1.6, 0)), str(at(u * 0.8, half))].join(' ');
-      g.appendChild(A.el('polygon', { 'class': shape === 'diamond' ? 'edge-head' : 'notation-ring', points: pts }));
-    }
-  }
-
-  function labelEl(lab, cls) {
-    var cx = lab.at.x + lab.at.w / 2, cy = lab.at.y + lab.at.h / 2;
-    var kids = [];
-    if (lab.role) kids.push(A.el('tspan', {}, [lab.role]));
-    if (lab.mult) kids.push(A.el('tspan', { 'class': 't-data', dx: lab.role ? G.unit * 0.5 : 0 }, [lab.mult]));
-    return A.el('text', { 'class': cls || 'edge-label', x: cx, y: cy, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, kids);
-  }
-
-  function drawRelationship(layer, r) {
-    var pts = r.route, n = pts.length;
-    var g = A.edgePath(pts, { dashed: r.dashed, hops: r.hops });
-    endShape(g, pts[0], U.unitVector(pts[0], pts[1]), r.shape.from);
-    endShape(g, pts[n - 1], U.unitVector(pts[n - 1], pts[n - 2]), r.shape.to);
-    layer.insertBefore(g, layer.firstChild);
-    var els = [g];
-    ['from', 'to', 'center'].forEach(function (k) {
-      var lab = r.labels[k];
-      if (!lab || !lab.at) return;
-      var el = labelEl(lab);
-      layer.appendChild(el);
-      els.push(el);
-    });
-    return els;
-  }
-
-  function memberText(x, cy, row) {
-    var cls = 't-member' + (row.italic ? ' t-italic' : '') + (row.isStatic ? ' t-static' : '');
-    var kids = [A.el('tspan', {}, [row.lead + row.name])];
-    if (row.rest) kids.push(A.el('tspan', { 'class': 't-data' + (row.italic ? ' t-italic' : ''), dx: G.unit * 0.25 }, [row.rest]));
-    return A.el('text', { 'class': cls, x: x, y: cy, 'dominant-baseline': 'central' }, kids);
-  }
-
   /* A class: the shared header-band node with the stereotype chips in its band, the compartment rule
      and, for a generic class, the dashed box of its type parameters on the band's corner. */
   function drawClass(layer, n) {
-    var g = A.headerNode({ x: n.x, y: n.y, width: n.w, rows: n.rows.length, rowHeights: n.rowHeights, rules: n.rules,
-      group: n.group, title: n.name, italic: n.kind === 'class' && !!n.src.abstract, ungrouped: n.ungrouped, bandChips: n.chips });
-    n.rows.forEach(function (row, i) {
-      if (row) g.rowEls[i].appendChild(memberText(n.x + HM.padX, A.headerRowCenter(n.y, i, n.rowHeights), row));
-    });
+    var g = U.drawNode(layer, n);
     if (n.params) {
       var h = n.genericH, r = A.smallRadius(), x = n.x + n.w + h / 2 - n.generic, y = n.y - h / 2, dash = ' ungrouped';
       g.appendChild(A.el('rect', { 'class': 'node' + dash, x: x, y: y, width: n.generic, height: h, rx: r, ry: r }));
       g.appendChild(A.el('rect', { 'class': 'node-outline' + dash, x: x, y: y, width: n.generic, height: h, rx: r, ry: r }));
       g.appendChild(A.text(x + n.generic / 2, y + h / 2 + 0.5, n.params, 't-data', { 'text-anchor': 'middle' }));
     }
-    layer.appendChild(g);
-    n.el = g;
   }
 
   /* ---------- the cards under the drawing ---------- */
 
-  function sampleSvg(w, h, children) {
-    return A.el('svg', { width: w, height: h, viewBox: '0 0 ' + w + ' ' + h, 'aria-hidden': 'true' }, children);
-  }
-
   /* a connector kind drawn with the drawing's own functions: its line, its end shape at the right,
      beside the edge of a class */
   function kindSample(kind) {
-    var w = G.sampleW, h = G.sampleH, tx = w - G.unit, s = A.px('--stroke');
     var r = prepareRel({ kind: kind, from: 'a', to: 'b', toEnd: kind === 'association' ? { navigable: true } : {}, fromEnd: {} }, 'sample', { a: null, b: null });
-    var g = A.el('g');
-    var dashed = r.dashed;
-    var rightShape = r.shape.to || r.shape.from;
-    g.appendChild(A.el('line', { 'class': 'edge' + (dashed ? ' dashed' : ''), x1: 0, y1: h / 2, x2: tx, y2: h / 2 }));
-    endShape(g, { x: tx, y: h / 2 }, { x: -1, y: 0 }, rightShape);
-    return sampleSvg(w, h, [g, A.el('rect', { 'class': 'node g-neutral', x: tx, y: s, width: G.unit, height: h - 2 * s, rx: A.smallRadius() })]);
+    return U.lineSample(r.shape.to || r.shape.from, r.dashed);
   }
 
-  function textSample(w, text, cls, extra) {
-    return sampleSvg(w, CM.height, [A.text(0, CM.height / 2, text, cls, extra)]);
-  }
-
-  function chipSample(label, w) {
-    return sampleSvg(w, CM.height, [A.chip(0, CM.height / 2, label, 'stereotype')]);
-  }
+  var sampleSvg = U.sampleSvg, textSample = U.textSample, chipSample = U.chipSample, swatch = U.swatch;
 
   function genericSample() {
     var h = CM.height, w = Math.ceil(A.textWidth('T', 't-data') + 2 * CM.padX), r = A.smallRadius(), s = A.px('--stroke');
     return sampleSvg(w + 2 * s, h + 2 * s, [
       A.el('rect', { 'class': 'node ungrouped g-neutral', x: s, y: s, width: w, height: h, rx: r, ry: r }),
       A.text(s + w / 2, s + h / 2 + 0.5, 'T', 't-data', { 'text-anchor': 'middle' })]);
-  }
-
-  function swatch(group, dashed) {
-    var w = Math.round(G.unit * 4), h = Math.round(G.unit * 2.5), s = A.px('--stroke');
-    if (dashed) {
-      return sampleSvg(w, h, [A.el('rect', { 'class': 'node ungrouped g-neutral', x: s, y: s, width: w - 2 * s, height: h - 2 * s, rx: A.smallRadius() })]);
-    }
-    return sampleSvg(w, h, [A.zone({ x: s, y: s, width: w - 2 * s, height: h - 2 * s, group: group })]);
   }
 
   /* what the drawing uses, for the legend */
@@ -439,7 +337,7 @@
       });
       p.nodes.forEach(function (n) { drawClass(classLayer, n); });
       var linked = {};
-      p.rels.forEach(function (r) { linked[r.id] = drawRelationship(edgeLayer, r); });
+      p.rels.forEach(function (r) { linked[r.id] = U.drawConnector(edgeLayer, r); });
 
       var maxX = size.width, maxY = size.height;
       p.nodes.forEach(function (n) {

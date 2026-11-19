@@ -1,0 +1,8 @@
+{
+  "title": "Flat layers",
+  "packages": [ { "id": "ui", "name": "ui" }, { "id": "core", "name": "core" }, { "id": "store", "name": "store" } ],
+  "dependencies": [
+    { "from": "ui", "to": "core", "kind": "dependency" },
+    { "from": "core", "to": "store", "kind": "dependency", "label": "reads" }
+  ]
+}

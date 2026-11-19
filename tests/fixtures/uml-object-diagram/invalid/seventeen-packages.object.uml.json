@@ -1,0 +1,79 @@
+{
+ "title": "t",
+ "packages": [
+  {
+   "id": "p0",
+   "label": "p0"
+  },
+  {
+   "id": "p1",
+   "label": "p1"
+  },
+  {
+   "id": "p2",
+   "label": "p2"
+  },
+  {
+   "id": "p3",
+   "label": "p3"
+  },
+  {
+   "id": "p4",
+   "label": "p4"
+  },
+  {
+   "id": "p5",
+   "label": "p5"
+  },
+  {
+   "id": "p6",
+   "label": "p6"
+  },
+  {
+   "id": "p7",
+   "label": "p7"
+  },
+  {
+   "id": "p8",
+   "label": "p8"
+  },
+  {
+   "id": "p9",
+   "label": "p9"
+  },
+  {
+   "id": "p10",
+   "label": "p10"
+  },
+  {
+   "id": "p11",
+   "label": "p11"
+  },
+  {
+   "id": "p12",
+   "label": "p12"
+  },
+  {
+   "id": "p13",
+   "label": "p13"
+  },
+  {
+   "id": "p14",
+   "label": "p14"
+  },
+  {
+   "id": "p15",
+   "label": "p15"
+  },
+  {
+   "id": "p16",
+   "label": "p16"
+  }
+ ],
+ "objects": [
+  {
+   "id": "a",
+   "class": "A"
+  }
+ ]
+}

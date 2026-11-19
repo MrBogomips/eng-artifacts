@@ -1,0 +1,1 @@
+{ "title": "t", "objects": [ { "id": "a", "class": "A" }, { "id": "b", "class": "B" } ], "links": [ { "from": "a", "to": "b", "toEnd": { "multiplicity": "1..*" } } ] }

@@ -1,0 +1,16 @@
+{
+  "title": "Anonymous instances and enumeration literals",
+  "description": "An anonymous member, a named one and the literals of a loan state.",
+  "objects": [
+    { "id": "m1", "class": "Member" },
+    { "id": "m2", "class": "Member", "name": "bob", "stereotypes": ["guest"], "slots": [ { "name": "since", "value": "2026" } ] },
+    { "id": "active", "class": "LoanState", "literal": "Active" },
+    { "id": "overdue", "class": "LoanState", "literal": "Overdue", "stereotypes": ["terminal"] },
+    { "id": "loan1", "class": "Loan", "name": "loan1", "slots": [ { "name": "id", "type": "int", "value": "1" } ] }
+  ],
+  "links": [
+    { "from": "loan1", "to": "m1", "name": "borrowed by" },
+    { "from": "loan1", "to": "active", "toEnd": { "role": "state", "navigable": true } },
+    { "from": "m2", "to": "overdue" }
+  ]
+}

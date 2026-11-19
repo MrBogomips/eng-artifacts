@@ -1,6 +1,6 @@
 # UML class diagram model
 
-The file the skill writes: `<name>.uml.json`, plain JSON. It holds data only. Never write HTML, CSS, SVG, scripts, colors or positions: the plugin draws the page and lays the diagram out itself, and the validator rejects unknown fields (an `x`, `y`, `position` or `style` included).
+The file the skill writes: `<name>.uml.json`, plain JSON holding data only. The validator rejects any field not listed below.
 
 ## Fields
 
@@ -35,7 +35,7 @@ Every field except those marked required is optional, so a domain-level model wr
 
 ## Packages
 
-`packages` holds at most sixteen entries, each classifier in at most one (`package` names its id). A package that holds a classifier is drawn as a zone with its label; the five group colors are assigned in order of first appearance and cycle from the sixth package, so two zones may share a color and only the labels tell them apart. A classifier in no package, in a model that has packages, is drawn neutral with a dashed outline. With no packages defined every classifier is drawn in the accent color and no zone is drawn. More than sixteen packages: merge packages or split the diagram.
+`packages` holds at most sixteen entries, each classifier in at most one (`package` names its id). A package that holds a classifier is drawn as a zone with its label; the five group colors are assigned in order of first appearance and cycle from the sixth package, so two zones may share a color and only the labels tell them apart. A classifier in no package, in a model that has packages, is drawn neutral with a dashed outline. With no packages defined every classifier is drawn in the accent color and no zone is drawn.
 
 ## Relationships
 
@@ -60,7 +60,7 @@ A composition, aggregation or association gives both ends: `fromEnd` is the end 
 - `role` (optional): the name the other classifier knows this end by (`lines`, `customer`), drawn beside the end.
 - `navigable` (optional, default false): `true` draws an open arrowhead at that end of an association. On a composition or aggregation the diamond marks the whole end and a navigable part end shows the arrowhead.
 
-The multiplicity at an end says how many instances of that end's classifier take part per instance of the other: `Order` composes `OrderLine`, `fromEnd` `1` (at `Order`), `toEnd` `0..*` with role `lines` (at `OrderLine`). A field `lines: OrderLine[]` gives `toEnd` `0..*`, an optional field `0..1`, any other field `1`. When the source does not say how many instances of the holder point to one target, use `*` at the holder's end of an association or aggregation and `1` at the whole of a composition. A field and its inverse (`Customer.orders`, `Order.customer`) are one relationship with both ends named and `navigable`.
+The multiplicity at an end says how many instances of that end's classifier take part per instance of the other: `Order` composes `OrderLine`, `fromEnd` `1` (at `Order`), `toEnd` `0..*` with role `lines` (at `OrderLine`). How to choose the multiplicities, and the ends of a field and its inverse, from the source is in `SKILL.md` step 4.
 
 `fromEnd` and `toEnd` are not allowed on the other three kinds.
 
@@ -122,4 +122,4 @@ The multiplicity at an end says how many instances of that end's classifier take
 }
 ```
 
-`Money` has no package, so in a model with packages it is drawn neutral with a dashed outline, outside every zone. Validate a model with `python3 scripts/uml_class_diagram_model.py <file>` from the skill folder; it prints every problem and exits non-zero when there is one.
+`Money` has no package, so in a model with packages it is drawn neutral with a dashed outline, outside every zone. The page script validates the model before it draws anything, so there is no separate validation step. To check a model without producing a page, run `python3 "${CLAUDE_PLUGIN_ROOT}/skills/uml-class-diagram/scripts/uml_class_diagram_model.py" <file>`: it prints every problem and exits non-zero when there is one.

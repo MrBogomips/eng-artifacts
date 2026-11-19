@@ -1,0 +1,10 @@
+{
+  "title": "Every dependency kind",
+  "packages": [ { "id": "a", "name": "a" }, { "id": "b", "name": "b" }, { "id": "c", "name": "c" }, { "id": "d", "name": "d" } ],
+  "dependencies": [
+    { "from": "a", "to": "b", "kind": "import" },
+    { "from": "b", "to": "c", "kind": "access" },
+    { "from": "c", "to": "d", "kind": "merge" },
+    { "from": "a", "to": "d", "kind": "dependency", "label": "uses" }
+  ]
+}
